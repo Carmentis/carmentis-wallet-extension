@@ -1,61 +1,26 @@
 import * as React from 'react';
-import { useEffect } from 'react';
-import * as ReactDOM from 'react-dom';
-import {
-    goBack,
-    goTo,
-    popToTop,
-    Link,
-    Router,
-    getCurrent,
-    getComponentStack,
-} from 'react-chrome-extension-router';
+import ReactDOM from 'react-dom';
+import { Router } from 'react-chrome-extension-router';
 import Index from './screens/Index';
+import { LockContext } from "@/contexts/LockContext.tsx";
 
-const Three = ({ message }: any) => (
-    <div onClick={() => popToTop()}>
-        <h1>{message}</h1>
-        <p>Click me to pop to the top</p>
-    </div>
-);
-
-const Two = ({ message }: any) => (
-    <div>
-        This is component Two. I was passed a message:
-        <p>{message}</p>
-        <button onClick={() => goBack()}>
-            Click me to go back to component One
-        </button>
-        <button onClick={() => goTo(Three, { message })}>
-            Click me to go to component Three!
-        </button>
-    </div>
-);
-
-const One = () => {
-    return (
-        <Link component={Two} props={{ message: 'I came from component one!' }}>
-            This is component One. Click me to route to component Two
-        </Link>
-    );
-};
-
+// Créez un nouveau composant fonctionnel pour encapsuler la logique d'état
 const App = () => {
-    useEffect(() => {
-        const { component, props } = getCurrent();
-        console.log(
-            component
-                ? `There is a component on the stack! ${component} with ${props}`
-                : `The current stack is empty so Router's direct children will be rendered`
-        );
-        const components = getComponentStack();
-        console.log(`The stack has ${components.length} components on the stack`);
-    });
+    const [isLocked, setIsLocked] = React.useState(true); // Utilisation correcte de useState
+    const valueLockedProvider = React.useMemo(() => ({ isLocked, setIsLocked }), [isLocked, setIsLocked]);
+
     return (
-        <Router>
-            <Index />
-        </Router>
+        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-24 lg:px-8">
+            <LockContext.Provider value={valueLockedProvider}>
+                <Router>
+                    <div className={"w-full"}>
+                        <Index/>
+                    </div>
+                </Router>
+            </LockContext.Provider>
+        </div>
     );
 };
 
+// Rendre le composant App dans le DOM
 ReactDOM.render(<App />, document.getElementById('root'));
