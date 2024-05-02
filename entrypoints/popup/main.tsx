@@ -1,20 +1,37 @@
 import * as React from 'react';
-import ReactDOM from 'react-dom';
 import { Router } from 'react-chrome-extension-router';
 import Index from './screens/Index';
 import { LockContext } from "@/contexts/LockContext.tsx";
+import {useWallet} from "@/hooks/useWallet.tsx";
+import {createRoot} from "react-dom/client";
+import Wallet from "@/entities/Wallet.ts";
+import NoWallet from "@/entrypoints/popup/screens/NoWallet.tsx";
+import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 
-// Créez un nouveau composant fonctionnel pour encapsuler la logique d'état
+const Start = ({wallet, isLocked}) => {
+    if(wallet === null) {
+        return <NoWallet />;
+    }
+
+    if(isLocked) {
+        return <PromptPassword nextComponent={Index} />;
+    }
+
+    return <Index />;
+};
+
 const App = () => {
-    const [isLocked, setIsLocked] = React.useState(true); // Utilisation correcte de useState
+    const [isLocked, setIsLocked] = React.useState(true);
+    const [wallet, storeWallet] = useWallet();
     const valueLockedProvider = React.useMemo(() => ({ isLocked, setIsLocked }), [isLocked, setIsLocked]);
+    const valueWalletProvider = React.useMemo(() => ({ wallet, storeWallet }), [wallet, storeWallet]);
 
     return (
-        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-24 lg:px-8">
+        <div className="flex min-h-full flex-1 flex-col justify-center py-24 lg:px-8 min-w-full w-25">
             <LockContext.Provider value={valueLockedProvider}>
                 <Router>
-                    <div className={"w-full"}>
-                        <Index/>
+                    <div className={"min-h-full p-6"}>
+                        <Start wallet={wallet} isLocked={isLocked} />
                     </div>
                 </Router>
             </LockContext.Provider>
@@ -22,5 +39,6 @@ const App = () => {
     );
 };
 
-// Rendre le composant App dans le DOM
-ReactDOM.render(<App />, document.getElementById('root'));
+const container = document.getElementById('root');
+const root = createRoot(container!);
+root.render(<App />);

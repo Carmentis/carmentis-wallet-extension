@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useContext, useState} from 'react';
 import Input from "@/components/Input.tsx";
 import Button from "@/components/Button.tsx";
 import {getComponentStack, goTo} from "react-chrome-extension-router";
@@ -7,12 +7,15 @@ import * as React from "react";
 import  secureLocalStorage  from  "react-secure-storage";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
+import {useWallet} from "@/hooks/useWallet.tsx";
 
 function InitPassword() {
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [acceptRisk, setAcceptRisk] = useState(false);
+
+    const [wallet, storeWallet] = useWallet();
 
     function savePassword() {
         if(password.length < 8) {
@@ -27,9 +30,14 @@ function InitPassword() {
             alert('You must check the box to accept the risk of losing your password.');
             return;
         }
-        secureLocalStorage.setItem('wallet', new Wallet({
-            password: password
-        }));
+
+        if(!wallet) {
+            storeWallet(
+                new Wallet({
+                    password: password
+                })
+            );
+        }
 
         goTo(KeepWalletSecure);
     }
@@ -51,7 +59,7 @@ function InitPassword() {
                 <div className="flex items-center">
                     <Input label={""} id={"accept_risk"} name={"accept_risk"} autoComplete={""}
                            onChange={(e) => setAcceptRisk(e.target.checked)} type={"checkbox"} />
-                    <label for={"accept_risk"}>
+                    <label htmlFor={"accept_risk"}>
                         &nbsp;I understand that if I lose my password, I will lose access to my wallet and funds.
                     </label>
                 </div>

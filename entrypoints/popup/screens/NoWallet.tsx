@@ -11,7 +11,7 @@ function NoWallet() {
 
     return (
         <>
-        <Header />
+            <Header />
             <Button onClick={() => goTo(InitPassword, { message: 'I came from component one!' })}>
                 Create a new Carmentis Wallet
             </Button>

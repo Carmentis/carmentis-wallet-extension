@@ -8,27 +8,26 @@ import secureLocalStorage from "react-secure-storage";
 import Wallet from "@/entities/Wallet.ts";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 import {LockContext} from "@/contexts/LockContext.tsx";
+import {useWallet} from "@/hooks/useWallet.tsx";
+import {render} from "react-dom";
 
 function Index() {
 
     const {isLocked, setIsLocked} = useContext(LockContext);
 
-    let wallet: Wallet|null = secureLocalStorage.getItem("wallet") as Wallet|null;
+    const [wallet, storeWallet] = useWallet();
 
     useEffect(() => {
-        if(wallet !== null) {
-            console.log('Wallet exists');
-        }else{
-            console.log('Wallet does not exist');
-            goTo(NoWallet);
-            return;
+        if(wallet === null) {
+            console.log('Wallet does not exist', wallet);
+            return goTo(NoWallet);
         }
 
         if(isLocked) {
             goTo(PromptPassword, {nextComponent: Index});
             return;
         }
-    }, [wallet]);
+    }, [wallet, isLocked]);
 
     useEffect(() => {
         /*setTimeout(() => {
@@ -41,9 +40,7 @@ function Index() {
     return (
         <>
             <Header />
-            <div className="p-5 w-64 min-w-full">
-                <p>
-                </p>
+            <div className="p-5 w-64 min-w-full min-h-96">
             </div>
             <BottomNav />
         </>

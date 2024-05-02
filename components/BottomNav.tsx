@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ClockIcon, UserCircleIcon, WalletIcon, CogIcon } from '@heroicons/react/24/outline';
+import {goTo} from "react-chrome-extension-router";
+import SettingsTab from "@/entrypoints/popup/screens/SettingsTab.tsx";
 
 function BottomNav() {
     return (
@@ -14,7 +16,7 @@ function BottomNav() {
             <button  className="flex flex-col items-center text-gray-700 hover:text-gray-900">
                 <WalletIcon className="h-6 w-6" />
             </button>
-            <button className="flex flex-col items-center text-gray-700 hover:text-gray-900">
+            <button className="flex flex-col items-center text-gray-700 hover:text-gray-900" onClick={() => goTo(SettingsTab)}>
                 <CogIcon className="h-6 w-6" />
             </button>
         </div>
