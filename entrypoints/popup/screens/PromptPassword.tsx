@@ -8,32 +8,44 @@ import secureLocalStorage  from  "react-secure-storage";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
 import {LockContext} from "@/contexts/LockContext.tsx";
+import {useWallet} from "@/hooks/useWallet.tsx";
 
-function InitPassword({nextComponent}: {nextComponent: any}) {
+function PromptPassword({nextComponent, callback}: {nextComponent?: any, callback?:any}) {
 
     const [password, setPassword] = useState('');
 
     const {isLocked, setIsLocked} = useContext(LockContext);
-    const wallet: Wallet = secureLocalStorage.getItem('wallet') as Wallet;
+    const [wallet, storeWallet] = useWallet();
 
     function checkPassword() {
 
+        console.log(wallet, typeof wallet, wallet?.getPassword(), password);
 
-        console.log(wallet);
-
-        if(wallet?.password !== password) {
-            setIsLocked(true);
-            alert('Incorrect password');
-        }else{
+        if(wallet?.getPassword() === password) {
             console.log('Wallet unlocked');
             setIsLocked(false);
-            goTo(nextComponent);
+
+            if (callback) {
+                console.log('Calling callback')
+                callback();
+            }
+            if (nextComponent) {
+                goTo(nextComponent);
+            }
+
+        }else{
+            setIsLocked(true);
+            alert('Incorrect password');
         }
     }
 
     useEffect(() => {
         console.log('Checking if wallet is locked', isLocked)
         if(!isLocked || !wallet) {
+            if (callback) {
+                console.log('Calling callback')
+                callback();
+            }
             goTo(nextComponent);
         }
     }, []);
@@ -56,4 +68,4 @@ function InitPassword({nextComponent}: {nextComponent: any}) {
     );
 }
 
-export default InitPassword;
+export default PromptPassword;

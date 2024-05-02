@@ -1,31 +1,35 @@
-import {useState} from "react";
+import { useState } from "react";
 import secureLocalStorage from "react-secure-storage";
-import Wallet from "@/entities/Wallet.ts";
+import Wallet from "@/entities/Wallet";
 
-export function useWallet() {
-    // State to store our value
-    // Pass initial state function to useState so logic is only executed once
-    const [wallet, setWallet] = useState(() => {
-        try {
-            // Get from local storage by key
-            const w = secureLocalStorage.getItem("wallet") as Wallet;
-            // Parse stored json or if none return initialValue
-            return w ? w : null;
-        } catch (error) {
-            // If error also return initialValue
-            console.log(error);
+export function useWallet(): [Wallet | null, (wallet: Wallet) => void] {
+    const [wallet, setWallet] = useState<Wallet | null>(() => {
+        const storedData = secureLocalStorage.getItem("wallet");
+
+        let response = null;
+
+        if (typeof storedData === "string") {
+            response = storedData ? JSON.parse(storedData) : null;
+        }
+
+        if(response === null) {
             return null;
         }
+
+        return new Wallet(response); // Adjust serialization logic as needed
     });
 
-    // Return a wrapped version of useState's setter function that ...
-    // ... persists the new value to localStorage.
-    const storeWallet = (wallet:Wallet) => {
+    const storeWallet = (wallet: Wallet|null) => {
         try {
             setWallet(wallet);
-            secureLocalStorage.setItem("wallet", wallet);
+
+            if(wallet === null) {
+                secureLocalStorage.clear();
+            }else{
+                secureLocalStorage.setItem("wallet", JSON.stringify(wallet));
+            } // Serialize object to string
         } catch (error) {
-            console.log(error);
+            console.error("Failed to store wallet:", error); // More explicit error handling
         }
     };
 

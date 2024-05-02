@@ -2,12 +2,11 @@ import {useContext, useState} from 'react';
 import Input from "@/components/Input.tsx";
 import Button from "@/components/Button.tsx";
 import {getComponentStack, goTo} from "react-chrome-extension-router";
-import Header from "@/components/Header.tsx";
 import * as React from "react";
-import  secureLocalStorage  from  "react-secure-storage";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 
 function InitPassword() {
 
@@ -17,7 +16,7 @@ function InitPassword() {
 
     const [wallet, storeWallet] = useWallet();
 
-    function savePassword() {
+    async function savePassword() {
         if(password.length < 8) {
             alert('Password must be at least 8 characters long');
             return;
@@ -32,11 +31,19 @@ function InitPassword() {
         }
 
         if(!wallet) {
-            storeWallet(
-                new Wallet({
-                    password: password
-                })
-            );
+
+            const mnemonic:string[] = await Carmentis.generateWordList();
+            const masterKey = await Carmentis.deriveFromWordList(mnemonic);
+
+            const wallet = new Wallet({
+                password: password,
+                mnemonic: mnemonic,
+                masterKey: masterKey
+            });
+
+            console.log('Wallet created', wallet);
+
+            storeWallet(wallet);
         }
 
         goTo(KeepWalletSecure);
@@ -44,7 +51,6 @@ function InitPassword() {
 
     return (
         <>
-            <Header canGoBack={getComponentStack().length > 0}/>
             <p>
                 Create a password for your new Carmentis Wallet
             </p>
@@ -60,7 +66,7 @@ function InitPassword() {
                     <Input label={""} id={"accept_risk"} name={"accept_risk"} autoComplete={""}
                            onChange={(e) => setAcceptRisk(e.target.checked)} type={"checkbox"} />
                     <label htmlFor={"accept_risk"}>
-                        &nbsp;I understand that if I lose my password, I will lose access to my wallet and funds.
+                        &nbsp;I understand that if I lose my password, <br/> I will lose access to my wallet and funds.
                     </label>
                 </div>
 

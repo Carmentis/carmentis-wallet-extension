@@ -39,7 +39,6 @@ function Index() {
 
     return (
         <>
-            <Header />
             <div className="p-5 w-64 min-w-full min-h-96">
             </div>
             <BottomNav />
