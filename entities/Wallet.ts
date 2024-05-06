@@ -1,8 +1,8 @@
 
 export default class Wallet {
     private readonly masterKey?: string[];
-    private readonly password?: string;
     private readonly mnemonic?: string[];
+    private password?: string;
 
     constructor({masterKey, password, mnemonic}: {masterKey?: string[], password?: string, mnemonic?: string[]}) {
         this.password = password;
@@ -24,5 +24,9 @@ export default class Wallet {
 
     public getMnemonic(): string[] | undefined {
         return this.mnemonic;
+    }
+
+    public setPassword(password: string): void {
+        this.password = password;
     }
 }

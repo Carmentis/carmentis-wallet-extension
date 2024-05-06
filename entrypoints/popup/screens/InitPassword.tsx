@@ -6,7 +6,9 @@ import * as React from "react";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
+// @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
+import Index from "@/entrypoints/popup/screens/Index.tsx";
 
 function InitPassword() {
 
@@ -17,8 +19,8 @@ function InitPassword() {
     const [wallet, storeWallet] = useWallet();
 
     async function savePassword() {
-        if(password.length < 8) {
-            alert('Password must be at least 8 characters long');
+        if(password.length < 5) {
+            alert('Password must be at least 5 characters long');
             return;
         }
         if(password !== confirmPassword) {
@@ -44,9 +46,13 @@ function InitPassword() {
             console.log('Wallet created', wallet);
 
             storeWallet(wallet);
+            goTo(KeepWalletSecure);
+        } else {
+            wallet.setPassword(password);
+            storeWallet(wallet);
+            goTo(Index)
         }
 
-        goTo(KeepWalletSecure);
     }
 
     return (

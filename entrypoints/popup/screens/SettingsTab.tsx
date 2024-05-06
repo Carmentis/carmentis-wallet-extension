@@ -7,6 +7,7 @@ import {goTo} from "react-chrome-extension-router";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import ShowMnemonic from "@/entrypoints/popup/screens/ShowMnemonic.tsx";
+import Confirm from "@/entrypoints/popup/screens/Confirm.tsx";
 
 
 function SettingsTab() {
@@ -23,13 +24,41 @@ function SettingsTab() {
                     See mnemonic
                 </Button>
                 <Button onClick={() => {
-                    //if(confirm("Are you sure you want to reset your wallet?")) {
+                    /*Confirm({
+                        title: "Reset wallet",
+                            description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
+                        onConfirm: () => {
+                        goTo(PromptPassword, {
+                            callback: () => {
+                                console.log('Clearing wallet');
+                                storeWallet(null);
+                                secureLocalStorage.clear();
+                            }, nextComponent: Index
+                        });
+                        }
+                    });*/
+                    /*
+                    goTo(
+                        Confirm,
+                        {
+                            title: "Reset wallet",
+                            description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
+                            onConfirm: () => {
+                                goTo(PromptPassword, {
+                                    callback: () => {
+                                        console.log('Clearing wallet');
+                                        storeWallet(null);
+                                        secureLocalStorage.clear();
+                                    }, nextComponent: Index
+                                });
+                            }
+                        });
+                     */
                     goTo(PromptPassword, {callback: () => {
-                            console.log('Clearing wallet');
-                            storeWallet(null);
-                            secureLocalStorage.clear();
-                        }, nextComponent: Index});
-                    //}
+                        console.log('Clearing wallet');
+                        storeWallet(null);
+                        secureLocalStorage.clear();
+                    }, nextComponent: Index});
                 } } className={"bg-red-500"}>
                     Reset wallet
                 </Button>

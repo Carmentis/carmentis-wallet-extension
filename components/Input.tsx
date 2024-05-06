@@ -1,16 +1,17 @@
 import React, {ChangeEventHandler} from 'react';
 
-interface PasswordInputProps {
+interface InputProps {
     type?: 'password' | 'text' | 'email' | 'number' | 'checkbox' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color' | 'file' | 'image' | 'hidden' | 'reset' | 'submit' | 'button' | undefined;
     label: string;
     id: string;
     name: string;
     autoComplete: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    value?: string;
     autoFocus?: boolean;
 }
 
-const Input: React.FC<PasswordInputProps> = ({type, label, id, name, autoComplete, onChange, autoFocus = false}) => {
+const Input: React.FC<InputProps> = ({type, label, id, name, autoComplete, onChange, value='', autoFocus = false}) => {
     return (
         <div>
             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">

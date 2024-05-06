@@ -5,6 +5,7 @@ import Button from "@/components/Button.tsx";
 import Header from "@/components/Header.tsx";
 import * as React from "react";
 import secureLocalStorage from "react-secure-storage";
+import PromptMnemonic from "@/entrypoints/popup/screens/PromptMnemonic.tsx";
 
 
 function NoWallet() {
@@ -12,10 +13,10 @@ function NoWallet() {
     return (
         <>
             <Header />
-            <Button onClick={() => goTo(InitPassword, { message: 'I came from component one!' })}>
+            <Button onClick={() => goTo(InitPassword)}>
                 Create a new Carmentis Wallet
             </Button>
-            <Button onClick={() => console.log('Import action')}>
+            <Button onClick={() => goTo(PromptMnemonic)}>
                 Import an existing Carmentis Wallet
             </Button>
         </>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import Wallet from "@/entities/Wallet";
 
-export function useWallet(): [Wallet | null, (wallet: Wallet) => void] {
+export function useWallet(): [Wallet | null, (wallet: Wallet|null) => void] {
     const [wallet, setWallet] = useState<Wallet | null>(() => {
         const storedData = secureLocalStorage.getItem("wallet");
 

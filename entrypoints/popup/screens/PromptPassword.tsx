@@ -1,12 +1,8 @@
 import {useContext, useEffect, useState} from 'react';
 import Input from "@/components/Input.tsx";
 import Button from "@/components/Button.tsx";
-import {getComponentStack, goTo} from "react-chrome-extension-router";
-import Header from "@/components/Header.tsx";
+import {goTo} from "react-chrome-extension-router";
 import * as React from "react";
-import secureLocalStorage  from  "react-secure-storage";
-import KeepWalletSecure from "./KeepWalletSecure.tsx";
-import Wallet from "@/entities/Wallet.ts";
 import {LockContext} from "@/contexts/LockContext.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 
@@ -30,6 +26,7 @@ function PromptPassword({nextComponent, callback}: {nextComponent?: any, callbac
                 callback();
             }
             if (nextComponent) {
+                console.log('Going to next component')
                 goTo(nextComponent);
             }
 
@@ -58,10 +55,11 @@ function PromptPassword({nextComponent, callback}: {nextComponent?: any, callbac
             <form onSubmit={checkPassword}>
                 <Input
                     onChange={(e) => setPassword(e.target.value)}
-                    type={"password"} autoComplete={"password"} id={"password"} label={"Password"} name={"password"} autoFocus={true}/>
+                    type={"password"} autoComplete={"password"} id={"password"} label={"Password"} name={"password"} autoFocus={true}
+                />
 
                 <Button onClick={() => checkPassword()} className={"mt-5"}>
-                    Next
+                    Unlock Wallet
                 </Button>
             </form>
         </>

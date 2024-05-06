@@ -21,6 +21,16 @@ function ShowMnemonic() {
                         return <span key={index} className="bg-gray-100 p-2 m-2 rounded">{word}</span>
                     })}
                 </div>
+                <Button onClick={() => {
+                    if(wallet?.getMnemonic()) {
+                        // @ts-ignore
+                        navigator.clipboard.writeText(wallet?.getMnemonic() ? wallet.getMnemonic().join(' ') : '');
+
+                        alert('Mnemonic copied to clipboard');
+                    }
+                }}>
+                    Copy to clipboard
+                </Button>
                 <Button onClick={() => goTo(Index)}>
                     Continue
                 </Button>
