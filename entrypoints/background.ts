@@ -19,6 +19,8 @@ export default defineBackground({
                         height: 600,
                         left: 0,
                         top: 0,
+                        focused: true,
+                        titlePreface: 'Carmentis Wallet',
                     }).then(() => {
                         console.log("Popup ouvert");
                     });
