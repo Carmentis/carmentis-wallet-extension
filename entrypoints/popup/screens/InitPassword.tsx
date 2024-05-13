@@ -6,9 +6,9 @@ import * as React from "react";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
+import Index from "@/entrypoints/popup/screens/Index.tsx";
 // @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
-import Index from "@/entrypoints/popup/screens/Index.tsx";
 
 function InitPassword() {
 
