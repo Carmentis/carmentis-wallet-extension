@@ -6,14 +6,15 @@
   "type": "module",
   "scripts": {
     "tailwind": "npx tailwindcss -i ./entrypoints/popup/input.css -o ./entrypoints/popup/output.css --watch",
-    "dev": "wxt",
-    "dev:firefox": "wxt -b firefox",
+    "dev": "wxt --mv3",
+    "dev:firefox": "wxt -b firefox --mv2",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "open:fake:web": "npx live-server --entry-file=tests/index.html"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.19",

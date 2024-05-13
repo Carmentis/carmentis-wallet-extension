@@ -16,7 +16,7 @@ export function useWallet(): [Wallet | null, (wallet: Wallet|null) => void] {
             return null;
         }
 
-        return new Wallet(response); // Adjust serialization logic as needed
+        return new Wallet(response);
     });
 
     const storeWallet = (wallet: Wallet|null) => {

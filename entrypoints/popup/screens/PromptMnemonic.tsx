@@ -59,9 +59,10 @@ function PromptMnemonic() {
 
     addEventListener("paste", (e) => {
         setTags(
+            e.clipboardData ?
             e.clipboardData.getData('text').split(' ').map((word: string) => {
                 return {id: (x++).toString(), text: word};
-            })
+            }) : []
         )
     });
 

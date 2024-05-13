@@ -1,13 +1,15 @@
 import * as React from 'react';
+import ReactDOM from 'react-dom/client';
 import {getComponentStack, Router} from 'react-chrome-extension-router';
 import Index from './screens/Index';
 import { LockContext } from "@/contexts/LockContext.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {createRoot} from "react-dom/client";
-import Wallet from "@/entities/Wallet.ts";
 import NoWallet from "@/entrypoints/popup/screens/NoWallet.tsx";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 import Header from "@/components/Header.tsx";
+import {CarmentisProvider} from "@/providers/CarmentisProvider.ts";
+import {browser} from "wxt/browser";
 
 const Start = ({wallet, isLocked}) => {
     if(wallet === null) {
@@ -20,11 +22,12 @@ const Start = ({wallet, isLocked}) => {
 
     return <Index />;
 };
-
 const App = () => {
     const [isLocked, setIsLocked] = React.useState(true);
     const [wallet, storeWallet] = useWallet();
     const valueLockedProvider = React.useMemo(() => ({ isLocked, setIsLocked }), [isLocked, setIsLocked]);
+    // @ts-ignore
+    //window['carmentis'] = new CarmentisProvider();
 
     return (
         <div className="flex min-h-full flex-1 flex-col justify-center py-24 lg:px-8 min-w-full w-25">
@@ -40,6 +43,8 @@ const App = () => {
     );
 };
 
-const container = document.getElementById('root');
-const root = createRoot(container!);
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+);

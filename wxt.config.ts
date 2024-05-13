@@ -10,6 +10,14 @@ export default defineConfig({
         chrome: '/Applications/Brave\\ Browser.app/Contents/MacOS/Brave\\ Browser',
         firefox: '/Applications/Firefox.app/Contents/MacOS/firefox',
       }
-    }
+    },
+    //externally_connectable: {
+    //  matches: ['*://*/*'],
+    //}
   }),
+  manifest: {
+    host_permissions: ['*://*/*'],
+    browser_action: {},
+    permissions: ['storage', 'tabs']
+  }
 });
