@@ -9,6 +9,7 @@ import {useWallet} from "@/hooks/useWallet.tsx";
 // @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import Index from "@/entrypoints/popup/screens/Index.tsx";
+import secureLocalStorage from "react-secure-storage";
 
 function InitPassword() {
 
@@ -35,13 +36,14 @@ function InitPassword() {
         if(!wallet) {
 
             const mnemonic:string[] = await Carmentis.generateWordList();
-            const masterKey = await Carmentis.deriveFromWordList(mnemonic);
+            const seed = await Carmentis.getSeedFromWordList(mnemonic);
+            const {encrypt, decrypt} = Carmentis.deriveKeyFromPassword(password);
 
-            const wallet = new Wallet({
-                password: password,
-                mnemonic: mnemonic,
-                masterKey: masterKey
-            });
+            const encryptedSeed = encrypt(seed);
+
+            secureLocalStorage.setItem('encryptedSeed', encryptedSeed);
+
+            const wallet = new Wallet({seed});
 
             console.log('Wallet created', wallet);
 

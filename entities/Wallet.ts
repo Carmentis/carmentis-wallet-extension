@@ -1,32 +1,26 @@
+// @ts-ignore
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 
 export default class Wallet {
-    private readonly masterKey?: string[];
-    private readonly mnemonic?: string[];
-    private password?: string;
+    private readonly seed: Uint8Array;
 
-    constructor({masterKey, password, mnemonic}: {masterKey?: string[], password?: string, mnemonic?: string[]}) {
-        this.password = password;
-        this.mnemonic = mnemonic;
-        this.masterKey = masterKey;
+    constructor({seed}: {seed: Uint8Array}) {
+        this.seed = seed;
     }
 
-    public getMasterPublicKey(): string | undefined {
-        return this.masterKey ? this.masterKey[0] : undefined;
+    public getSeed(): Uint8Array {
+        return this.seed;
     }
 
-    public getMasterPrivateKey(): string | undefined {
-        return this.masterKey ? this.masterKey[1] : undefined;
+    public async getMasterKey(): Promise<Uint8Array> {
+        return (await Carmentis.deriveKeyIdFromSeed(this.seed))[0];
     }
 
-    public getPassword(): string | undefined {
-        return this.password;
+    public async getChainlinkId(): Promise<Uint8Array> {
+        return (await Carmentis.deriveKeyIdFromSeed(this.seed))[1];
     }
 
-    public getMnemonic(): string[] | undefined {
-        return this.mnemonic;
-    }
-
-    public setPassword(password: string): void {
-        this.password = password;
+    public async getMnemonic(): Promise<string[]> {
+        return await Carmentis.generateWordListFromSeed(this.seed);
     }
 }
