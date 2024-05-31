@@ -10,14 +10,16 @@ import {useWallet} from "@/hooks/useWallet.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import Index from "@/entrypoints/popup/screens/Index.tsx";
 import secureLocalStorage from "react-secure-storage";
+import {sha256} from "js-sha256";
+import {retrieveWallet, SeedContext} from "@/contexts/SeedContext.tsx";
 
-function InitPassword() {
+function InitPassword(seed: Uint8Array) {
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [acceptRisk, setAcceptRisk] = useState(false);
 
-    const [wallet, storeWallet] = useWallet();
+    const {setEncryptedSeed} = useContext(SeedContext);
 
     async function savePassword() {
         if(password.length < 5) {
@@ -33,28 +35,22 @@ function InitPassword() {
             return;
         }
 
-        if(!wallet) {
-
             const mnemonic:string[] = await Carmentis.generateWordList();
             const seed = await Carmentis.getSeedFromWordList(mnemonic);
-            const {encrypt, decrypt} = Carmentis.deriveKeyFromPassword(password);
+            const pepper = await Carmentis.derivePepperFromSeed(seed, 1);
+            const account = await Carmentis.deriveAccountPrivateKey(pepper);
 
-            const encryptedSeed = encrypt(seed);
+            console.log(account);
 
-            secureLocalStorage.setItem('encryptedSeed', encryptedSeed);
+            const wallet = new Wallet({
+                seed: seed,
+                account: account
+            });
 
-            const wallet = new Wallet({seed});
 
-            console.log('Wallet created', wallet);
+        console.log('Wallet created', wallet);
 
-            storeWallet(wallet);
             goTo(KeepWalletSecure);
-        } else {
-            wallet.setPassword(password);
-            storeWallet(wallet);
-            goTo(Index)
-        }
-
     }
 
     return (

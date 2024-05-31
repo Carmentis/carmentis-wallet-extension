@@ -22,7 +22,7 @@ const delimiters = [KeyCodes.comma, KeyCodes.enter, KeyCodes.space];
 function PromptMnemonic() {
     const [tags, setTags] = useState<Tag[]>([]);
 
-    const [wallet, storeWallet] = useWallet();
+    const [wallet, storeSeed] = useWallet();
 
     const [isPasted, setIsPasted] = useState(false);
 
@@ -87,15 +87,9 @@ function PromptMnemonic() {
                     const mnemonic = tags.map(tag => tag.text);
                     console.log('Mnemonic', mnemonic)
                     const masterKey = Carmentis.deriveFromWordList(mnemonic);
+                    const seed = Carmentis.getSeedFromWordList(mnemonic);
 
-                    const wallet = new Wallet({
-                        password: '',
-                        mnemonic: mnemonic,
-                        masterKey: masterKey
-                    });
-
-                    storeWallet(wallet);
-                    goTo(InitPassword);
+                    goTo(InitPassword, {seed: seed});
                 }}>
                     Continue with existing wallet
                 </Button>

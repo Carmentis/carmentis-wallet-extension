@@ -11,7 +11,7 @@ import Confirm from "@/entrypoints/popup/screens/Confirm.tsx";
 
 
 function SettingsTab() {
-    const [wallet, storeWallet] = useWallet();
+    const [wallet, storeSeed] = useWallet();
 
     return (
         <>
@@ -29,9 +29,9 @@ function SettingsTab() {
                             description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
                         onConfirm: () => {
                         goTo(PromptPassword, {
-                            callback: () => {
+                            nextComponentParams: () => {
                                 console.log('Clearing wallet');
-                                storeWallet(null);
+                                storeSeed(null);
                                 secureLocalStorage.clear();
                             }, nextComponent: Index
                         });
@@ -45,21 +45,28 @@ function SettingsTab() {
                             description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
                             onConfirm: () => {
                                 goTo(PromptPassword, {
-                                    callback: () => {
+                                    nextComponentParams: () => {
                                         console.log('Clearing wallet');
-                                        storeWallet(null);
+                                        storeSeed(null);
                                         secureLocalStorage.clear();
                                     }, nextComponent: Index
                                 });
                             }
                         });
                      */
-                    goTo(PromptPassword, {callback: () => {
-                        console.log('Clearing wallet');
-                        storeWallet(null);
-                        secureLocalStorage.clear();
-                    }, nextComponent: Index});
-                } } className={"bg-red-500"}>
+
+
+                    goTo(Confirm, {
+                        title: "Reset wallet",
+                        description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
+                        onConfirm: () => {
+                            console.log('Clearing wallet');
+                            storeSeed(null, '');
+                            secureLocalStorage.clear();
+                            goTo(Index);
+                        }
+                    })
+                }} className={"bg-red-500"}>
                     Reset wallet
                 </Button>
 

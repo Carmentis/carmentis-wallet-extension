@@ -9,8 +9,12 @@
     </p>
         <script>
             document.getElementById('openExtensionPopup').addEventListener('click', function() {
+                console.log("window.carmentisWallet", window.carmentisWallet);
+                console.log("window.carmentisWallet.hello()", window.carmentisWallet.hello());
+
                 console.log('Ouverture du popup de l’extension');
                 window.postMessage({ event: "openPopupRequest" }, "*");
+
 
             });
         </script>

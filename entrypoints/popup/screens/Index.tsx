@@ -15,11 +15,12 @@ function Index() {
 
     const {isLocked, setIsLocked} = useContext(LockContext);
 
-    const [wallet, storeWallet] = useWallet();
+    const [wallet, storeSeed] = useWallet();
 
     useEffect(() => {
-        if(wallet === null) {
-            console.log('Wallet does not exist', wallet);
+        console.log(wallet)
+        if(wallet === null || wallet === undefined) {
+            console.log('Wallet does not exist');
             return goTo(NoWallet);
         }
 

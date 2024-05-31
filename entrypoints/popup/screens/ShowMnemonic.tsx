@@ -1,32 +1,47 @@
 import Button from "@/components/Button.tsx";
 import * as React from "react";
-import {useWallet} from "@/hooks/useWallet.tsx";
 import Index from "@/entrypoints/popup/screens/Index.tsx";
 import {goTo} from "react-chrome-extension-router";
+import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
+import {useContext} from "react";
+import {SeedContext} from "@/contexts/SeedContext.tsx";
+import {useWallet} from "@/hooks/useWallet.tsx";
 
 
-function ShowMnemonic() {
+async function ShowMnemonic({password}: {password: string|undefined|null}) {
 
-    const [wallet, storeWallet] = useWallet();
+    const [wallet, storeSeed] = useWallet();
+
+    if(!password === null) {
+        goTo(PromptPassword, {nextComponent: ShowMnemonic, nextComponentParams: {password: password}});
+        return null;
+    }
 
     return (
         <>
+            {
+                !password ? goTo(PromptPassword, {nextComponent: ShowMnemonic, nextComponentParams: {password: password}}) : null
+            }
             <div>
 
                 <p>
                     Write down these words in the correct order and keep them safe. You will need them to recover your wallet.
                 </p>
                 <div className={"w-1/2 mb-5"}>
-                    {wallet?.getMnemonic()?.map((word, index) => {
+                    {password && wallet && (await wallet.getMnemonic(password))?.map((word, index) => {
                         return <span key={index} className="bg-gray-100 p-2 m-2 rounded">{word}</span>
                     })}
                 </div>
-                <Button onClick={() => {
-                    if(wallet?.getMnemonic()) {
-                        // @ts-ignore
-                        navigator.clipboard.writeText(wallet?.getMnemonic() ? wallet.getMnemonic().join(' ') : '');
+                <Button onClick={async () => {
+                    if(password) {
+                        const mnemonics = await wallet?.getMnemonic(password);
 
-                        alert('Mnemonic copied to clipboard');
+                        if(mnemonics) {
+                            // @ts-ignore
+                            navigator.clipboard.writeText(wallet?.getMnemonic(password) ? wallet.getMnemonic(password).join(' ') : '');
+
+                            alert('Mnemonic copied to clipboard');
+                        }
                     }
                 }}>
                     Copy to clipboard

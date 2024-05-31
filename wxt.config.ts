@@ -18,6 +18,7 @@ export default defineConfig({
   manifest: {
     host_permissions: ['*://*/*'],
     browser_action: {},
-    permissions: ['storage', 'tabs']
+    permissions: ['storage', 'tabs'],
+    web_accessible_resources: ['carmentis-wallet.js']
   }
 });

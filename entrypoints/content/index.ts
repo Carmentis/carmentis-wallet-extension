@@ -1,8 +1,13 @@
 import {browser} from "wxt/browser";
 
+// @ts-ignore
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
+import {useWallet} from "@/hooks/useWallet.tsx";
+
 export default defineContentScript({
     matches: ['*://*/*'],
     async main(ctx) {
+
         console.log('Hello content.');
 
         const port = browser.runtime.connect({ name: 'example' });
@@ -11,12 +16,7 @@ export default defineContentScript({
         });
 
         window.addEventListener('message', async (event) => {
-            console.log("Message reçu in content :", event)
-            // Assurez-vous que le message vient de la source attendue
-            /*browser.runtime.sendMessage(event.data).then((response) => {
-                console.log('Popup response:', response);
-            });*/
-            //port.postMessage("openPopupRequest");
+            console.log("Message reçu in content :", event);
             port.postMessage(event.data);
         });
 
@@ -34,14 +34,33 @@ export default defineContentScript({
             const ui = createIntegratedUi(ctx, {
             position: 'inline',
             onMount: (container) => {
+                //const [wallet, storeSeed] = useWallet();
                 // Append children to the container
                 const app = document.createElement('p');
                 app.textContent = 'Carmentis Wallet installed';
+
+                /*var s = document.createElement('script');
+                s.type = 'module';
+                s.src = browser.runtime.getURL('/carmentis-wallet.js');
+                //s.onload = function() { this.remove(); };
+// see also "Dynamic values in the injected code" section in this answer
+                (document.head || document.documentElement).appendChild(s);
+*/
+                const script = document.createElement('script');
+                script.textContent = `
+const CarmentisWallet = class {
+    hello = function () {
+        console.log('Hello from Carmentis Wallet!');
+    }
+};
+window.carmentisWallet = new CarmentisWallet;`;
+                app.append(script);
+
                 container.append(app);
             },
-        });
+});
 
-        // Call mount to add the UI to the DOM
-        ui.mount();
-    },
+// Call mount to add the UI to the DOM
+ui.mount();
+},
 });

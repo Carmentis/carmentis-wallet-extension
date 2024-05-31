@@ -5,33 +5,31 @@ import {goTo} from "react-chrome-extension-router";
 import * as React from "react";
 import {LockContext} from "@/contexts/LockContext.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
+import {SeedContext} from "@/contexts/SeedContext.tsx";
+import Wallet from "@/entities/Wallet.ts";
 
-function PromptPassword({nextComponent, callback}: {nextComponent?: any, callback?:any}) {
+function PromptPassword({nextComponent, nextComponentParams}: {nextComponent?: any, nextComponentParams?:any}) {
 
     const [password, setPassword] = useState('');
 
     const {isLocked, setIsLocked} = useContext(LockContext);
-    const [wallet, storeWallet] = useWallet();
+    const {wallet, storeSeed} = useContext(SeedContext);
 
-    function checkPassword() {
+    async function checkPassword() {
 
-        console.log(wallet, typeof wallet, wallet?.getPassword(), password);
+        console.log(wallet, typeof wallet, wallet, password, "sdsdsd");
 
-        if(wallet?.getPassword() === password) {
+        if(await ((wallet as Wallet).checkPassword(nextComponentParams?.password))) {
             console.log('Wallet unlocked');
             setIsLocked(false);
 
-            if (callback) {
-                console.log('Calling callback')
-                callback();
-            }
             if (nextComponent) {
-                console.log('Going to next component')
-                goTo(nextComponent);
+                console.log('Going to next component ', nextComponent, ' with params ', nextComponentParams);
+                goTo(nextComponent, nextComponentParams);
             }
 
         }else{
-            setIsLocked(true);
+            //setIsLocked(true);
             alert('Incorrect password');
         }
     }
@@ -39,11 +37,13 @@ function PromptPassword({nextComponent, callback}: {nextComponent?: any, callbac
     useEffect(() => {
         console.log('Checking if wallet is locked', isLocked)
         if(!isLocked || !wallet) {
-            if (callback) {
-                console.log('Calling callback')
-                callback();
+            if(!wallet) {
+                console.warn('Wallet not found');
             }
-            goTo(nextComponent);
+            if (nextComponent) {
+                console.log('Going to next component ', nextComponent, ' with params ', nextComponentParams);
+                goTo(nextComponent, nextComponentParams);
+            }
         }
     }, []);
 
