@@ -5,13 +5,13 @@ import {getComponentStack, goTo} from "react-chrome-extension-router";
 import * as React from "react";
 import KeepWalletSecure from "./KeepWalletSecure.tsx";
 import Wallet from "@/entities/Wallet.ts";
-import {useWallet} from "@/hooks/useWallet.tsx";
 // @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import Index from "@/entrypoints/popup/screens/Index.tsx";
 import secureLocalStorage from "react-secure-storage";
 import {sha256} from "js-sha256";
-import {retrieveWallet, SeedContext} from "@/contexts/SeedContext.tsx";
+import {retrieveWallet} from "@/hooks/retrieveWallet.tsx";
+import {useLocalStorage} from "@uidotdev/usehooks";
 
 function InitPassword(seed: Uint8Array) {
 
@@ -19,7 +19,7 @@ function InitPassword(seed: Uint8Array) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [acceptRisk, setAcceptRisk] = useState(false);
 
-    const {setEncryptedSeed} = useContext(SeedContext);
+    const [encryptedSeed, setEncryptedSeed] = useLocalStorage('encryptedSeed', '');
 
     async function savePassword() {
         if(password.length < 5) {
@@ -40,15 +40,10 @@ function InitPassword(seed: Uint8Array) {
             const pepper = await Carmentis.derivePepperFromSeed(seed, 1);
             const account = await Carmentis.deriveAccountPrivateKey(pepper);
 
-            console.log(account);
+            const {encrypt} = await Carmentis.deriveAesKeyFromPassword(password);
+            const encryptedSeed = await encrypt(seed);
 
-            const wallet = new Wallet({
-                seed: seed,
-                account: account
-            });
-
-
-        console.log('Wallet created', wallet);
+            setEncryptedSeed(encryptedSeed.toString());
 
             goTo(KeepWalletSecure);
     }

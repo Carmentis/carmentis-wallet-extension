@@ -11,7 +11,7 @@ export default class Wallet {
     }
 
     public async checkPassword(password: string): Promise<boolean> {
-        const {encrypt, decrypt} = Carmentis.deriveAesKeyFromPassword(password);
+        const {encrypt, decrypt} = await Carmentis.deriveAesKeyFromPassword(password);
 
         const seed = decrypt(this.encryptedSeed);
 

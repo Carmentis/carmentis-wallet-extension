@@ -5,13 +5,16 @@ import secureLocalStorage from "react-secure-storage";
 import Index from "@/entrypoints/popup/screens/Index.tsx";
 import {goTo} from "react-chrome-extension-router";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
-import {useWallet} from "@/hooks/useWallet.tsx";
 import ShowMnemonic from "@/entrypoints/popup/screens/ShowMnemonic.tsx";
 import Confirm from "@/entrypoints/popup/screens/Confirm.tsx";
+import {retrieveWallet} from "@/hooks/retrieveWallet.tsx";
+import {useLocalStorage} from "@uidotdev/usehooks";
 
 
 function SettingsTab() {
-    const [wallet, storeSeed] = useWallet();
+    const wallet = retrieveWallet();
+    const [encryptedSeed, setEncryptedSeed] = useLocalStorage<string>('encryptedSeed', '');
+
 
     return (
         <>
@@ -55,17 +58,19 @@ function SettingsTab() {
                         });
                      */
 
+                    console.log('Clearing wallet');
+                    window.localStorage.clear();
+                    goTo(Index);
 
-                    goTo(Confirm, {
+                    /*goTo(Confirm, {
                         title: "Reset wallet",
                         description: "Are you sure you want to reset your wallet? This will delete all your data and you will need to recover your wallet using your mnemonic phrase.",
                         onConfirm: () => {
                             console.log('Clearing wallet');
-                            storeSeed(null, '');
-                            secureLocalStorage.clear();
+                            window.localStorage.clear();
                             goTo(Index);
                         }
-                    })
+                    })*/
                 }} className={"bg-red-500"}>
                     Reset wallet
                 </Button>

@@ -1,13 +1,13 @@
 import {useState} from "react";
 import Button from "@/components/Button.tsx";
 import Header from "@/components/Header.tsx";
-import {useWallet} from "@/hooks/useWallet.tsx";
 import {Tag, WithContext as ReactTags} from 'react-tag-input';
 // @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import Wallet from "@/entities/Wallet.ts";
 import {goTo} from "react-chrome-extension-router";
 import InitPassword from "@/entrypoints/popup/screens/InitPassword.tsx";
+import {retrieveWallet} from "@/hooks/retrieveWallet.tsx";
 
 
 
@@ -22,7 +22,7 @@ const delimiters = [KeyCodes.comma, KeyCodes.enter, KeyCodes.space];
 function PromptMnemonic() {
     const [tags, setTags] = useState<Tag[]>([]);
 
-    const [wallet, storeSeed] = useWallet();
+    const wallet = retrieveWallet();
 
     const [isPasted, setIsPasted] = useState(false);
 

@@ -4,26 +4,21 @@ import Index from "@/entrypoints/popup/screens/Index.tsx";
 import {goTo} from "react-chrome-extension-router";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 import {useContext} from "react";
-import {SeedContext} from "@/contexts/SeedContext.tsx";
-import {useWallet} from "@/hooks/useWallet.tsx";
+import {retrieveWallet} from "@/hooks/retrieveWallet.tsx";
 
 
 async function ShowMnemonic({password}: {password: string|undefined|null}) {
 
-    const [wallet, storeSeed] = useWallet();
+    const wallet = retrieveWallet();
 
-    if(!password === null) {
+    if(password === null || password === undefined) {
         goTo(PromptPassword, {nextComponent: ShowMnemonic, nextComponentParams: {password: password}});
         return null;
     }
 
     return (
         <>
-            {
-                !password ? goTo(PromptPassword, {nextComponent: ShowMnemonic, nextComponentParams: {password: password}}) : null
-            }
             <div>
-
                 <p>
                     Write down these words in the correct order and keep them safe. You will need them to recover your wallet.
                 </p>

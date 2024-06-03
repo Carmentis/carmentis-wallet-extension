@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
 export default function Confirm({ title, description, onConfirm }: { title: string, description: string, onConfirm: () => void}) {
+    console.log('Confirming')
     const [open, setOpen] = useState(true)
 
     const cancelButtonRef = useRef(null)

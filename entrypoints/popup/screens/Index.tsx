@@ -8,14 +8,16 @@ import secureLocalStorage from "react-secure-storage";
 import Wallet from "@/entities/Wallet.ts";
 import PromptPassword from "@/entrypoints/popup/screens/PromptPassword.tsx";
 import {LockContext} from "@/contexts/LockContext.tsx";
-import {useWallet} from "@/hooks/useWallet.tsx";
 import {render} from "react-dom";
+import {retrieveWallet} from "@/hooks/retrieveWallet.tsx";
 
 function Index() {
 
     const {isLocked, setIsLocked} = useContext(LockContext);
 
-    const [wallet, storeSeed] = useWallet();
+    const wallet = retrieveWallet();
+
+    console.log(wallet)
 
     useEffect(() => {
         console.log(wallet)

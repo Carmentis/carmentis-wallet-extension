@@ -7,7 +7,7 @@
   "scripts": {
     "tailwind": "npx tailwindcss -i ./entrypoints/popup/input.css -o ./entrypoints/popup/output.css --watch",
     "dev": "wxt --mv3",
-    "dev:firefox": "wxt -b firefox --mv2",
+    "dev:firefox": "wxt -b firefox --mv3",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
@@ -27,7 +27,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.0",
     "react-secure-storage": "^1.3.2",
-    "react-tag-input": "^6.9.0"
+    "react-tag-input": "^6.9.0",
+    "@uidotdev/usehooks": "^2.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.46",

@@ -2,7 +2,6 @@ import {browser} from "wxt/browser";
 
 // @ts-ignore
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {useWallet} from "@/hooks/useWallet.tsx";
 
 export default defineContentScript({
     matches: ['*://*/*'],
@@ -34,7 +33,7 @@ export default defineContentScript({
             const ui = createIntegratedUi(ctx, {
             position: 'inline',
             onMount: (container) => {
-                //const [wallet, storeSeed] = useWallet();
+                //const wallet = retrieveWallet();
                 // Append children to the container
                 const app = document.createElement('p');
                 app.textContent = 'Carmentis Wallet installed';
