@@ -7,7 +7,7 @@
   "scripts": {
     "tailwind": "npx tailwindcss -i ./entrypoints/popup/input.css -o ./entrypoints/popup/output.css --watch",
     "dev": "wxt --mv3",
-    "dev:firefox": "wxt -b firefox --mv3",
+    "dev:firefox": "wxt -b firefox --mv2",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
