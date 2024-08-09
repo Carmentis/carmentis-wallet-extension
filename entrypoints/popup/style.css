@@ -1,5 +1,5 @@
 body {
-  min-width: 400px;
+  min-width: 300px;
   min-height: 1000vh;
 }
 
@@ -41,7 +41,9 @@ body {
 }
 #_app_wrapper {
   position: absolute;
-  width: 355px;
+  top: -20px;
+  left: -20px;
+  width: 300px;
   height: 700px;
   /*background-image: url(/assets/img/phone.png);*/
   z-index: 1000;

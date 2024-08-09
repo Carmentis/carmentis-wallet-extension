@@ -1,6 +1,6 @@
 import './style.css';
 import '@/public/assets/vendor/bootstrap-icons/bootstrap-icons.css';
-import * as Carmentis from './carmentis-node-sdk.js';
+import * as Carmentis from '../../lib/carmentis-server-sdk.js';
 import * as storage     from "./storage.js";
 
 console.log("Carmentis", Carmentis);

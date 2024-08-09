@@ -1,4 +1,4 @@
-import * as Carmentis   from './carmentis-node-sdk.js';
+import * as Carmentis   from '../../lib/carmentis-server-sdk.js';
 
 const fileSystem = Carmentis.util.fileSystem;
 
