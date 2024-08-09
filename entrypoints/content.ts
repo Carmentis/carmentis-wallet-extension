@@ -4,13 +4,13 @@ export default defineContentScript({
     console.log('Hello content.');
 
     const port = browser.runtime.connect({name: 'carmentis-wallet'});
-    port.onMessage.addListener((message) => {
+    browser.runtime.onMessage.addListener(async (message) => {
       console.log('content received:', message);
     });
 
-    window.addEventListener('message', async (event) => {
-      console.log("Message reçu in content :", event);
-      port.postMessage(event.data);
+    window.addEventListener('message', async (message) => {
+      console.log("Message reçu in content :", message);
+      port.postMessage(message.data);
     });
 
 
@@ -40,20 +40,33 @@ export default defineContentScript({
 */
         const script = document.createElement('script');
         script.textContent = `
-const CarmentisWallet = class {
-    hello = function () {
-        console.log('Hello from Carmentis Wallet!');
-    },
-    input(data) {
-        console.log('Input to Carmentis Wallet:', data);
-        
-    }
-};
-window.carmentisWallet = new CarmentisWallet;`;
+try {
+  const CarmentisWallet = class {
+      test = function () {
+          console.log('This is a test message from window.carmentisWallet');
+      }
+      
+      openPopup = function (data) {
+          console.log('Input to Carmentis Wallet:', data);
+          window.postMessage({ event: "input", data }, "*");
+      }
+  };
+  
+  
+  if(!window.carmentisWallet) {
+    window.carmentisWallet = new CarmentisWallet;
+  };
+} catch (e) {
+  console.warn('Carmentis Wallet already defined');
+}
+`;
+
         app.append(script);
 
         container.append(app);
       },
     });
+
+    ui.mount();
   }
 });

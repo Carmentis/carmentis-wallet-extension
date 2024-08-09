@@ -11,7 +11,12 @@
 <script>
     document.getElementById('openExtensionPopup').addEventListener('click', function() {
         console.log('Ouverture du popup de l’extension');
-        window.postMessage({ event: "openPopupRequest" }, "*");
+        if(window.carmentisWallet) {
+            window.carmentisWallet.test();
+            window.carmentisWallet.openPopup("lorem ipsum");
+        } else {
+            console.error('L’extension Carmentis Wallet n’est pas installée');
+        }
 
     });
 </script>
