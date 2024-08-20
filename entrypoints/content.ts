@@ -9,8 +9,8 @@ export default defineContentScript({
     });
 
     window.addEventListener('message', async (message) => {
-      console.log("Message reçu in content :", message);
-      port.postMessage(message.data);
+      console.log("Standard message reçu in content :", message);
+      port.postMessage(message.data); //sent to background
     });
 
 
@@ -48,7 +48,7 @@ try {
       
       openPopup = function (data) {
           console.log('Input to Carmentis Wallet:', data);
-          window.postMessage({ event: "input", data }, "*");
+          window.postMessage({ function: "processQRCode", data }, "*");
       }
   };
   
