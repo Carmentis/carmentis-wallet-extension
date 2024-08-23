@@ -29,19 +29,15 @@ export default defineBackground({
             focused: true
           }).then(() => {
             console.log("Popup opened", message.data);
-            setTimeout(() => {
-              console.log("Sending message to popup");
-              browser.runtime.sendMessage({
-                function: message.function,
-                data: message.data
-              });
-              //window.postMessage({request: "toto", type: "message"}, "*");
-            }, 1000);
-            /*CarmentisApp.processQRCode(message.data).then(() => {
-              console.log("QRCode traité");
-            }).catch((error:any) => {
-                console.error("Erreur de traitement du QRCode", error);
-            });*/
+            if(message.data !== undefined) {
+              setTimeout(() => {
+                console.log("Sending message to popup");
+                browser.runtime.sendMessage({
+                  function: message.function,
+                  data: message.data
+                });
+              }, 1000);
+            }
           });
         }
       });
