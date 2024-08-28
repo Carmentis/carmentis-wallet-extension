@@ -3,8 +3,15 @@ import { defineConfig } from 'wxt';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     manifest: {
+        name: 'Carmentis Wallet',
+        version: '0.1.0',
+        description: 'Carmentis Wallet',
         host_permissions: ['*://*/*'],
         browser_action: {},
-        permissions: ['storage', 'tabs']
+        permissions: ['storage', 'tabs'],
+        web_accessible_resources: [{
+            resources: ['vendor/carmentis-wallet-init.js'],
+            matches: ['<all_urls>'],
+        }],
     }
 });

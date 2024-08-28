@@ -47,13 +47,14 @@ export default defineBackground({
             }).then((tab) => {
               console.log("Tab opened", tab);
               setTimeout(() => {
-                const windows = browser.extension.getViews({type: "popup"});
+                /*const windows = browser.extension?.getViews({type: "popup"});
                 if (windows.length) {
                   console.log("Closing popup");
                   //windows[0].close(); // Normally, there shouldn't be more than 1 popup
                 } else {
                   console.log("There was no popup to close");
                 }
+                 */
                 console.log("Posting message to tab ?");
                 if (tab.id != null) {
                   browser.tabs.sendMessage(tab.id, {

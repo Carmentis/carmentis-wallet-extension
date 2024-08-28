@@ -38,32 +38,11 @@ export default defineContentScript({
 // see also "Dynamic values in the injected code" section in this answer
         (document.head || document.documentElement).appendChild(s);
 */
-        const script = document.createElement('script');
-        script.textContent = `
-try {
-  const CarmentisWallet = class {
-      test = function () {
-          console.log('This is a test message from window.carmentisWallet');
-      }
-      
-      openPopup = function (data) {
-          console.log('Input to Carmentis Wallet:', data);
-          window.postMessage({ function: "processQRCode", data }, "*");
-      }
-  };
-  
-  
-  if(!window.carmentisWallet) {
-    window.carmentisWallet = new CarmentisWallet;
-  };
-} catch (e) {
-  console.warn('Carmentis Wallet already defined');
-}
-`;
+          const script = document.createElement('script');
+          script.type = 'module'; // Optional, if using ES6 modules
+          script.src = browser.runtime.getURL('/vendor/carmentis-wallet-init.js');
+          container.append(script);
 
-        app.append(script);
-
-        container.append(app);
       },
     });
 

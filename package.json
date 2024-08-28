@@ -8,7 +8,7 @@
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
-    "build:firefox": "wxt build -b firefox",
+    "build:firefox": "wxt build -b firefox --mv 3",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "typescript": "^5.5.4",
-    "wxt": "^0.19.1",
+    "wxt": "0.19.6",
     "live-server": "^1.2.2"
   }
 }
