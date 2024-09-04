@@ -21,7 +21,7 @@ export default defineBackground({
             console.log("Popup request");
 
             browser.windows.create({
-              url: './popup.html',
+              url: './main.html',
               type: 'popup',
               width: 400,
               height: 600,
