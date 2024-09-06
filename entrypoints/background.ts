@@ -6,7 +6,7 @@ export default defineBackground({
   persistent: true,
   main() {
     console.log('Hello background!', {id: browser.runtime.id});
-    //CarmentisApp.initialize();
+    CarmentisApp.initialize({isBackground: true});
 
 //    browser.storage.session.set({key: 'value'}).then(() => {
 
