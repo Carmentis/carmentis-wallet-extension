@@ -8,7 +8,13 @@ export default defineConfig({
         description: 'Carmentis Wallet',
         host_permissions: ['*://*/*'],
         browser_action: {},
-        permissions: ['storage', 'tabs'],
+        permissions: [
+            'storage',
+            'tabs',
+            'webRequest',
+            'webRequestBlocking',
+            'webNavigation',
+        ],
         web_accessible_resources: [{
             resources: ['vendor/carmentis-wallet-init.js'],
             matches: ['<all_urls>'],
