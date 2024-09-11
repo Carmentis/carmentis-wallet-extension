@@ -377,9 +377,9 @@ p {
   transform: translate(-50%, -50%);
 }
 
-.carousel-item {
+/*.carousel-item {
   display: block !important;
   position: relative;
   text-align: center;
   background-color: #f8f9fa;
-}
+}*/
