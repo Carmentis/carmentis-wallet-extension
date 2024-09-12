@@ -383,3 +383,42 @@ p {
   text-align: center;
   background-color: #f8f9fa;
 }*/
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  border-radius: 50%; /* Circular shape */
+  width: 50px;
+  height: 50px;
+}
+
+.carousel-control-prev-icon:hover,
+.carousel-control-next-icon:hover {
+  background-color: rgba(0, 0, 0, 0.8); /* Darker on hover */
+}
+
+/* Custom styles for carousel indicators */
+.carousel-indicators li {
+  background-color: #06b57b; /* Custom color */
+}
+
+.carousel-indicators .active {
+  background-color: #034d3a; /* Darker shade for active indicator */
+}
+
+/* Modal content styling */
+.modal-content {
+  border: 2px solid #06b57b; /* Custom border color */
+}
+
+.modal-header {
+  background-color: #f8f9fa; /* Light background for header */
+}
+
+.modal-title {
+  color: #06b57b; /* Custom title color */
+}
+
+.modal-footer {
+  background-color: #f8f9fa; /* Light background for footer */
+}

@@ -10,11 +10,11 @@
   </head>
   <body>
   <!-- Modale Bootstrap 5 -->
-  <div class="modal fade" id="microblockModal" tabindex="-1" aria-labelledby="microblockModalLabel" aria-hidden="true">
+  <div class="modal fade" id="microblockModal" tabindex="-1" aria-labelledby="microblockModalTitle" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="microblockModalLabel">Microblock Details</h5>
+          <h5 class="modal-title" id="microblockModalTitle">Microchain Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="microblockModalBody">
@@ -32,8 +32,14 @@
                     <span class="visually-hidden">Next</span>
                   </button>
                 </div>
-                <div id="_app_event_summary">
+                <div style="border: #06b57b solid 3px; padding: 3px">
+                  <div id="_app_event_summary" ></div>
+                  <div id="_app_event_status">
 
+                  </div>
+                  <div id="_app_event_details">
+
+                  </div>
                 </div>
         </div>
         <div class="modal-footer">
