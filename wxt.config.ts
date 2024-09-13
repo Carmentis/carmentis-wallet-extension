@@ -12,7 +12,6 @@ export default defineConfig({
             'storage',
             'tabs',
             'webRequest',
-            'webRequestBlocking',
             'webNavigation',
         ],
         web_accessible_resources: [{

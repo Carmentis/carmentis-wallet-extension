@@ -1,3 +1,4 @@
+console.log('Hello content script.');
 export default defineContentScript({
   matches: ['*://*/*'],
   main(ctx) {
@@ -26,10 +27,12 @@ export default defineContentScript({
     const ui = createIntegratedUi(ctx, {
       position: 'inline',
       onMount: (container) => {
+        console.log('Carmentis Wallet mounted');
         //const wallet = retrieveWallet();
         // Append children to the container
         const app = document.createElement('p');
         app.textContent = 'Carmentis Wallet installed';
+        console.log('Carmentis Wallet installed')
 
         /*var s = document.createElement('script');
         s.type = 'module';
