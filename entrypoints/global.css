@@ -20,14 +20,20 @@
     }
 
     .words-row {
-        @apply flex flex-row gap-2;
+        @apply flex flex-row gap-4 mb-4;
     }
 
     .word-group {
-        @apply flex flex-row;
+        @apply flex flex-row justify-center items-center;
     }
 
     .word-input {
-        @apply border-2 border-gray-200 rounded-md;
+        @apply border-2 ring-green-300 rounded-lg p-1;
+    }
+
+
+
+    .word-group label {
+        @apply p-1 w-6;
     }
 }
