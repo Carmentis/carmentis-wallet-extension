@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .btn-primary {
+        @apply py-2 px-5  text-gray-800 font-semibold rounded-full shadow-md focus:outline-none focus:ring focus:ring-opacity-75;
+    }
+
+    .btn-highlight {
+        @apply bg-green-400;
+    }
+
+    .title {
+        @apply text-2xl font-extrabold dark:text-white mb-2;
+    }
+
+    input {
+        @apply focus:ring-green-400;
+    }
+
+    .words-row {
+        @apply flex flex-row gap-2;
+    }
+
+    .word-group {
+        @apply flex flex-row;
+    }
+
+    .word-input {
+        @apply border-2 border-gray-200 rounded-md;
+    }
+}
