@@ -124,7 +124,7 @@ export function PasswordCreation() {
                 </div>
                 { activeForm && !consent &&
                     <p className="mt-2 text-pink-600">
-                        Accept the incapacity for Carmentis to recover your password.
+                        Accept that Carmentis cannot help yout to recover your password.
                     </p>
                 }
             </div>

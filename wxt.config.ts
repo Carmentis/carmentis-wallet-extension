@@ -13,6 +13,7 @@ export default defineConfig({
       'tabs',
       'webRequest',
       'webNavigation',
+      'clipboard'
     ],
     web_accessible_resources: [{
       resources: ['vendor/carmentis-wallet-init.js'],
