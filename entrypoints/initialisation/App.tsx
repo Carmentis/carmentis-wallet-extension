@@ -1,5 +1,4 @@
 import {useState} from 'react';
-import './App.css';
 import {PasswordCreation} from "./components/PasswordCreation.tsx"
 import {Home} from "@/entrypoints/initialisation/components/Home.tsx";
 import {Route, Routes, useNavigate} from "react-router";
@@ -38,5 +37,6 @@ function App() {
     );
 
 }
+
 
 export default App;
