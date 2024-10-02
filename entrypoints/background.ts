@@ -30,7 +30,7 @@ export default defineBackground({
       if ( reason === "install" ) {
         browser.tabs.create({url: "./initialisation.html"});
       }
-    })
+    });
 
 
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -38,17 +38,11 @@ export default defineBackground({
         if (message.location == "main") {
           browser.tabs.create({url: "./main.html"});
         }
+
+        if (message.location == "onboarding") {
+          browser.tabs.create({url: "./initialisation.html"});
+        }
       }
-
-      if (message.action == "new-tab") {
-        launchExtensionOnTab()
-      } else {
-        console.error(`undefined required action: ${message.action}`)
-      }
-
-
-    })
-
-
+    });
   }
 });

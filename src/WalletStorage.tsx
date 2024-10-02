@@ -1,15 +1,27 @@
-import {EncryptedWalletContext, WalletContext} from "@/src/WalletContext.tsx";
-import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
+import {WalletContext} from "@/src/WalletContext.tsx";
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
 import {SecretEncryptionKey} from "@/src/SecretEncryptionKey.tsx";
 import {StorageItem} from "webext-storage";
-import {wallet} from "@/lib/carmentis-nodejs-sdk";
 
 const ENCRYPTED_SEED_STORAGE = "encryptedSeed"
 export class SecureWalletStorage {
 
 
     constructor( private readonly secretKey : SecretEncryptionKey) {
+
+    }
+
+    static async IsEmpty() : Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_SEED_STORAGE);
+            options.get().then(bytes => {
+                console.log("[Storage:isEmpty] then: ", bytes)
+                resolve(bytes === undefined || bytes.ENCRYPTED_SEED_STORAGE === undefined)
+            }).catch(err => {
+                console.error(`[Storage:IsEmpty] catch: ${err}`);
+                reject(err)
+            });
+        })
 
     }
 

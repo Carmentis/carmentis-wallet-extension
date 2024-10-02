@@ -2,8 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './style.css';
-
-console.log("main.tsx from popup called")
+import {HashRouter} from "react-router-dom";
+import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
+import background from "@/entrypoints/background.ts";
 
 function launchExtensionOnTab() {
     const extensionId = browser.runtime.id;
@@ -24,14 +25,22 @@ function launchExtensionOnTab() {
     });
 }
 
-
-launchExtensionOnTab();
-
-if (false) {
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-        <React.StrictMode>
-            <App/>
-        </React.StrictMode>,
-    );
-
+// if no wallet is defined
+console.log("popup executed")
+let emptyWallet = await SecureWalletStorage.IsEmpty();
+if (emptyWallet) {
+    browser.runtime.sendMessage({
+        action: "open",
+        location: "onboarding"
+    })
 }
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <HashRouter>
+            <App/>
+        </HashRouter>
+    </React.StrictMode>,
+);
+
+
