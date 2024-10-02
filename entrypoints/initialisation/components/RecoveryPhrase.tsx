@@ -1,5 +1,7 @@
-import * as Carmentis from "../../../lib/carmentis-nodejs-sdk.js";
-import React, {useState} from "react";
+
+import React, {Component, useEffect, useState} from "react";
+import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
+import {useLocation, useNavigate} from "react-router";
 
 /**
  * Generate a random number included between the two provided (included) bounds.
@@ -14,7 +16,8 @@ function randomIntFromInterval(min : number, max : number) {
 }
 
 // generate a list of words
-const wordsList = Carmentis.generateWordList(12)
+const provider = new CarmentisProvider();
+const wordsList = provider.generateWords()
 
 // generate three random numbers corresponding to the list of
 let a = 0;
@@ -26,8 +29,20 @@ do {
     c = randomIntFromInterval(0, 11);
 } while (a == b || b == c || a == c);
 let challengeIndexes = [a,b,c];
-
 export function RecoveryPhrase() {
+    // this component should be called from password definition, meaning that a password is sent as a parameter.
+    // to access it, we use the location variable of react routing. If no password is provided, we back to the password
+    // creation page
+    const navigate = useNavigate();
+    const location = useLocation()
+    if (!location.state || !location.state.password) {
+
+        console.log("No password defined: go to password creation")
+        useEffect(() => {
+            navigate("/create-password");
+        });
+    }
+
     // create a list of states
     let wordStates: string[] = [];
     let setWords = [];
@@ -111,10 +126,18 @@ export function RecoveryPhrase() {
     /**
      * Function executed when the user click on the "Continue" button once the challenge is completed.
      */
-    function onChallengeCompleted() {
+    async function onChallengeCompleted() {
         // check that the challenge is indeed completed!
         if (isChallengeComplete()) {
-            // TODO store the seed
+            // generate an encrypted seed
+            let seed = await provider.generateSeed(wordsList);
+            navigate("/setup-wallet", {
+                state: {
+                    password: location.state.password,
+                    seed: seed,
+                }
+            })
+
         }
     }
 

@@ -1,9 +1,14 @@
-import {useState} from 'react';
+import {useContext, useState} from 'react';
 import {PasswordCreation} from "./components/PasswordCreation.tsx"
 import {Home} from "@/entrypoints/initialisation/components/Home.tsx";
 import {Route, Routes, useNavigate} from "react-router";
 import {BrowserRouter} from "react-router-dom";
 import {RecoveryPhrase} from "@/entrypoints/initialisation/components/RecoveryPhrase.tsx";
+import {SetupWallet} from "@/entrypoints/initialisation/components/SetupWallet.tsx";
+
+// define the password and seed that need to be
+let password : string | undefined = undefined;
+let seed : string  | undefined = undefined;
 
 
 function App() {
@@ -23,8 +28,9 @@ function App() {
 
                             <Routes>
 
-                                <Route path="/create-password" element={< PasswordCreation/>}></Route>
-                                <Route path="/recovery-phrase" element={< RecoveryPhrase/>}></Route>
+                                <Route path="/create-password" element={< PasswordCreation />}></Route>
+                                <Route path="/recovery-phrase" element={< RecoveryPhrase />}></Route>
+                                <Route path="/setup-wallet" element={< SetupWallet />}></Route>
                                 <Route path="*" element={< Home/>}></Route>
                             </Routes>
 

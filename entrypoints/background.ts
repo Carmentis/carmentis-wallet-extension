@@ -34,6 +34,12 @@ export default defineBackground({
 
 
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action == "open") {
+        if (message.location == "main") {
+          browser.tabs.create({url: "./main.html"});
+        }
+      }
+
       if (message.action == "new-tab") {
         launchExtensionOnTab()
       } else {

@@ -12,7 +12,7 @@ zip-chrome: build-core
 	npm run zip
 
 zip-firefox: build-core
-	bpm run zip:firefox
+	npm run zip:firefox
 
 
 
