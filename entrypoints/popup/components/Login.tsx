@@ -1,11 +1,33 @@
 import {useState} from "react";
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
+import {useNavigate} from "react-router";
 
 
-function Login() {
+
+function Login({ setWallet }) {
+    const navigate = useNavigate();
+
+
+    // if the wallet is already defined, move to the home page
+    // store the wallet in the session to recover it later
+    chrome.storage.session.get(["wallet"], (result) => {
+        const wallet = result.wallet;
+        if (wallet) {
+            setWallet(wallet);
+            navigate("/home")
+        }
+    })
+
+
+
+
 
     const [password, setPassword] = useState("");
+    const [invalidPassword, setInvalidPassword] = useState(false);
+
+
+
 
     /**
      * This function is executed when the user attempts to login in.
@@ -17,9 +39,15 @@ function Login() {
         let provider = new CarmentisProvider();
         let secureStorage = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
         secureStorage.readContextFromLocalStorage().then(wallet => {
-            console.log(wallet);
+            // store the wallet in the session to recover it later
+            chrome.storage.session.set({"wallet": wallet})
+
+            // update the wallet for react
+            setWallet(wallet);
+            navigate("/home")
         }).catch(error => {
             console.log("An error occured during the wallet reading: ", error)
+            setInvalidPassword(true);
         })
     }
 
@@ -31,7 +59,7 @@ function Login() {
                          src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg"
                          alt="Your Company"/>
                     <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Sign in
-                        to your account</h2>
+                        to your wallet</h2>
                 </div>
 
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -47,6 +75,11 @@ function Login() {
                                        onChange={(e) => setPassword(e.target.value)}
                                        required
                                        className="block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-green-300 sm:text-sm sm:leading-6"/>
+                                { invalidPassword &&
+                                    <p className="mt-2 text-pink-600">
+                                        Invalid password
+                                    </p>
+                                }
                             </div>
                         </div>
 

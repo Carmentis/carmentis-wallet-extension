@@ -2,7 +2,7 @@ import {useLocation, useNavigate} from "react-router";
 import {useEffect, useState} from "react";
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
-import {WalletContext} from "@/src/WalletContext.tsx";
+import {Wallet} from "@/src/Wallet.tsx";
 
 /**
  * This function should be called to setup the wallet.
@@ -31,7 +31,7 @@ export function SetupWallet() {
     const password = location.state.password;
 
     // create the wallet
-    const walletContext = WalletContext.CreateFromBytes(seed);
+    const walletContext = Wallet.CreateFromBytes(seed);
 
 
     function redirectToMainPage() {

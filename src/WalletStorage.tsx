@@ -1,9 +1,11 @@
-import {WalletContext} from "@/src/WalletContext.tsx";
+import {Wallet} from "@/src/Wallet.tsx";
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
 import {SecretEncryptionKey} from "@/src/SecretEncryptionKey.tsx";
 import {StorageItem} from "webext-storage";
+import {Account} from "@/src/Account.tsx";
 
 const ENCRYPTED_SEED_STORAGE = "encryptedSeed"
+const ENCRYPTED_ACCOUNTS = "encryptedAccounts"
 export class SecureWalletStorage {
 
 
@@ -15,10 +17,8 @@ export class SecureWalletStorage {
         return new Promise<boolean>((resolve, reject) => {
             const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_SEED_STORAGE);
             options.get().then(bytes => {
-                console.log("[Storage:isEmpty] then: ", bytes)
                 resolve(bytes === undefined || bytes.ENCRYPTED_SEED_STORAGE === undefined)
             }).catch(err => {
-                console.error(`[Storage:IsEmpty] catch: ${err}`);
                 reject(err)
             });
         })
@@ -30,25 +30,64 @@ export class SecureWalletStorage {
         return new SecureWalletStorage(secretKey);
     }
 
-    async readContextFromLocalStorage() : Promise<WalletContext> {
+    async readContextFromLocalStorage() : Promise<Wallet> {
         return new Promise(async (resolve, reject) => {
-            const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_SEED_STORAGE);
-            const bytes = await options.get();
-            const encryptedSeed = new Uint8Array(bytes.ENCRYPTED_SEED_STORAGE);
-            const seed = await this.secretKey.decrypt(encryptedSeed);
-            if (seed) {
-                resolve(seed);
-            } else {
-                reject()
+            try {
+
+                const storageItemSeed = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_SEED_STORAGE);
+                let result = await storageItemSeed.get();
+                const encryptedSeedBytes = new Uint8Array(result.ENCRYPTED_SEED_STORAGE);
+                const seedBytes = await this.secretKey.decrypt(encryptedSeedBytes);
+
+                const storageItemAccounts = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_ACCOUNTS);
+                var resultAccounts = await storageItemAccounts.get();
+                const encryptedAccountsBytes = new Uint8Array(resultAccounts.ENCRYPTED_ACCOUNTS);
+                const accountsBytes = await this.secretKey.decrypt(encryptedAccountsBytes).catch(reject);
+;
+                const textDecoder = new TextDecoder();
+                const accounts : Account[] = JSON.parse(
+                    textDecoder.decode(accountsBytes)
+                );
+
+                const wallet = Wallet.CreateFromBytesAndAccounts(seedBytes, accounts)
+                resolve(wallet);
+            } catch (e) {
+                reject(e)
             }
         });
     }
 
-    async writeWalletContextToLocalStorage(walletContext : WalletContext) : Promise<void> {
-        const options = new StorageItem<Record<string, Uint8Array>>(ENCRYPTED_SEED_STORAGE);
-        const seed = walletContext.getSeed();
-        const encryptedSeed = await this.secretKey.encrypt(seed);
-        const bytes = Array.from(encryptedSeed);
-        return options.set({ENCRYPTED_SEED_STORAGE: bytes});
+    async writeWalletContextToLocalStorage(walletContext : Wallet) : Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                {
+                    // store the encrypted seed
+                    const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_SEED_STORAGE);
+                    const seed = walletContext.getSeed();
+                    const encryptedSeed = await this.secretKey.encrypt(seed);
+                    await options.set({
+                        ENCRYPTED_SEED_STORAGE: Array.from(encryptedSeed),
+                    });
+                }
+
+                {
+                    // store the encrypted accounts
+                    const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_ACCOUNTS);
+                    const textEncoder = new TextEncoder();
+                    console.log(walletContext, walletContext.accounts);
+                    const stringifyAccounts = JSON.stringify(walletContext.accounts)
+                    const bytesAccounts = textEncoder.encode(stringifyAccounts);
+                    const encryptedAccounts = await this.secretKey.encrypt(bytesAccounts)
+                    await options.set({
+                        ENCRYPTED_ACCOUNTS: Array.from(encryptedAccounts),
+                    })
+                }
+
+                resolve()
+            } catch (e) {
+                reject(e)
+            }
+        });
+
      }
 }
