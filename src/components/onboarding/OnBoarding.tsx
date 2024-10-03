@@ -4,6 +4,7 @@ import {PasswordCreation} from "@/src/components/onboarding/PasswordCreation.tsx
 import {RecoveryPhrase} from "@/src/components/onboarding/RecoveryPhrase.tsx";
 import {SetupWallet} from "@/src/components/onboarding/SetupWallet.tsx";
 import {Landing} from "@/src/components/onboarding/Landing.tsx";
+import {ImportWallet} from "@/src/components/onboarding/ImportWallet.tsx";
 function OnBoarding() {
 
     return (
@@ -24,6 +25,7 @@ function OnBoarding() {
                                 <Route path="/create-password" element={< PasswordCreation />}></Route>
                                 <Route path="/recovery-phrase" element={< RecoveryPhrase />}></Route>
                                 <Route path="/setup-wallet" element={< SetupWallet />}></Route>
+                                <Route path="/import-wallet" element={<ImportWallet />}></Route>
                                 <Route path="*" element={< Landing/>}></Route>
                             </Routes>
 

@@ -7,7 +7,19 @@ export function Landing() {
     const navigate = useNavigate();
 
     function moveToWalletCreation() {
-        navigate("/create-password")
+        navigate("/create-password", {
+            state: {
+                nextStep: "/recovery-phrase"
+            }
+        })
+    }
+
+    function moveToWalletImportation() {
+        navigate("/create-password",{
+            state: {
+                nextStep: "/import-wallet"
+            }
+        })
     }
 
     return (
@@ -27,7 +39,7 @@ export function Landing() {
                 <button id="create-wallet" className="btn-primary btn-highlight min-w-72 mb-3" onClick={moveToWalletCreation}>Create your
                     wallet
                 </button>
-                <button id="import-wallet" className="btn-primary min-w-72">Import a wallet</button>
+                <button id="import-wallet" className="btn-primary min-w-72" onClick={moveToWalletImportation}>Import a wallet</button>
             </div>
 
         </>

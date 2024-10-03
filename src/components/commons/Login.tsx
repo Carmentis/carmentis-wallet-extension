@@ -1,23 +1,12 @@
 import {useState} from "react";
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
-import {useNavigate} from "react-router";
 import {Wallet} from "@/src/Wallet.tsx";
 import {Optional} from "@/src/Optional.tsx";
 
 
 
 function Login({ setWallet } : { setWallet : (Optional<Wallet>) }) {
-
-
-    // if the wallet is already defined, move to the home page
-    // store the wallet in the session to recover it later
-    chrome.storage.session.get(["wallet"], (result) => {
-        const wallet = result.wallet;
-        if (wallet instanceof Wallet) {
-            setWallet(Optional.From(wallet));
-        }
-    })
 
 
 
@@ -39,9 +28,6 @@ function Login({ setWallet } : { setWallet : (Optional<Wallet>) }) {
         let provider = new CarmentisProvider();
         let secureStorage = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
         secureStorage.readContextFromLocalStorage().then(wallet => {
-            // store the wallet in the session to recover it later
-            chrome.storage.session.set({"wallet": wallet})
-
             // update the wallet for react
             setWallet(Optional.From(wallet));
         }).catch(error => {

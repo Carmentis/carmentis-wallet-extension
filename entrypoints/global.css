@@ -36,4 +36,12 @@
     .word-group label {
         @apply p-1 w-6;
     }
+
+    h1 {
+        @apply text-2xl font-extrabold dark:text-white mb-2;
+    }
+
+    p {
+        @apply mb-2;
+    }
 }

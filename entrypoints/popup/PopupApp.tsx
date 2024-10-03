@@ -1,7 +1,6 @@
 import '@/entrypoints/style.css'
 import {useContext} from "react";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
-import "./App.css"
 import {
     AccountCreatedContext,
     ApplicationInitializedContext, AuthenticationContext,
@@ -10,6 +9,7 @@ import {
 } from "@/entrypoints/main/FullPageApp.tsx";
 import Login from "@/src/components/commons/Login.tsx";
 import {PopupDashboard} from "@/src/components/popup/PopupDashboard.tsx";
+import {NoWalletDetected} from "@/src/components/popup/NoWalletDetected.tsx";
 
 
 export function PopupAppEntrypoint() {
@@ -41,6 +41,9 @@ function PopupApp() {
                             <PopupDashboard wallet={authentication.wallet.unwrap()} activeAccount={authentication.activeAccount.unwrap()}></PopupDashboard>
                         }
                     </>
+                }
+                { !accountCreated &&
+                    <NoWalletDetected/>
                 }
             </>
         }

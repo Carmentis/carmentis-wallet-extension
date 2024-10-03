@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {useNavigate} from "react-router";
+import {useLocation, useNavigate} from "react-router";
 
 interface FormCondition {
     evaluate() : boolean;
@@ -62,8 +62,11 @@ export function PasswordCreation() {
 
     // handle the case where the password is correct
     const navigate = useNavigate();
+    const location = useLocation();
+    const nextStep = location.state.nextStep;
+    const target = nextStep ? nextStep : "/recovery-phrase";
     function onCorrectPasswordCreation() {
-        navigate("/recovery-phrase", {
+        navigate(target, {
             state: {
                 password: password,
             }

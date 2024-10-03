@@ -1,18 +1,15 @@
 import {createContext, Dispatch, SetStateAction, useContext, useState} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
-import '../style.css'
+import "./global.css"
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {Account} from "@/src/Account.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import pino from "pino";
-import {res} from "pino-std-serializers";
 import {SessionStorage} from "@/src/SessionStorage.tsx";
 import Dashboard from "@/src/components/dashboard/Dashboard.tsx";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
 import OnBoarding from "@/src/components/onboarding/OnBoarding.tsx";
 import Login from "@/src/components/commons/Login.tsx";
-
-const noWallet = await SecureWalletStorage.IsEmpty();
 
 const logger = pino({
     level: "debug",
@@ -138,7 +135,7 @@ export function ContextPage (props) {
 
 }
 
-export function FullMainEntrypoint() {
+export function FullPageEntrypoint() {
     return <ContextPage>
         <FullPageApp></FullPageApp>
     </ContextPage>

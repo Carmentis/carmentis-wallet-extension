@@ -1,15 +1,15 @@
-import React, {createContext, useContext} from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
-import "../style.css"
+import "./global.css"
 import {HashRouter} from "react-router-dom";
-import {FullMainEntrypoint} from "@/entrypoints/main/FullPageApp.tsx";
+import {FullPageEntrypoint} from "@/entrypoints/main/FullPageApp.tsx";
 
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <HashRouter>
-                <FullMainEntrypoint/>
+                <FullPageEntrypoint/>
         </HashRouter>
     </React.StrictMode>,
 );
