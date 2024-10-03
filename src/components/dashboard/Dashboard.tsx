@@ -1,11 +1,14 @@
-import React from "react";
+import React, {useContext} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
 import {wallet} from "@/lib/carmentis-nodejs-sdk";
 import {Account} from "@/src/Account.tsx";
+import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 
 
 
 export function  Dashboard({ wallet, activeAccount }: {wallet: Wallet, activeAccount: Account}) {
+
+        const authentication = useContext(AuthenticationContext);
 
         return (
             <>
@@ -21,6 +24,7 @@ export function  Dashboard({ wallet, activeAccount }: {wallet: Wallet, activeAcc
                                 {activeAccount.pseudo}
                             </span>
                         </a>
+                        <button className="ring-green-400"  onClick={authentication.clearAuthentication}>Logout</button>
                     </div>
                 </nav>
                 <div className="h-full w-full">

@@ -35,4 +35,8 @@ export class SessionStorage {
             state: session
         });
     }
+
+    static Clear() {
+        chrome.storage.session.clear();
+    }
 }

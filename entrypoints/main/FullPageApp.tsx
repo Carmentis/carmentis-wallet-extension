@@ -1,4 +1,4 @@
-import {createContext, useContext, useState} from "react";
+import {createContext, Dispatch, SetStateAction, useContext, useState} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
 import '../style.css'
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
@@ -7,23 +7,36 @@ import {Optional} from "@/src/Optional.tsx";
 import pino from "pino";
 import {res} from "pino-std-serializers";
 import {SessionStorage} from "@/src/SessionStorage.tsx";
-import Login from "@/src/components/popup/Login.tsx";
 import Dashboard from "@/src/components/dashboard/Dashboard.tsx";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
 import OnBoarding from "@/src/components/onboarding/OnBoarding.tsx";
+import Login from "@/src/components/commons/Login.tsx";
 
 const noWallet = await SecureWalletStorage.IsEmpty();
 
 const logger = pino({
     level: "debug",
 })
+
+export interface AuthenticationContainer {
+    wallet: Optional<Wallet>,
+    activeAccount: Optional<Account>,
+    updateWallet: Dispatch<SetStateAction<Optional<Wallet>>> | null
+    clearAuthentication: () => void,
+}
+
+// create the different contexts
 export const LoggerContext = createContext(logger);
+export const ApplicationInitializedContext = createContext<boolean>(false);
+export const AccountCreatedContext = createContext<boolean>(false);
+export const AuthenticationContext = createContext<AuthenticationContainer>({
+    wallet: Optional.Empty(),
+    activeAccount: Optional.Empty(),
+    updateWallet: null,
+    clearAuthentication: () => {}
+})
 
-
-
-
-function App() {
-
+export function ContextPage (props) {
     let [applicationInitialized, setApplicationInitialized] = useState<boolean>(false);
     let [accountCreated, setAccountCreated] = useState<boolean>(false);
     let [activeAccount, setActiveAccount] = useState<Optional<Account>>(Optional.Empty());
@@ -53,15 +66,18 @@ function App() {
         }
 
         // search in session if a wallet exists
-        SessionStorage.GetSessionState().then((result) => {
+        SessionStorage.ContainsWallet().then((isWalletInSession) => {
             // if the wallet exist in session, load the application state from session
-            if (result.state) {
-                logger.info("Wallet open but not active: use the wallet found in session")
-                const sessionWallet = result.state.wallet;
-                const sessionActiveAccount = result.state.activeAccount;
-                setWallet(Optional.From(sessionWallet));
-                setActiveAccount(Optional.From(sessionActiveAccount));
-                setApplicationInitialized(true);
+            if (isWalletInSession) {
+                SessionStorage.GetSessionState().then(result => {
+                    logger.info("Wallet open but not active: use the wallet found in session")
+                    const sessionWallet = result.state.wallet;
+                    const sessionActiveAccount = result.state.activeAccount;
+                    setWallet(Optional.From(sessionWallet));
+                    setActiveAccount(Optional.From(sessionActiveAccount));
+                    setApplicationInitialized(true);
+                })
+
             } else {
                 // otherwise, try with the wallet returned by the login page
                 if (!wallet.isEmpty()) {
@@ -92,19 +108,61 @@ function App() {
 
     }).catch(error => {
         console.error("An error occured while initializing the application: ", error)
-    })
+    });
+
+
+    // create the authentication context
+    let authenticationData : AuthenticationContainer = {
+        wallet: wallet,
+        activeAccount: activeAccount,
+        updateWallet: setWallet,
+        clearAuthentication: () => {
+            SessionStorage.Clear();
+            setWallet(Optional.Empty());
+            setActiveAccount(Optional.Empty());
+        }
+    }
 
     return <>
-        <LoggerContext.Provider value={logger}>
+    <LoggerContext.Provider value={logger}>
+        <AuthenticationContext.Provider value={authenticationData}>
+                <AccountCreatedContext.Provider value={accountCreated}>
+                    <ApplicationInitializedContext.Provider value={applicationInitialized}>
+                        {props.children}
+                    </ApplicationInitializedContext.Provider>
+                </AccountCreatedContext.Provider>
+        </AuthenticationContext.Provider>
+    </LoggerContext.Provider>
+    </>;
+
+
+}
+
+export function FullMainEntrypoint() {
+    return <ContextPage>
+        <FullPageApp></FullPageApp>
+    </ContextPage>
+}
+
+
+function FullPageApp() {
+
+
+    let applicationInitialized = useContext(ApplicationInitializedContext);
+    let accountCreated = useContext(AccountCreatedContext);
+    let authentication : AuthenticationContainer = useContext(AuthenticationContext);
+
+
+    return <>
         { applicationInitialized &&
             <>
                 { accountCreated &&
                     <>
-                        { activeAccount.isEmpty() &&
-                            <Login setWallet={setWallet}></Login>
+                        { authentication.activeAccount.isEmpty() &&
+                            <Login setWallet={authentication.updateWallet}></Login>
                         }
-                        { !activeAccount.isEmpty() &&
-                            <Dashboard wallet={wallet.unwrap()} activeAccount={activeAccount.unwrap()}></Dashboard>
+                        { !authentication.activeAccount.isEmpty() &&
+                            <Dashboard wallet={authentication.wallet.unwrap()} activeAccount={authentication.activeAccount.unwrap()}></Dashboard>
                         }
                     </>
                 }
@@ -117,8 +175,9 @@ function App() {
         { !applicationInitialized &&
             <Splashscreen/>
         }
-        </LoggerContext.Provider>
     </>;
+
+
 }
 
-export default App;
+export default FullPageApp;

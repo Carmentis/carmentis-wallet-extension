@@ -8,7 +8,6 @@ import {Optional} from "@/src/Optional.tsx";
 
 
 function Login({ setWallet } : { setWallet : (Optional<Wallet>) }) {
-    const navigate = useNavigate();
 
 
     // if the wallet is already defined, move to the home page

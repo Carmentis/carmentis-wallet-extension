@@ -2,14 +2,14 @@ import React, {createContext, useContext} from 'react';
 import ReactDOM from 'react-dom/client';
 import "../style.css"
 import {HashRouter} from "react-router-dom";
-import App from "@/entrypoints/main/App.tsx";
+import {FullMainEntrypoint} from "@/entrypoints/main/FullPageApp.tsx";
 
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <HashRouter>
-                <App/>
+                <FullMainEntrypoint/>
         </HashRouter>
     </React.StrictMode>,
 );
