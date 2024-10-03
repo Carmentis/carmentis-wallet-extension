@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {Dispatch, SetStateAction, useState} from "react";
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {Wallet} from "@/src/Wallet.tsx";
@@ -6,17 +6,12 @@ import {Optional} from "@/src/Optional.tsx";
 
 
 
-function Login({ setWallet } : { setWallet : (Optional<Wallet>) }) {
+function Login({ setWallet } : { setWallet : Dispatch<SetStateAction<Optional<Wallet>>> }) {
 
 
-
-
-
+    // states to handle the login
     const [password, setPassword] = useState("");
     const [invalidPassword, setInvalidPassword] = useState(false);
-
-
-
 
     /**
      * This function is executed when the user attempts to login in.

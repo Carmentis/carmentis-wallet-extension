@@ -1,4 +1,8 @@
-import {createContext, Dispatch, SetStateAction, useContext, useState} from "react";
+import {createContext, Dispatch, JSXElementConstructor, ReactElement, ReactNode, ReactPortal,
+    SetStateAction,
+    useContext,
+    useState
+} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
 import "./global.css"
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
@@ -30,10 +34,11 @@ export const AuthenticationContext = createContext<AuthenticationContainer>({
     wallet: Optional.Empty(),
     activeAccount: Optional.Empty(),
     updateWallet: null,
-    clearAuthentication: () => {}
+    clearAuthentication: () => {
+    }
 })
 
-export function ContextPage (props) {
+export function ContextPage(props: { children: ReactElement }) {
     let [applicationInitialized, setApplicationInitialized] = useState<boolean>(false);
     let [accountCreated, setAccountCreated] = useState<boolean>(false);
     let [activeAccount, setActiveAccount] = useState<Optional<Account>>(Optional.Empty());

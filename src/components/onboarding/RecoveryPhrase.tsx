@@ -1,7 +1,9 @@
 
-import React, {Component, useEffect, useState} from "react";
+import React, {Component, Dispatch, SetStateAction, useEffect, useState} from "react";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {useLocation, useNavigate} from "react-router";
+import {Optional} from "@/src/Optional.tsx";
+import {Wallet} from "@/src/Wallet.tsx";
 
 /**
  * Generate a random number included between the two provided (included) bounds.
@@ -45,7 +47,7 @@ export function RecoveryPhrase() {
 
     // create a list of states
     let wordStates: string[] = [];
-    let setWords = [];
+    let setWords : Dispatch<SetStateAction<string>>[] = [];
     for (let i = 0; i < 12; i++) {
         let [word, setWord] = useState(wordsList[i]);
         wordStates.push(word);
@@ -57,7 +59,7 @@ export function RecoveryPhrase() {
     for (let i = 0; i < wordsList.length; i++) {indexes.push(i);}
 
     // create a state to get the consent of the user
-    let [consent, setConsent] = useState(false);
+    let [consent, setConsent] = useState(0);
 
     // create the state defining if the challenge is started and is completed
     let [challengeStarted, setChallengeStarted] = useState(false);
@@ -101,7 +103,7 @@ export function RecoveryPhrase() {
     /**
      * Event function executed when a challenge word is modified.
      */
-    function onChallengeWordsChanged(evt, wordIndex) {
+    function onChallengeWordsChanged(evt: React.ChangeEvent<HTMLInputElement>, wordIndex : number) {
         const changedValue = evt.target.value;
         wordStates[wordIndex] = changedValue;
         setWords[wordIndex](changedValue);
@@ -177,7 +179,7 @@ export function RecoveryPhrase() {
                 <div className="flex items-center mb-4">
                     <input id="default-checkbox" type="checkbox"
                            value={consent}
-                           onChange={(e) => setConsent(e.target.checked)}
+                           onChange={(e) => setConsent(e.target.checked ? 1 : 0)}
                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500  dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"/>
                     <label htmlFor="default-checkbox"
                            className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
