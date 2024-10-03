@@ -10,7 +10,7 @@ export function Splashscreen() {
                 <div className="loading flex justify-center items-center h-full flex-col">
                     <div className="mb-5">
                         <img className="mx-auto h-10 w-auto"
-                             src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg"
+                             src="/assets/carmentis-logo-dark.svg"
                              alt="Your Company"/>
                     </div>
 
