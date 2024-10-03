@@ -1,14 +1,12 @@
 import React, {useContext} from "react";
-import {Wallet} from "@/src/Wallet.tsx";
-import {wallet} from "@/lib/carmentis-nodejs-sdk";
-import {Account} from "@/src/Account.tsx";
 import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 
 
 
-export function  Dashboard({ wallet, activeAccount }: {wallet: Wallet, activeAccount: Account}) {
+export function  Dashboard() {
 
         const authentication = useContext(AuthenticationContext);
+        const activeAccount = authentication.activeAccount.unwrap();
 
         return (
             <>

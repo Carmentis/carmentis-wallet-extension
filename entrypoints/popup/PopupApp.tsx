@@ -35,7 +35,7 @@ function PopupApp() {
                 { accountCreated &&
                     <>
                         { authentication.activeAccount.isEmpty() &&
-                            <Login setWallet={authentication.updateWallet}></Login>
+                            <Login></Login>
                         }
                         { !authentication.activeAccount.isEmpty() &&
                             <PopupDashboard></PopupDashboard>

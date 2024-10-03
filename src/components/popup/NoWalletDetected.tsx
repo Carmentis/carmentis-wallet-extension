@@ -9,7 +9,10 @@ export function NoWalletDetected() {
     }
 
     function goToDocumentation()  {
-        window.open("https://docs.carmentis.io/", '_blank').focus();
+        const action = window.open("https://docs.carmentis.io/", '_blank');
+        if (action) {
+            action.focus();
+        }
     }
 
     return <>

@@ -22,7 +22,7 @@ const logger = pino({
 export interface AuthenticationContainer {
     wallet: Optional<Wallet>,
     activeAccount: Optional<Account>,
-    updateWallet: Dispatch<SetStateAction<Optional<Wallet>>> | null
+    updateWallet: Optional<Dispatch<SetStateAction<Optional<Wallet>>>>
     clearAuthentication: () => void,
 }
 
@@ -33,7 +33,7 @@ export const AccountCreatedContext = createContext<boolean>(false);
 export const AuthenticationContext = createContext<AuthenticationContainer>({
     wallet: Optional.Empty(),
     activeAccount: Optional.Empty(),
-    updateWallet: null,
+    updateWallet: Optional.Empty(),
     clearAuthentication: () => {
     }
 })
@@ -117,7 +117,7 @@ export function ContextPage(props: { children: ReactElement }) {
     let authenticationData : AuthenticationContainer = {
         wallet: wallet,
         activeAccount: activeAccount,
-        updateWallet: setWallet,
+        updateWallet: Optional.From(setWallet),
         clearAuthentication: () => {
             SessionStorage.Clear();
             setWallet(Optional.Empty());
@@ -161,10 +161,10 @@ function FullPageApp() {
                 { accountCreated &&
                     <>
                         { authentication.activeAccount.isEmpty() &&
-                            <Login setWallet={authentication.updateWallet}></Login>
+                            <Login></Login>
                         }
                         { !authentication.activeAccount.isEmpty() &&
-                            <Dashboard wallet={authentication.wallet.unwrap()} activeAccount={authentication.activeAccount.unwrap()}></Dashboard>
+                            <Dashboard></Dashboard>
                         }
                     </>
                 }
