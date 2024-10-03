@@ -43,7 +43,7 @@ function launchExtensionOnTab( url: string ) {
 
             browser.runtime.onInstalled.addListener(({reason}) => {
                 if ( reason === "install" ) {
-                    browser.tabs.create({url: "./initialisation.html"});
+                    browser.tabs.create({url: "./main.html"});
                 }
             });
 
@@ -57,7 +57,7 @@ function launchExtensionOnTab( url: string ) {
                     }
 
                     if (message.location == "onboarding") {
-                        browser.tabs.create({url: "./initialisation.html"});
+                        browser.tabs.create({url: "./main.html"});
                     }
                 }
             });

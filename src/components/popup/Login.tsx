@@ -2,10 +2,12 @@ import {useState} from "react";
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {useNavigate} from "react-router";
+import {Wallet} from "@/src/Wallet.tsx";
+import {Optional} from "@/src/Optional.tsx";
 
 
 
-function Login({ setWallet }) {
+function Login({ setWallet } : { setWallet : (Optional<Wallet>) }) {
     const navigate = useNavigate();
 
 
@@ -13,9 +15,8 @@ function Login({ setWallet }) {
     // store the wallet in the session to recover it later
     chrome.storage.session.get(["wallet"], (result) => {
         const wallet = result.wallet;
-        if (wallet) {
-            setWallet(wallet);
-            navigate("/home")
+        if (wallet instanceof Wallet) {
+            setWallet(Optional.From(wallet));
         }
     })
 
@@ -43,8 +44,7 @@ function Login({ setWallet }) {
             chrome.storage.session.set({"wallet": wallet})
 
             // update the wallet for react
-            setWallet(wallet);
-            navigate("/home")
+            setWallet(Optional.From(wallet));
         }).catch(error => {
             console.log("An error occured during the wallet reading: ", error)
             setInvalidPassword(true);

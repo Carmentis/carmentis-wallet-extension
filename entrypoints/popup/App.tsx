@@ -1,24 +1,23 @@
 import '../style.css'
-import Login from "@/entrypoints/popup/components/Login.tsx";
-import {Route, Routes, useNavigate} from "react-router";
-import {Home} from "@/entrypoints/popup/components/Home.tsx";
-import {createContext, useEffect, useState} from "react";
+import {useState} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
-
+import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
+import "./App.css"
+import {Optional} from "@/src/Optional.tsx";
+import {Navigate} from "react-router";
 
 
 
 function App() {
-    let [wallet, setWallet] = useState<Wallet|null>(null);
 
-
-
+    const [applicationInitialized, setApplicationInitialized] = useState<boolean>(false);
+    const [wallet, setWallet] = useState<Optional<Wallet>>(Optional.Empty());
+    const [activeAccount, setActiveAccount] = useState<Optional<Wallet>>(Optional.Empty());
 
     return <>
-          <Routes>
-              <Route path="/" element={< Login setWallet={setWallet} />}></Route>
-              <Route path="/home" element={< Home wallet={wallet} />}></Route>
-          </Routes>
+        { !applicationInitialized &&
+            <Navigate to="/"></Navigate>
+        }
     </>;
 }
 

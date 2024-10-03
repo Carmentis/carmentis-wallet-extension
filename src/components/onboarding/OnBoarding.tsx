@@ -1,17 +1,10 @@
-import {useContext, useState} from 'react';
-import {PasswordCreation} from "./components/PasswordCreation.tsx"
-import {Home} from "@/entrypoints/initialisation/components/Home.tsx";
-import {Route, Routes, useNavigate} from "react-router";
-import {BrowserRouter} from "react-router-dom";
-import {RecoveryPhrase} from "@/entrypoints/initialisation/components/RecoveryPhrase.tsx";
-import {SetupWallet} from "@/entrypoints/initialisation/components/SetupWallet.tsx";
 
-// define the password and seed that need to be
-let password : string | undefined = undefined;
-let seed : string  | undefined = undefined;
-
-
-function App() {
+import {Route, Routes} from "react-router";
+import {PasswordCreation} from "@/src/components/onboarding/PasswordCreation.tsx";
+import {RecoveryPhrase} from "@/src/components/onboarding/RecoveryPhrase.tsx";
+import {SetupWallet} from "@/src/components/onboarding/SetupWallet.tsx";
+import {Landing} from "@/src/components/onboarding/Landing.tsx";
+function OnBoarding() {
 
     return (
         <>
@@ -31,7 +24,7 @@ function App() {
                                 <Route path="/create-password" element={< PasswordCreation />}></Route>
                                 <Route path="/recovery-phrase" element={< RecoveryPhrase />}></Route>
                                 <Route path="/setup-wallet" element={< SetupWallet />}></Route>
-                                <Route path="*" element={< Home/>}></Route>
+                                <Route path="*" element={< Landing/>}></Route>
                             </Routes>
 
                         </div>
@@ -45,4 +38,4 @@ function App() {
 }
 
 
-export default App;
+export default OnBoarding;

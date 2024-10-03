@@ -3,7 +3,7 @@ import {useNavigate} from "react-router";
 
 
 
-export function Home() {
+export function Landing() {
     const navigate = useNavigate();
 
     function moveToWalletCreation() {
