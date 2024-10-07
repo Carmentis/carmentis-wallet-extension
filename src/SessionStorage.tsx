@@ -1,4 +1,4 @@
-import {Wallet} from "@/src/Wallet.tsx";
+import {Wallet, WalletData} from "@/src/Wallet.tsx";
 import {Account} from "@/src/Account.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
@@ -25,15 +25,22 @@ export class SessionStorage {
                 if (result.state === undefined) {
                     throw new IllegalStateError("Attempt to read session state but not initialized yet")
                 }
-                let state : SessionState = result.state;
-                resolve(state);
+                resolve({
+                    "state": {
+                        wallet: Wallet.CreateFromDict( result.state.wallet ),
+                        activeAccount: Account.CreateFromDict( result.state.activeAccount ),
+                    }
+                });
             })
         });
     }
 
     static WriteSessionState(session : SessionState) : Promise<void> {
         return chrome.storage.session.set({
-            state: session
+            state: {
+                wallet: session.state.wallet.data,
+                activeAccount: session.state.activeAccount.data
+            }
         });
     }
 

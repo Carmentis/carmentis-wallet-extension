@@ -17,8 +17,12 @@ export class Encoders {
         if (str == null || typeof str !== "string" || !str.match(/^([\da-f]{2})*$/gi)) {
             throw new Error("Invalid hex format.");
         }
+        const chars : string[] | null =  str.match(/../g);
+        if (chars === null) {
+            throw new Error("Invalid hex format.");
+        }
         return new Uint8Array(
-            str.match(/../g).map(s => parseInt(s, 16))
+           chars.map(s => parseInt(s, 16))
         );
     }
 

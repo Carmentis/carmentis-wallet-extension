@@ -6,7 +6,7 @@ import {createContext, Dispatch, JSXElementConstructor, ReactElement, ReactNode,
 import {Wallet} from "@/src/Wallet.tsx";
 import "./global.css"
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
-import {Account} from "@/src/Account.tsx";
+import {Account, AccountData} from "@/src/Account.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import pino from "pino";
 import {SessionStorage} from "@/src/SessionStorage.tsx";
@@ -85,8 +85,7 @@ export function ContextPage(props: { children: ReactElement }) {
                 if (!wallet.isEmpty()) {
                     logger.info("Wallet open but no active account chosen: affect to the first one")
                     const walletObject : Wallet = wallet.unwrap();
-                    const accounts : Account[] = walletObject.accounts;
-                    const activeAccount = accounts[0]
+                    const activeAccount = walletObject.getAccount(0);
 
                     // store the account in sesssion
                     SessionStorage.WriteSessionState({
