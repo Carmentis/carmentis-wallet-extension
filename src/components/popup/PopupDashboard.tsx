@@ -26,9 +26,6 @@ export function PopupDashboard() {
     let [success, setSuccess] = useState<boolean>(false);
     let [showMenu, setShowMenu] = useState<boolean>(false);
 
-    // configure the SDK based on the wallet preferences
-    Carmentis.registerDataEndpoint(wallet.getDataEndpoint());
-    Carmentis.registerNodeEndpoint(wallet.getNodeEndpoint());
 
     /**
      * This function is called when the user wants to see the extension in the main view.

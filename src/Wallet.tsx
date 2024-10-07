@@ -1,4 +1,4 @@
-import {Account, AccountData} from "@/src/Account.tsx";
+import {Account, AccountData, EmailValidationProofData} from "@/src/Account.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
 
 const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
@@ -90,5 +90,13 @@ export class Wallet {
             throw new Error(`Invalid account index: got ${accountIndex} but have ${this.data.accounts.length} accounts`);
         }
         this.data.accounts[accountIndex].email = email;
+    }
+
+
+    updateValidationProof(accountIndex : number, emailValidationProof : EmailValidationProofData) {
+        if ( 0 < accountIndex || this.data.accounts.length <= accountIndex ) {
+            throw new Error(`Invalid account index: got ${accountIndex} but have ${this.data.accounts.length} accounts`);
+        }
+        this.data.accounts[accountIndex].emailValidationProof = emailValidationProof;
     }
 }

@@ -38,7 +38,6 @@ export class SessionStorage {
     }
 
     static WriteSessionState(session : SessionState) : Promise<void> {
-        console.log("[session-storage] writting data wallet:", session)
         return chrome.storage.session.set({
             state: {
                 wallet: session.state.wallet.data,

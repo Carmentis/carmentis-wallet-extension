@@ -14,6 +14,7 @@ import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
 import OnBoarding from "@/src/components/onboarding/OnBoarding.tsx";
 import Login from "@/src/components/commons/Login.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 
 const logger = pino({
     level: "debug",
@@ -43,6 +44,17 @@ export const AuthenticationContext = createContext<AuthenticationContainer>({
     clearAuthentication: () => {
     }
 })
+
+
+function configureEndpointsFromWallet( wallet : Optional<Wallet> ) {
+    if (wallet.isEmpty()) {
+        console.warn("Endpoints not set since the provided wallet is not defined.")
+    } else {
+        // configure the SDK based on the wallet preferences
+        Carmentis.registerDataEndpoint(wallet.unwrap().getDataEndpoint());
+        Carmentis.registerNodeEndpoint(wallet.unwrap().getNodeEndpoint());
+    }
+}
 
 export function ContextPage(props: { children: ReactElement }) {
     let [applicationInitialized, setApplicationInitialized] = useState<boolean>(false);
@@ -78,6 +90,7 @@ export function ContextPage(props: { children: ReactElement }) {
                 setActiveAccountIndex(Optional.From(0))
                 setPassword(Optional.From(password))
                 setWallet(Optional.From(wallet))
+                configureEndpointsFromWallet(Optional.From(wallet))
                 resolve();
             }).catch(error => {
                 reject(error)
@@ -109,8 +122,8 @@ export function ContextPage(props: { children: ReactElement }) {
                         }
                     }).then(_ => {
                         // update the wallet
-
                         setWallet(Optional.From(wallet))
+                        configureEndpointsFromWallet(Optional.From(wallet))
                         resolve();
                     }).catch(error => {
                         reject(error)
@@ -152,6 +165,7 @@ export function ContextPage(props: { children: ReactElement }) {
                     const sessionActiveAccountIndex = result.state.activeAccountIndex;
                     const sessionPassword = result.state.password;
                     setWallet(Optional.From(sessionWallet));
+                    configureEndpointsFromWallet(Optional.From(sessionWallet));
                     setActiveAccountIndex(Optional.From(sessionActiveAccountIndex));
                     setPassword(Optional.From(sessionPassword));
                     setApplicationInitialized(true);

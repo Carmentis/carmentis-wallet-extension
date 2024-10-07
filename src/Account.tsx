@@ -3,25 +3,33 @@ import {Optional} from "@/src/Optional.tsx";
 
 const DEFAULT_ACCOUNT_NAME = "Account"
 
+export interface EmailValidationProofData {
+    ts: number,
+    email: string,
+    publicKey: string,
+    signature: string,
+}
+
 /**
  * The AccountData interface is used to include a
  */
 export interface AccountData {
     pseudo: string;
     email: string | undefined;
-    verifiedEmail: boolean | undefined
+    emailValidationProof: EmailValidationProofData | undefined
 }
+
 
 
 export class Account {
 
     data : AccountData
 
-    constructor(pseudo: string, email: string | undefined, verifiedEmail: boolean | undefined) {
+    constructor(pseudo: string, email: string | undefined, emailValidationProof: EmailValidationProofData | undefined) {
         this.data = {
             pseudo : pseudo,
             email:  email,
-            verifiedEmail: verifiedEmail,
+            emailValidationProof: emailValidationProof,
         };
     }
 
@@ -37,7 +45,7 @@ export class Account {
     }
 
     hasVerifiedEmail(): boolean {
-        return this.data.verifiedEmail === true;
+        return this.data.emailValidationProof !== undefined;
     }
 
 
@@ -46,6 +54,6 @@ export class Account {
     }
 
     static CreateFromDict(account : AccountData) : Account {
-        return new Account( account.pseudo, account.email, account.verifiedEmail );
+        return new Account( account.pseudo, account.email, account.emailValidationProof );
     }
 }
