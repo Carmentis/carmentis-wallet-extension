@@ -161,7 +161,7 @@ export function PopupDashboard() {
                             <div className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
                                id="menu-item-0" onClick={goToMainView}>Large View</div>
                             <div className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-                               id="menu-item-1" onClick={authenticationContext.clearAuthentication}>Logout</div>
+                               id="menu-item-1" onClick={authenticationContext.Disconnect}>Logout</div>
                         </div>
                     </div>
                 </div>

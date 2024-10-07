@@ -27,7 +27,7 @@ export interface AuthenticationContainer {
     activeAccountIndex: Optional<number>,
     loadWalletInSession: Optional<(password : string, wallet: Wallet) => Promise<void>>,
     updateWallet: Optional<(wallet: Wallet) => Promise<void>>,
-    clearAuthentication: () => void,
+    Disconnect: () => void,
 }
 
 // create the different contexts
@@ -41,7 +41,7 @@ export const AuthenticationContext = createContext<AuthenticationContainer>({
     loadWalletInSession: Optional.Empty(),
     updateWallet: Optional.Empty(),
     setPassword: Optional.Empty(),
-    clearAuthentication: () => {
+    Disconnect: () => {
     }
 })
 
@@ -212,7 +212,7 @@ export function ContextPage(props: { children: ReactElement }) {
         loadWalletInSession: Optional.From(loadWalletInSession),
         updateWallet: Optional.From(updateWallet),
         setPassword: Optional.From(setPassword),
-        clearAuthentication: () => {
+        Disconnect: () => {
             SessionStorage.Clear();
             setWallet(Optional.Empty());
             setActiveAccountIndex(Optional.Empty());
