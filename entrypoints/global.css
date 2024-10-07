@@ -41,6 +41,10 @@
         @apply text-2xl font-extrabold dark:text-white mb-2;
     }
 
+    h2 {
+        @apply text-xl font-extrabold dark:text-white mb-2;
+    }
+
     p {
         @apply mb-2;
     }

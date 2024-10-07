@@ -14,6 +14,11 @@ export class Optional<T> {
         return this.value;
     }
 
+    unwrapOr( defaultValue : T ) : T {
+        if ( this.value === undefined ) { return defaultValue }
+        return this.value;
+    }
+
     isEmpty() : boolean {
         return this.value === undefined;
     }
