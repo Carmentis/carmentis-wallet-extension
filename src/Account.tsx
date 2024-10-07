@@ -9,6 +9,7 @@ const DEFAULT_ACCOUNT_NAME = "Account"
 export interface AccountData {
     pseudo: string;
     email: string | undefined;
+    verifiedEmail: boolean | undefined
 }
 
 
@@ -16,10 +17,11 @@ export class Account {
 
     data : AccountData
 
-    constructor(pseudo: string, email: string | undefined) {
+    constructor(pseudo: string, email: string | undefined, verifiedEmail: boolean | undefined) {
         this.data = {
             pseudo : pseudo,
             email:  email,
+            verifiedEmail: verifiedEmail,
         };
     }
 
@@ -34,12 +36,16 @@ export class Account {
         return Optional.From(this.data.email);
     }
 
+    hasVerifiedEmail(): boolean {
+        return this.data.verifiedEmail === true;
+    }
+
 
     static Default() : Account {
-        return new Account(DEFAULT_ACCOUNT_NAME, undefined);
+        return new Account(DEFAULT_ACCOUNT_NAME, undefined, undefined);
     }
 
     static CreateFromDict(account : AccountData) : Account {
-        return new Account( account.pseudo, account.email );
+        return new Account( account.pseudo, account.email, account.verifiedEmail );
     }
 }

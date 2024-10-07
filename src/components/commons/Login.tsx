@@ -11,7 +11,8 @@ function Login() {
 
     // recover the wallet update from the context
     const authenticationContext : AuthenticationContainer = useContext(AuthenticationContext);
-    const setWallet = authenticationContext.updateWallet.unwrap();
+    const loadWalletInSession = authenticationContext.loadWalletInSession.unwrap();
+    const setPasswordInContext = authenticationContext.setPassword.unwrap();
 
     // states to handle the login
     const [password, setPassword] = useState("");
@@ -28,7 +29,8 @@ function Login() {
         let secureStorage = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
         secureStorage.readContextFromLocalStorage().then(wallet => {
             // update the wallet for react
-            setWallet(Optional.From(wallet));
+            loadWalletInSession(password, wallet);
+
         }).catch(error => {
             console.log("An error occured during the wallet reading: ", error)
             setInvalidPassword(true);

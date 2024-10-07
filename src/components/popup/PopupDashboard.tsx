@@ -13,7 +13,9 @@ export function PopupDashboard() {
 
 
     let authentication : AuthenticationContainer = useContext(AuthenticationContext);
-    let activeAccount : Account = authentication.activeAccount.unwrap();
+    const wallet : Wallet = authentication.wallet.unwrap();
+    const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
+    let activeAccount : Account = wallet.getAccount(activeAccountIndex);
     let actionMessages : ActionMessageContainer = useContext(ActionMessageContext);
     let authenticationContext : AuthenticationContainer = useContext(AuthenticationContext);
     let logger = useContext(LoggerContext);
@@ -25,7 +27,6 @@ export function PopupDashboard() {
     let [showMenu, setShowMenu] = useState<boolean>(false);
 
     // configure the SDK based on the wallet preferences
-    const wallet = authenticationContext.wallet.unwrap();
     Carmentis.registerDataEndpoint(wallet.getDataEndpoint());
     Carmentis.registerNodeEndpoint(wallet.getNodeEndpoint());
 

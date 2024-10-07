@@ -1,4 +1,4 @@
-import {createContext, Dispatch, JSXElementConstructor, ReactElement, ReactNode, ReactPortal,
+import {createContext, Dispatch, ReactElement,
     SetStateAction,
     useContext,
     useState
@@ -6,7 +6,6 @@ import {createContext, Dispatch, JSXElementConstructor, ReactElement, ReactNode,
 import {Wallet} from "@/src/Wallet.tsx";
 import "./global.css"
 import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
-import {Account, AccountData} from "@/src/Account.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import pino from "pino";
 import {SessionStorage} from "@/src/SessionStorage.tsx";
@@ -14,15 +13,19 @@ import Dashboard from "@/src/components/dashboard/Dashboard.tsx";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
 import OnBoarding from "@/src/components/onboarding/OnBoarding.tsx";
 import Login from "@/src/components/commons/Login.tsx";
+import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 
 const logger = pino({
     level: "debug",
 })
 
 export interface AuthenticationContainer {
+    password : Optional<string>,
+    setPassword: Optional<Dispatch<SetStateAction<Optional<string>>>>,
     wallet: Optional<Wallet>,
-    activeAccount: Optional<Account>,
-    updateWallet: Optional<Dispatch<SetStateAction<Optional<Wallet>>>>
+    activeAccountIndex: Optional<number>,
+    loadWalletInSession: Optional<(password : string, wallet: Wallet) => Promise<void>>,
+    updateWallet: Optional<(wallet: Wallet) => Promise<void>>,
     clearAuthentication: () => void,
 }
 
@@ -31,9 +34,12 @@ export const LoggerContext = createContext(logger);
 export const ApplicationInitializedContext = createContext<boolean>(false);
 export const AccountCreatedContext = createContext<boolean>(false);
 export const AuthenticationContext = createContext<AuthenticationContainer>({
+    password : Optional.Empty(),
     wallet: Optional.Empty(),
-    activeAccount: Optional.Empty(),
+    activeAccountIndex: Optional.Empty(),
+    loadWalletInSession: Optional.Empty(),
     updateWallet: Optional.Empty(),
+    setPassword: Optional.Empty(),
     clearAuthentication: () => {
     }
 })
@@ -41,11 +47,80 @@ export const AuthenticationContext = createContext<AuthenticationContainer>({
 export function ContextPage(props: { children: ReactElement }) {
     let [applicationInitialized, setApplicationInitialized] = useState<boolean>(false);
     let [accountCreated, setAccountCreated] = useState<boolean>(false);
-    let [activeAccount, setActiveAccount] = useState<Optional<Account>>(Optional.Empty());
+    let [activeAccountIndex, setActiveAccountIndex] = useState<Optional<number>>(Optional.Empty());
     let [wallet, setWallet] = useState<Optional<Wallet>>(Optional.Empty());
+    let [password, setPassword] = useState<Optional<string>>(Optional.Empty());
+
 
 
     let logger = useContext(LoggerContext);
+
+    /**
+     * This function is used to load a wallet.
+     *
+     * This function write the wallet in session storage but **not** in local storage.
+     *
+     * @param password
+     * @param wallet
+     */
+    function loadWalletInSession( password : string, wallet : Wallet ) : Promise<void> {
+        console.log("[context page] Load wallet in session")
+
+        return new Promise((resolve, reject) => {
+            SessionStorage.WriteSessionState({
+                state: {
+                    activeAccountIndex: 0,
+                    wallet: wallet,
+                    password: password
+                }
+            }).then(_ => {
+                // update the wallet
+                setActiveAccountIndex(Optional.From(0))
+                setPassword(Optional.From(password))
+                setWallet(Optional.From(wallet))
+                resolve();
+            }).catch(error => {
+                reject(error)
+            });
+        })
+    }
+
+    /**
+     * This function is called when the user update the wallet and store it in local.
+     *
+     * This function is generally used when the session is already initialized and when an update of the wallet
+     * is required for the long-term (using the local storage).
+     * @constructor
+     */
+    function updateWallet( wallet : Wallet ) : Promise<void> {
+        console.log("[context page] Update of the wallet")
+        return new Promise((resolve, reject) => {
+            // store the wallet in the storage session
+            const provider = new CarmentisProvider();
+            SecureWalletStorage.CreateSecureWalletStorage(provider, password.unwrap()).then(storage => {
+                storage.writeWalletContextToLocalStorage( wallet ).then(() => {
+
+                    // store the wallet in session
+                    SessionStorage.WriteSessionState({
+                        state: {
+                            activeAccountIndex: activeAccountIndex.unwrap(),
+                            wallet: wallet,
+                            password: password.unwrap()
+                        }
+                    }).then(_ => {
+                        // update the wallet
+
+                        setWallet(Optional.From(wallet))
+                        resolve();
+                    }).catch(error => {
+                        reject(error)
+                    });
+                }).catch(error => {
+                    reject(error)
+                })
+            });
+        });
+    }
 
     // search for installed wallet, if not redirect to onboarding page
     SecureWalletStorage.IsEmpty().then(isEmpty => {
@@ -62,7 +137,7 @@ export function ContextPage(props: { children: ReactElement }) {
         setAccountCreated(true);
 
         // if there is a wallet and an active account, good!
-        if ( !wallet.isEmpty() && !activeAccount.isEmpty() ) {
+        if ( !wallet.isEmpty() && !activeAccountIndex.isEmpty() ) {
             setApplicationInitialized(true);
             return
         }
@@ -74,9 +149,11 @@ export function ContextPage(props: { children: ReactElement }) {
                 SessionStorage.GetSessionState().then(result => {
                     logger.info("Wallet open but not active: use the wallet found in session")
                     const sessionWallet = result.state.wallet;
-                    const sessionActiveAccount = result.state.activeAccount;
+                    const sessionActiveAccountIndex = result.state.activeAccountIndex;
+                    const sessionPassword = result.state.password;
                     setWallet(Optional.From(sessionWallet));
-                    setActiveAccount(Optional.From(sessionActiveAccount));
+                    setActiveAccountIndex(Optional.From(sessionActiveAccountIndex));
+                    setPassword(Optional.From(sessionPassword));
                     setApplicationInitialized(true);
                 })
 
@@ -85,17 +162,18 @@ export function ContextPage(props: { children: ReactElement }) {
                 if (!wallet.isEmpty()) {
                     logger.info("Wallet open but no active account chosen: affect to the first one")
                     const walletObject : Wallet = wallet.unwrap();
-                    const activeAccount = walletObject.getAccount(0);
+                    const activeAccountIndex = 0
 
-                    // store the account in sesssion
+                    // store the account in session
                     SessionStorage.WriteSessionState({
                         state: {
-                            activeAccount: activeAccount,
-                            wallet: walletObject
+                            activeAccountIndex: activeAccountIndex,
+                            wallet: walletObject,
+                            password: password.unwrap()
                         }
                     }).then(_ => {
                         // and update the application state
-                        setActiveAccount(Optional.From(activeAccount))
+                        setActiveAccountIndex(Optional.From(activeAccountIndex))
                         setApplicationInitialized(true);
                     });
                 } else {
@@ -114,13 +192,17 @@ export function ContextPage(props: { children: ReactElement }) {
 
     // create the authentication context
     let authenticationData : AuthenticationContainer = {
+        password: password,
         wallet: wallet,
-        activeAccount: activeAccount,
-        updateWallet: Optional.From(setWallet),
+        activeAccountIndex: activeAccountIndex,
+        loadWalletInSession: Optional.From(loadWalletInSession),
+        updateWallet: Optional.From(updateWallet),
+        setPassword: Optional.From(setPassword),
         clearAuthentication: () => {
             SessionStorage.Clear();
             setWallet(Optional.Empty());
-            setActiveAccount(Optional.Empty());
+            setActiveAccountIndex(Optional.Empty());
+            setPassword(Optional.Empty());
         }
     }
 
@@ -159,10 +241,10 @@ function FullPageApp() {
             <>
                 { accountCreated &&
                     <>
-                        { authentication.activeAccount.isEmpty() &&
+                        { authentication.activeAccountIndex.isEmpty() &&
                             <Login></Login>
                         }
-                        { !authentication.activeAccount.isEmpty() &&
+                        { !authentication.activeAccountIndex.isEmpty() &&
                             <Dashboard></Dashboard>
                         }
                     </>

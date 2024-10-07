@@ -5,8 +5,9 @@ import {ActionMessage} from "@/src/ActionMessage.tsx";
 
 export interface SessionState {
     state: {
-       wallet: Wallet;
-       activeAccount: Account;
+        password: string;
+        wallet: Wallet;
+        activeAccountIndex: number;
     }
 }
 
@@ -27,8 +28,9 @@ export class SessionStorage {
                 }
                 resolve({
                     "state": {
+                        password: result.state.password,
                         wallet: Wallet.CreateFromDict( result.state.wallet ),
-                        activeAccount: Account.CreateFromDict( result.state.activeAccount ),
+                        activeAccountIndex: result.state.activeAccountIndex,
                     }
                 });
             })
@@ -36,10 +38,12 @@ export class SessionStorage {
     }
 
     static WriteSessionState(session : SessionState) : Promise<void> {
+        console.log("[session-storage] writting data wallet:", session)
         return chrome.storage.session.set({
             state: {
                 wallet: session.state.wallet.data,
-                activeAccount: session.state.activeAccount.data
+                activeAccountIndex: session.state.activeAccountIndex,
+                password: session.state.password,
             }
         });
     }

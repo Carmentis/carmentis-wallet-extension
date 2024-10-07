@@ -24,6 +24,16 @@ export class SecureWalletStorage {
 
     }
 
+    /**
+     * Create a secure storage based on the provider and the password given as parameters.
+     *
+     * The provider is used to handle the cryptographic operations while the password is used as a key to securely
+     * store the wallet.
+     *
+     * @param provider
+     * @param password
+     * @constructor
+     */
     static async CreateSecureWalletStorage(provider: ProviderInterface, password: string): Promise<SecureWalletStorage> {
         const secretKey = await provider.deriveSecretKeyFromPassword(password);
         return new SecureWalletStorage(secretKey);

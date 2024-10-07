@@ -3,29 +3,42 @@ import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {Wallet} from "@/src/Wallet.tsx";
 import '../../../entrypoints/main/global.css'
 import {Account} from "@/src/Account.tsx";
+import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
+import {SecureWalletStorage} from "@/src/WalletStorage.tsx";
+import {SessionStorage} from "@/src/SessionStorage.tsx";
+import {Optional} from "@/src/Optional.tsx";
 
 
 
 export function  Dashboard() {
 
     const authentication = useContext(AuthenticationContext);
-    const activeAccount : Account = authentication.activeAccount.unwrap();
     const wallet : Wallet = authentication.wallet.unwrap();
+    const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
+    const activeAccount : Account = wallet.getAccount(activeAccountIndex);
 
-    const [emailProvided, setEmailProvided] = useState(false);
-    const [emailValidated, setEmailValidated] = useState(false);
+    const [emailProvided, setEmailProvided] = useState(!activeAccount.getEmail().isEmpty());
+    const [emailValidated, setEmailValidated] = useState(activeAccount.hasVerifiedEmail());
     const [email, setEmail] = useState(
         activeAccount.getEmail().unwrapOr("")
     );
-
 
     /**
      * This function is called when the user has entered an email that should be linked to the current account
      * and save locally.
      */
     function saveEmail() {
-        // update the active account and store the update
+        // update the active account
+        wallet.updateAccountEmail( activeAccountIndex, email );
 
+        // store the update both in long term and in session storages
+        const updateWalletInSession = authentication.updateWallet.unwrap();
+        console.log("[main] proceed to the update of the wallet:", wallet)
+        updateWalletInSession(wallet).then(() => {
+            console.log("[main] Update the storage done")
+        }).catch(e => {
+            console.error("[main] An error occurred during wallet update:", e)
+        });
     }
 
     return (
@@ -58,10 +71,10 @@ export function  Dashboard() {
                                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Email
                                 </label>
-                                <input type="email" id="email" value={email}
+                                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)}
                                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"/>
                             </div>
-                            <button className="btn-primary btn-highlight">Save</button>
+                            <button className="btn-primary btn-highlight" onClick={saveEmail}>Save</button>
                         </div>
                     }
 
@@ -74,7 +87,7 @@ export function  Dashboard() {
                                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Email
                                 </label>
-                                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                                <input type="email" id="email"
                                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"/>
                             </div>
                             <button className="btn-primary btn-highlight">Save</button>

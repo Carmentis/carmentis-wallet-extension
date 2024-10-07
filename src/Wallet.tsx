@@ -5,7 +5,7 @@ const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
 const DEFAULT_DATA_ENDPOINT = "https://data.testapps.carmentis.io"
 
 export interface WalletData {
-    seed : ArrayBuffer | undefined;
+    seed : Array | undefined;
     accounts : AccountData[];
     nodeEndpoint: string;
     dataEndpoint: string;
@@ -16,13 +16,13 @@ export class Wallet {
     data : WalletData
 
     private constructor(
-        seed: ArrayBuffer | undefined,
+        seed: ArrayLike<number> | undefined,
         accounts : AccountData[],
         nodeEndpoint: string | undefined = undefined,
         dataEndpoint: string | undefined = undefined,
     ) {
         this.data = {
-            seed : seed,
+            seed : Array.from(seed),
             accounts : accounts,
             nodeEndpoint : nodeEndpoint ? nodeEndpoint : DEFAULT_NODE_ENDPOINT,
             dataEndpoint : dataEndpoint ? dataEndpoint : DEFAULT_DATA_ENDPOINT,
@@ -74,6 +74,7 @@ export class Wallet {
 
 
     getSeed() : Uint8Array {
+        console.log(this.data.seed);
         if (this.data.seed === undefined) {
             throw new Error( "Illegal state: The seed is undefined" );
         }
@@ -82,5 +83,12 @@ export class Wallet {
 
     static CreateFromDict(wallet : WalletData) {
         return new Wallet(wallet.seed, wallet.accounts);
+    }
+
+    updateAccountEmail(accountIndex : number, email: string) {
+        if ( 0 < accountIndex || this.data.accounts.length <= accountIndex ) {
+            throw new Error(`Invalid account index: got ${accountIndex} but have ${this.data.accounts.length} accounts`);
+        }
+        this.data.accounts[accountIndex].email = email;
     }
 }

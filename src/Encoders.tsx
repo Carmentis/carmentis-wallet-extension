@@ -27,13 +27,13 @@ export class Encoders {
     }
 
 
-    static ToUint8Array( bytes : Uint8Array | ArrayBuffer ) : Uint8Array {
-        if (bytes instanceof ArrayBuffer) {
+    static ToUint8Array( bytes : Uint8Array | Array<number> ) : Uint8Array {
+        if (bytes instanceof Array) {
             return Uint8Array.from(bytes)
         } else if (bytes instanceof Uint8Array) {
             return bytes
         } else {
-            throw new Error("[encoder] invalid bytes");
+            throw new Error(`[encoder] invalid type of bytes: expected either Uint8array of Array(number), got ${typeof bytes}`);
         }
     }
 }

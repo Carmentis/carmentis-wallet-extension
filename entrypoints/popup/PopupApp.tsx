@@ -132,7 +132,6 @@ function PopupApp() {
     let accountCreated = useContext(AccountCreatedContext);
     let authentication : AuthenticationContainer = useContext(AuthenticationContext);
 
-    let actionMessages : ActionMessage[] = useContext(ActionMessageContext);
 
     return <>
         { !applicationInitialized &&
@@ -142,10 +141,10 @@ function PopupApp() {
             <>
                 { accountCreated &&
                     <>
-                        { authentication.activeAccount.isEmpty() &&
+                        { authentication.activeAccountIndex.isEmpty() &&
                             <Login></Login>
                         }
-                        { !authentication.activeAccount.isEmpty() &&
+                        { !authentication.activeAccountIndex.isEmpty() &&
                           <>
                               <PopupDashboard></PopupDashboard>
                           </>
