@@ -39,4 +39,8 @@ export class Wallet {
         }
         return this.seed;
     }
+
+    static CreateFromDict(wallet : { seed : Uint8Array, accounts : Account[] }) {
+        return new Wallet(wallet.seed, wallet.accounts);
+    }
 }

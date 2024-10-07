@@ -1,3 +1,5 @@
+import {Wallet} from "@/src/Wallet.tsx";
+
 const DEFAULT_ACCOUNT_NAME = "Account"
 export class Account {
     pseudo: string;
@@ -11,5 +13,9 @@ export class Account {
 
     static Default() : Account {
         return new Account(DEFAULT_ACCOUNT_NAME, undefined);
+    }
+
+    static CreateFromDict(account : { pseudo: string, email: string }) : Account {
+        return new Account( account.pseudo, account.email );
     }
 }

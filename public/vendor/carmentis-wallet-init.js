@@ -1,12 +1,8 @@
 try {
     const CarmentisWallet = class {
-        test = function () {
-            console.log('This is a test message from window.carmentisWallet');
-        }
-
         openPopup = function (data) {
             console.log('Input to Carmentis Wallet:', data);
-            window.postMessage({ function: "processQRCode", data }, "*");
+            window.postMessage({ action: "processQRCode", data }, "*");
         }
     };
 
