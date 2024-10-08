@@ -1,9 +1,12 @@
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {Wallet} from "@/src/Wallet.tsx";
 import '../../../entrypoints/main/global.css'
 import {Account} from "@/src/Account.tsx";
 import {EmailValidation} from "@/src/components/dashboard/EmailValidation.tsx";
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
+import {Route, Routes} from "react-router";
+import Parameters from "@/src/components/dashboard/Parameters.tsx";
 
 export function  Dashboard() {
 
@@ -11,6 +14,8 @@ export function  Dashboard() {
     const wallet : Wallet = authentication.wallet.unwrap();
     const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
     const activeAccount : Account = wallet.getAccount(activeAccountIndex);
+
+
 
 
     return (
@@ -33,7 +38,10 @@ export function  Dashboard() {
                     </div>
                 </nav>
                 <div className="h-full w-full p-4">
-                    <EmailValidation></EmailValidation>
+                    <Routes>
+                        <Route path="/" element={<EmailValidation />} />
+                        <Route path="/parameters" element={<Parameters />} />
+                    </Routes>
                 </div>
 
 

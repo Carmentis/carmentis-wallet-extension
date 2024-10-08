@@ -45,7 +45,27 @@
         @apply text-xl font-extrabold dark:text-white mb-2;
     }
 
+    h3 {
+        @apply text-lg font-extrabold dark:text-white mb-2;
+    }
+
     p {
         @apply mb-2;
+    }
+
+    .parameter-group {
+        @apply mb-5;
+    }
+
+    .parameter-title {
+        @apply mb-2 font-bold;
+    }
+
+    .parameter-description {
+        @apply mb-1;
+    }
+
+    .parameter-input {
+        @apply bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700;
     }
 }
