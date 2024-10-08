@@ -106,7 +106,7 @@ export function ContextPage(props: { children: ReactElement }) {
      * @constructor
      */
     function updateWallet( wallet : Wallet ) : Promise<void> {
-        console.log("[context page] Update of the wallet")
+        console.log("[context page] Update of the wallet:", wallet)
         return new Promise((resolve, reject) => {
             // store the wallet in the storage session
             const provider = new CarmentisProvider();

@@ -99,4 +99,11 @@ export class Wallet {
         }
         this.data.accounts[accountIndex].emailValidationProof = emailValidationProof;
     }
+
+    updatePseudo(accountIndex : number, pseudo: string) {
+        if ( 0 < accountIndex || this.data.accounts.length <= accountIndex ) {
+            throw new Error(`Invalid account index: got ${accountIndex} but have ${this.data.accounts.length} accounts`);
+        }
+        this.data.accounts[accountIndex].pseudo = pseudo
+    }
 }

@@ -38,7 +38,7 @@ export function EmailValidation() {
 
         // store the update both in long term and in session storages
         const updateWalletInSession = authentication.updateWallet.unwrap();
-        console.log("[main] proceed to the update of the wallet:", wallet)
+        console.log("[main] proceed to the update of the wallet")
         updateWalletInSession(wallet).then(() => {
             console.log("[main] Update the storage done")
             setEmailProvided(true);
@@ -85,7 +85,15 @@ export function EmailValidation() {
                 value: verificationCode
             }
         ).then(answer => {
-            const emailValidationProof : EmailValidationProofData = answer.data;
+            console.log("[email validation] answer after verification code:", answer)
+            // abort if the answer is undefined
+            if ( answer === undefined || answer.data === undefined || answer.data.proof === undefined ) {
+                console.error("[email validation] malformed response: ", answer)
+                throw new Error(`The answer obtained after the verification of the code is malformed: ${answer}`)
+            }
+
+            // populate the account with the provided proof
+            const emailValidationProof : EmailValidationProofData = answer.data.proof;
             wallet.updateValidationProof(activeAccountIndex, emailValidationProof);
             authentication.updateWallet.unwrap()(wallet).then(_ => {
                 setIsEmailVerificationSucceeded(true)

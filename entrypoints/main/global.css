@@ -682,19 +682,22 @@ p {
 
 .parameter-input {
   width: 100%;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
   border-radius: 0.25rem;
   border-width: 2px;
   --tw-border-opacity: 1;
   border-color: rgb(229 231 235 / var(--tw-border-opacity));
-  --tw-bg-opacity: 1;
-  background-color: rgb(229 231 235 / var(--tw-bg-opacity));
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+.parameter-input[readonly] {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity));
   --tw-text-opacity: 1;
   color: rgb(55 65 81 / var(--tw-text-opacity));
 }

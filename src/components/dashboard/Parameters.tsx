@@ -8,6 +8,7 @@ import {Account} from "@/src/Account.tsx";
 export default function Parameters() {
 
     const authentication = useContext(AuthenticationContext);
+    const activeAccountIndex:  number = authentication.activeAccountIndex.unwrap();
     const wallet : Wallet = authentication.wallet.unwrap();
 
 
@@ -24,6 +25,7 @@ export default function Parameters() {
     const [userPrivateKey, setUserPrivateKey] = useState("");
     const [userPublicKey, setUserPublicKey] = useState("");
 
+    // we place the content here to prevent infinite re-rendering
     useEffect(() => {
         const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
         const activeAccount : Account = wallet.getAccount(activeAccountIndex);
@@ -41,6 +43,8 @@ export default function Parameters() {
                 })
             })
         }).catch(error => {
+            console.error(error);
+            // TODO: Handle error
         })
     }, [wallet]);
 
@@ -63,11 +67,27 @@ export default function Parameters() {
     }, [wallet]);
 
 
+
     /**
      * Event function called when the user saves the parameters.
      */
     function saveParameters() {
-        
+        // prevent invalid parameters
+        if ( pseudo === "" ) {
+            // TODO notify the user
+            console.error("[parameters] cannot update the active account pseudo with an empty pseudo")
+            return
+        }
+
+
+
+        // update the pseudo
+        wallet.updatePseudo( activeAccountIndex, pseudo );
+
+        const updateWallet = authentication.updateWallet.unwrap();
+        updateWallet(wallet).then(_ => {
+
+        });
     }
 
     return <>
@@ -146,7 +166,7 @@ export default function Parameters() {
             </div>
 
             <div className="items-end">
-                <button className="btn-primary btn-highlight" onClick={saveParameters()}>Save</button>
+                <button className="btn-primary btn-highlight" onClick={saveParameters}>Save</button>
             </div>
         </div>
     </>
