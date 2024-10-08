@@ -46,29 +46,73 @@ export function PopupDashboard() {
     function handleClientRequest( request ) {
         logger.info("[popup] receive client request from operator", request);
         if (request.type == "signIn") {
-            // generate the private signature key and derive the public signature key from it
-            const wallet : Wallet = authenticationContext.wallet.unwrap();
-            const seed : Uint8Array = wallet.getSeed();
+           handleSignInRequest(request);
+        } else if (request.type == "eventApproval") {
+            handleRequestEventApproval(request)
+        }
 
-            // TODO SECURITY: Why a constant nonce ?
-            Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
-                logger.info("[popup] seed derived");
-                Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
-                    Carmentis.getPublicKey(privateKey).then(publicKey => {
-                        Carmentis.sign(privateKey, Encoders.FromHexa(request.data.sessionPublicKey)).then(signature => {
-                            CloseOnSuccess()
-                            request.answer({
-                                success: true,
-                                data: {
-                                    pubKey: Encoders.ToHexa(publicKey),
-                                    sessionPubKeySignature: Encoders.ToHexa(signature)
-                                }
-                            });
-                        })
+    }
+
+
+    /**
+     * This functions is called when the wallet receives a request to sign-in.
+     *
+     * @param request
+     */
+    function handleSignInRequest( request ) {
+        // generate the private signature key and derive the public signature key from it
+        const wallet : Wallet = authenticationContext.wallet.unwrap();
+        const seed : Uint8Array = wallet.getSeed();
+
+        // TODO SECURITY: Why a constant nonce ?
+        Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
+            Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
+                Carmentis.getPublicKey(privateKey).then(publicKey => {
+                    Carmentis.sign(privateKey, Encoders.FromHexa(request.data.sessionPublicKey)).then(signature => {
+                        CloseOnSuccess()
+                        request.answer({
+                            success: true,
+                            data: {
+                                pubKey: Encoders.ToHexa(publicKey),
+                                sessionPubKeySignature: Encoders.ToHexa(signature)
+                            }
+                        });
                     })
                 })
-            });
-        }
+            })
+        });
+    }
+
+    /**
+     * This functions is called when the wallet receives an event approval request.
+     *
+     * An event approval request is called mainly when the approval of a user is required.
+     */
+    function handleRequestEventApproval(request) {
+        const [ applicationId, recordId ] = request.data.id.split("-");
+
+        const seed = wallet.getSeed();
+
+        // TODO SECURITY: Why a constant nonce ?
+        Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
+            return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
+                return Carmentis.getPublicKey(privateKey).then(publicKey => {
+                    return request.answer({
+                        message  : "walletHandshake",
+                        recordId : recordId,
+                        publicKey: Encoders.ToHexa(publicKey)
+                    })
+                })
+            })
+        }).then( answer => {
+            console.log("[popup] The anwser has respond with an answer: ", answer)
+            CloseOnSuccess()
+        }).catch(error => {
+            console.error("[popup] The event approval process has failed: ", error);
+            setError(error)
+        }).finally(() => {
+            setRequestInProgress(false);
+        });
 
     }
 

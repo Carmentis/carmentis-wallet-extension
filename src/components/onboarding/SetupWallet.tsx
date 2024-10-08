@@ -35,10 +35,12 @@ export function SetupWallet() {
 
 
     function redirectToMainPage() {
-        browser.runtime.sendMessage({
-            action: "open",
-            location: "main"
-        })
+        (async () => {
+            await  browser.runtime.sendMessage({
+                action: "open",
+                location: "main"
+            });
+        })();
     }
 
     // store the seed in the wallet

@@ -13,7 +13,7 @@ function processQRCode( origin : string, data : string ) {
                 origin: origin ,
             })
         }, 250);
-
+        return true;
     }).catch( error => {
         // occurs when the popup is already opened
         browser.runtime.sendMessage({
@@ -69,14 +69,21 @@ function launchExtensionOnTab( url: string ) {
                 if ( reason === "install" ) {
                     browser.tabs.create({url: "./main.html"});
                 }
+                return true;
             });
 
 
             browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log("[background] message received:", message, sender, sendResponse);
+
+                // we do not execute request coming from tab which are not active
+                if ( sender.tab && !sender.tab.active ) { return }
+
+
                 if (message.action == "open") {
                     if (message.location == "main") {
-                        launchExtensionOnTab( "./main.html" );
+                        //launchExtensionOnTab( "./main.html" );
+                        browser.tabs.create({url: "./main.html"});
                         // browser.tabs.create({url: "./main.html"});
                     }
 
@@ -100,6 +107,7 @@ function launchExtensionOnTab( url: string ) {
                      } else {
                          console.warn("[background] undefined action: I don't known the desired action: received message: ", message);
                      }
+                     return true;
                  })
              });
         }
