@@ -1,10 +1,12 @@
 import {useNavigate} from "react-router";
-
-
+import {useTranslation} from "react-i18next";
 
 
 export function Landing() {
     const navigate = useNavigate();
+    const {t} = useTranslation();
+
+
 
     function moveToWalletCreation() {
         navigate("/create-password", {
@@ -25,8 +27,8 @@ export function Landing() {
     return (
         <>
             <div className="flex flex-col items-center justify-center">
-                <h1 className="title mb-2">Create your wallet</h1>
-                <p>Carmentis Wallet is a secure wallet designed to approve event.</p>
+                <h1 className="title mb-2">{t("onboarding.create-wallet.title")}</h1>
+                <p>{t("onboarding.create-wallet.subtitle")}</p>
                 <img src="https://docs.carmentis.io/img/carmentis-logo-color.png"/>
 
                 <div className="flex items-center mb-4">
