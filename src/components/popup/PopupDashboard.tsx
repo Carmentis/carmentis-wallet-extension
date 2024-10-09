@@ -6,7 +6,7 @@ import {ActionMessageContainer, ActionMessageContext} from "@/entrypoints/popup/
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
-import {Account} from "@/src/Account.tsx";
+import {Account, EmailValidationProofData} from "@/src/Account.tsx";
 
 
 export function PopupDashboard() {
@@ -45,12 +45,26 @@ export function PopupDashboard() {
      */
     function handleClientRequest( request ) {
         logger.info("[popup] receive client request from operator", request);
-        if (request.type == "signIn") {
-           handleSignInRequest(request);
-        } else if (request.type == "eventApproval") {
-            handleRequestEventApproval(request)
+        switch(request.type) {
+            case "signIn": {
+                handleSignInRequest(request);
+                break;
+            }
+            case "authentication": {
+                handleRequestAuthentication(request);
+                break;
+            }
+            case "eventApproval": {
+                handleRequestEventApproval(request);
+                break;
+            }
+            default:
+                console.error("Unknown request type: " + request.type);
+                setTimeout(() => {
+                    window.close();
+                }, 2000);
+                break;
         }
-
     }
 
 
@@ -117,6 +131,21 @@ export function PopupDashboard() {
     }
 
     /**
+     * Handle authentication request.
+     *
+     * @param request
+     */
+    function handleRequestAuthentication(request) {
+        // TODO handle the case where the user's email is not verified
+        // load the email proof
+        let emailProof : EmailValidationProofData = activeAccount.getEmailValidationProofData();
+        request.answer({
+            success: true,
+            proof  : emailProof
+        });
+    }
+
+    /**
      * Function called on the success.
      *
      * @constructor
@@ -130,12 +159,54 @@ export function PopupDashboard() {
         setTimeout(
             function() {
                 setSuccess(false)
-                window.close()
+                //window.close()
             }, 1700);
     }
 
+    /**
+     * Event function called when a request is received from the server
+     *
+     * @param request
+     */
     function handleServerRequest( request ) {
-        console.log("server", request)
+        console.log("[popup] receive server request:", request);
+        switch(request.type) {
+            case "blockData": {
+                requestBlockData(request);
+                break;
+            }
+            case "confirmRecord": {
+                handleConfirmRecord(request);
+                break;
+            }
+            default:
+                throw new Error("[popup] Unknown request type: " + request.type);
+        }
+    }
+
+
+    function requestBlockData( request ) {
+        Carmentis.prepareApproval(
+            request.data.applicationId,
+            request.data.flowId,
+            new Uint8Array(request.data.blockData)
+        ).then(flow => {
+            return request.answer({
+                message : "confirmRecord",
+                recordId: request.data.recordId
+            })
+        }).then(_ => {
+            return request.clientAnswer({
+                success : true,
+                recordId: request.data.recordId
+            });
+        }).catch(error => {
+            console.log("An error occurred while handling requestBlockData:", error)
+        });
+    }
+
+    function handleConfirmRecord(request) {
+        console.log("[popup] confirm record:", request);
     }
 
     useEffect(() => {

@@ -56,4 +56,16 @@ export class Account {
     static CreateFromDict(account : AccountData) : Account {
         return new Account( account.pseudo, account.email, account.emailValidationProof );
     }
+
+    /**
+     * Returns the email verification proof.
+     *
+     * @throws Error If the email is not verified.
+     */
+    getEmailValidationProofData() : EmailValidationProofData {
+        if ( this.data.emailValidationProof === undefined ) {
+            throw new Error( "The active account do not have verified its email" );
+        }
+        return this.data.emailValidationProof
+    }
 }

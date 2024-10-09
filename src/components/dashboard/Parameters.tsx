@@ -15,6 +15,7 @@ export default function Parameters() {
 
     // state for the name edition
     const [pseudo, setPseudo] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
 
     // states for the endpoints
     const [dataEndpoint, setDataEndpoint] = useState(wallet.getDataEndpoint());
@@ -30,6 +31,7 @@ export default function Parameters() {
         const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
         const activeAccount : Account = wallet.getAccount(activeAccountIndex);
         setPseudo(activeAccount.getPseudo());
+        setEmail(activeAccount.getEmail().unwrapOr(""))
     }, [wallet]);
 
     useEffect(() => {
@@ -102,6 +104,12 @@ export default function Parameters() {
                     <div className="parameter-description">The name of your account.</div>
                     <input type="text" onChange={e => setPseudo(e.target.value)}
                            className="parameter-input" value={pseudo}/>
+                </div>
+                <div className="parameter-group">
+                    <div className="parameter-title">Email</div>
+                    <div className="parameter-description">Your email</div>
+                    <input type="text"
+                           className="parameter-input" readOnly={true} value={email}/>
                 </div>
 
             </div>
