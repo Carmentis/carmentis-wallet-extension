@@ -649,8 +649,57 @@ h2 {
   }
 }
 
+h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 800;
+}
+
+@media (prefers-color-scheme: dark) {
+  h3 {
+    --tw-text-opacity: 1;
+    color: rgb(255 255 255 / var(--tw-text-opacity));
+  }
+}
+
 p {
   margin-bottom: 0.5rem;
+}
+
+.parameter-group {
+  margin-bottom: 1.25rem;
+}
+
+.parameter-title {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.parameter-description {
+  margin-bottom: 0.25rem;
+}
+
+.parameter-input {
+  width: 100%;
+  border-radius: 0.25rem;
+  border-width: 2px;
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity));
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.parameter-input[readonly] {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity));
 }
 
 .static {
@@ -671,6 +720,14 @@ p {
 
 .z-10 {
   z-index: 10;
+}
+
+.m-4 {
+  margin: 1rem;
+}
+
+.m-2 {
+  margin: 0.5rem;
 }
 
 .mx-auto {
@@ -724,6 +781,10 @@ p {
 
 .mt-4 {
   margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
 }
 
 .block {
@@ -787,6 +848,10 @@ p {
   height: 100%;
 }
 
+.h-32 {
+  height: 8rem;
+}
+
 .min-h-full {
   min-height: 100%;
 }
@@ -825,6 +890,22 @@ p {
 
 .w-full {
   width: 100%;
+}
+
+.w-1\/12 {
+  width: 8.333333%;
+}
+
+.w-3\/12 {
+  width: 25%;
+}
+
+.w-32 {
+  width: 8rem;
+}
+
+.w-12 {
+  width: 3rem;
 }
 
 .min-w-72 {
@@ -873,6 +954,10 @@ p {
   align-content: center;
 }
 
+.items-end {
+  align-items: flex-end;
+}
+
 .items-center {
   align-items: center;
 }
@@ -903,6 +988,10 @@ p {
 
 .self-center {
   align-self: center;
+}
+
+.overflow-x-scroll {
+  overflow-x: scroll;
 }
 
 .whitespace-nowrap {
@@ -999,6 +1088,16 @@ p {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
+.bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+}
+
+.bg-gray-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity));
+}
+
 .fill-blue-600 {
   fill: #2563eb;
 }
@@ -1029,6 +1128,10 @@ p {
 
 .p-6 {
   padding: 1.5rem;
+}
+
+.p-1 {
+  padding: 0.25rem;
 }
 
 .px-3 {

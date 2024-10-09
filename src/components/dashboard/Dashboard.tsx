@@ -7,6 +7,7 @@ import {EmailValidation} from "@/src/components/dashboard/EmailValidation.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Route, Routes, useNavigate} from "react-router";
 import Parameters from "@/src/components/dashboard/Parameters.tsx";
+import {extension} from "webextension-polyfill";
 
 export function  Dashboard() {
 
