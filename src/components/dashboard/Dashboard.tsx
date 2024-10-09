@@ -37,15 +37,26 @@ export function  Dashboard() {
         <>
                 <nav className="bg-white  dark:bg-gray-900 border-b-2 border-gray-100">
                     <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-                        <div onClick={goToMain} className="flex items-center space-x-3 rtl:space-x-reverse h-4">
+                        <div onClick={goToMain}
+                             className="flex items-center space-x-3 rtl:space-x-reverse h-4 border-gray-100 border-2 rounded-3xl py-4 px-1">
                             <img
-                                src="https://t4.ftcdn.net/jpg/05/49/98/39/360_F_549983970_bRCkYfk0P6PP5fKbMhZMIb07mCJ6esXL.jpg"
+                                src="/assets/img/user-icon.jpg"
                                 className="h-6"
                             />
                             <span
-                                className="self-center text-xl font-semibold whitespace-nowrap text-black">
+                                className="self-center text-lg font-semibold whitespace-nowrap text-black">
                                 {activeAccount.getPseudo()}
                             </span>
+                            <button className="rounded-2xl hover:bg-gray-50">
+                                <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                     viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="m19 9-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+
                         </div>
 
                         <div className="relative inline-block text-left">
