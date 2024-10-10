@@ -1,6 +1,5 @@
 import {Runtime} from "webextension-polyfill";
 import Port = Runtime.Port;
-import {req} from "pino-std-serializers";
 
 function processQRCode( origin : string, data : string ) {
     browser.action.openPopup().then(() => {
@@ -15,12 +14,42 @@ function processQRCode( origin : string, data : string ) {
         }, 250);
         return true;
     }).catch( error => {
+        console.log("[background] An error has been detected when opening the popup: ", error)
+
+
         // occurs when the popup is already opened
-        browser.runtime.sendMessage({
-            action: "popup/processQRCode",
-            data: data,
-            origin: origin,
-        })
+        if ( error.message === "Failed to open popup." ) {
+            console.log("[background] Retrying with a send message")
+            browser.runtime.sendMessage({
+                action: "popup/processQRCode",
+                data: data,
+                origin: origin,
+            })
+        }
+
+        // occurs when the navigator requires a user gesture
+        if ( error.message == "openPopup requires a user gesture" ) {
+            console.log("[background] Retrying with a floating window")
+            browser.windows.create({
+                url: "popup.html",
+                type: 'popup',
+                width: 400,
+                height: 600,
+                left: 0,
+                top: 0,
+                focused: true
+            }).then(() => {
+                browser.runtime.sendMessage({
+                    action: "popup/processQRCode",
+                    data: data,
+                    origin: origin,
+                })
+            }).catch((error) => {
+                console.error("[background] An error has been detected when opening the floating popup: ", error)
+            });
+        }
+
+        return true;
     });
 }
 
@@ -91,13 +120,17 @@ function launchExtensionOnTab( url: string ) {
                         browser.tabs.create({url: "./main.html"});
                     }
                 }
+
+                return true;
             });
 
 
              browser.runtime.onConnect.addListener((port:Port) => {
                  console.log("[background] connected to: ", port);
-                 port.onMessage.addListener((request) => {
-                     console.log("[background] message received from port:", request);
+                 port.onMessage.addListener((rawRequest) => {
+                     console.log("[background] message received from port:", rawRequest);
+                     const request = JSON.parse(rawRequest);
+                     console.log("[background] once decoded:", request);
                      const message = request.data
                      if (message.action === "processQRCode") {
                          // get the data section

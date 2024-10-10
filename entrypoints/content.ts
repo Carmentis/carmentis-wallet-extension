@@ -3,16 +3,17 @@ export default defineContentScript({
   main(ctx) {
 
     const port = browser.runtime.connect({name: 'carmentis-wallet'});
+    console.log("[content] port created:", port)
 
     window.addEventListener('message', async (message) => {
       console.log("[content] message received:", message);
 
-      //sent to background
-      port.postMessage({
+      // send to background
+      port.postMessage(JSON.stringify({
         request: message,
         data: message.data,
         origin: message.origin
-      });
+      }));
     });
 
 
@@ -20,10 +21,6 @@ export default defineContentScript({
       position: 'inline',
       onMount: (container) => {
         console.log('Carmentis Wallet mounted');
-        //const wallet = retrieveWallet();
-        // Append children to the container
-        const app = document.createElement('p');
-        app.textContent = 'Carmentis Wallet installed';
 
         const script = document.createElement('script');
         script.type = 'module'; // Optional, if using ES6 modules

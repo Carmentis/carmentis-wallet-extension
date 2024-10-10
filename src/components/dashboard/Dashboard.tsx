@@ -19,6 +19,7 @@ export function  Dashboard() {
     const navigate = useNavigate();
 
     const [showMenu, setShowMenu] = useState<boolean>(false);
+    const [mouseEntered, setMouseEntered] = useState<boolean>(false);
 
 
     function goToParameters() {
