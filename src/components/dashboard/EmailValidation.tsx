@@ -126,17 +126,17 @@ export function EmailValidation() {
 
         { emailProvided && !emailValidated &&
             <div className="bg-green-100 p-2 rounded-md shadow-sm">
-                <h2>Validate your email</h2>
+                <h2>Validate your email with oracle</h2>
                 <p>To validate your email (<b>{email}</b>), we will send a code that should be pasted.</p>
                 {emailValidationInProgress &&
                     <div className="mb-5">
                         <label htmlFor="verificationCode"
                                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            Email
+                            Received code
                         </label>
                         <input type="text" id="verificationCode" value={verificationCode}
                                onChange={(e) => setVerificationCode(e.target.value)}
-                               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"/>
+                               className="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"/>
                         <button className="btn-primary btn-highlight"
                                 onClick={verifyVerificationCode}>Verify the code</button>
                     </div>

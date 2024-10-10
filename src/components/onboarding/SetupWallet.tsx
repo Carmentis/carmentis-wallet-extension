@@ -36,11 +36,17 @@ export function SetupWallet() {
 
     function redirectToMainPage() {
         (async () => {
-            await  browser.runtime.sendMessage({
+            browser.runtime.sendMessage({
                 action: "open",
                 location: "main"
-            });
+            }).then(
+                closeCurrentTab
+            );
         })();
+    }
+
+    function closeCurrentTab() {
+        window.close()
     }
 
     // store the seed in the wallet
@@ -81,7 +87,10 @@ export function SetupWallet() {
             {installed &&
                 <div>
                     <h1>You are ready!</h1>
-                    <p>You will be redirected to the main page.</p>
+                    <p>You wallet has been installed and setup.</p>
+                    <button className="btn-primary btn-highlight" onClick={closeCurrentTab}>
+                        Close
+                    </button>
                 </div>
             }
         </div>

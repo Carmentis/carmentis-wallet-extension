@@ -106,6 +106,12 @@ export function PopupDashboard() {
      * @constructor
      */
     function AllowQRCodeProcess(QRCodeData: string) {
+        // if the QRCodeData is undefined, it is highly due to an expired page.
+        if ( QRCodeData == undefined ) {
+            AbortWithError( "The QR code seems outdated, please reload the QR code and retry." );
+            return
+        }
+
         logger.info(`[popup] Start QRCode request with ${QRCodeData}`)
         executeBackgroundTask(() => {
             Carmentis.wallet.getRequestByQRCode(QRCodeData)
@@ -336,7 +342,10 @@ export function PopupDashboard() {
                     }
 
                     { actionRequestState == RequestTreatmentState.AUTHENTICATION_REQUEST &&
-                        <AuthenticationRequest onAccept={handleRequestAuthentication} onReject={RejectRequest}></AuthenticationRequest>
+                        <AuthenticationRequest
+                            email={activeAccount.getEmail()}
+                            onAccept={handleRequestAuthentication}
+                            onReject={RejectRequest}></AuthenticationRequest>
                     }
 
 

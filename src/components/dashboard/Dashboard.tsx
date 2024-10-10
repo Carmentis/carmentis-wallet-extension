@@ -23,15 +23,23 @@ export function  Dashboard() {
 
 
     function goToParameters() {
+        setShowMenu(false)
         navigate("/parameters")
     }
 
     function goToMain() {
+        setShowMenu(false)
         navigate("/")
     }
 
     function logout() {
+        setShowMenu(false)
         authentication.Disconnect()
+    }
+
+    function goToHelp() {
+        setShowMenu(false);
+        window.open("https://docs.carmentis.io", "_blank");
     }
 
     return (
@@ -86,6 +94,11 @@ export function  Dashboard() {
                                     <div
                                         className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
                                         id="menu-item-1" onClick={logout}>Logout
+                                    </div>
+                                    <div
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
+                                        id="menu-item-0" onClick={goToHelp}>
+                                        Get help
                                     </div>
                                 </div>
                             </div>

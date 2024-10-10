@@ -1,14 +1,45 @@
-import {useContext, useEffect, useState} from "react";
+import {ReactElement, useContext, useEffect, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
 import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
 import {Account} from "@/src/Account.tsx";
 
+function InputWithDynamicConfirmSaveComponent(input: {
+    value: string,
+    onChange:(value: string) => void,
+    onSave:() => void,
+}) : ReactElement {
+
+    const [hasChanged, setHasChanged] = useState<boolean>(false);
+
+
+    function onChange(updatedValue : string): void {
+        setHasChanged(true);
+        input.onChange(updatedValue);
+    }
+
+    function onSave() {
+        setHasChanged(false);
+        input.onSave()
+    }
+
+    return <>
+        <input type="text" onChange={e => onChange(e.target.value)}
+               className="parameter-input" value={input.value}/>
+
+        { hasChanged &&
+            <div className="flex justify-end items-end space-x-1 mt-1">
+                <button className="btn-primary btn-highlight" onClick={onSave}>Save</button>
+            </div>
+        }
+    </>;
+}
+
 export default function Parameters() {
 
     const authentication = useContext(AuthenticationContext);
-    const activeAccountIndex:  number = authentication.activeAccountIndex.unwrap();
+    const activeAccountIndex: number = authentication.activeAccountIndex.unwrap();
     const wallet : Wallet = authentication.wallet.unwrap();
 
 
@@ -16,6 +47,7 @@ export default function Parameters() {
     // state for the name edition
     const [pseudo, setPseudo] = useState<string>("");
     const [email, setEmail] = useState<string>("");
+    const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false);
 
     // states for the endpoints
     const [dataEndpoint, setDataEndpoint] = useState(wallet.getDataEndpoint());
@@ -32,6 +64,7 @@ export default function Parameters() {
         const activeAccount : Account = wallet.getAccount(activeAccountIndex);
         setPseudo(activeAccount.getPseudo());
         setEmail(activeAccount.getEmail().unwrapOr(""))
+        setVerifiedEmail(activeAccount.hasVerifiedEmail())
     }, [wallet]);
 
     useEffect(() => {
@@ -102,15 +135,13 @@ export default function Parameters() {
                 <div className="parameter-group">
                     <div className="parameter-title">Account Name</div>
                     <div className="parameter-description">The name of your account.</div>
-                    <input type="text" onChange={e => setPseudo(e.target.value)}
-                           className="parameter-input" value={pseudo}/>
+                    <InputWithDynamicConfirmSaveComponent
+                        value={pseudo}
+                        onChange={setPseudo}
+                        onSave={saveParameters} />
+
                 </div>
-                <div className="parameter-group">
-                    <div className="parameter-title">Email</div>
-                    <div className="parameter-description">Your email</div>
-                    <input type="text"
-                           className="parameter-input" readOnly={true} value={email}/>
-                </div>
+
 
             </div>
 
@@ -134,47 +165,44 @@ export default function Parameters() {
                 </div>
             </div>
 
-
             <div className="parameter-section">
-                <h2>Organisation Keys</h2>
+                <h2>Oracles</h2>
                 <div className="parameter-group">
-                    <div className="parameter-title">Organization Private Key</div>
-                    <div className="parameter-description">The private signature key of the operator.</div>
-                    <input type="text" onClick={() => {
-                        navigator.clipboard.writeText(organisationPrivateKey);
-                    }}
-                           className="parameter-input" readOnly={true} value={organisationPrivateKey}/>
-                </div>
-                <div className="parameter-group">
-                    <div className="parameter-title">Organization Public Key</div>
-                    <div className="parameter-description">The public signature key of the operator.</div>
-                    <input type="text" onClick={() => {
-                        navigator.clipboard.writeText(organisationPublicKey);
-                    }}
-                           className="parameter-input" readOnly={true} value={organisationPublicKey}/>
-                </div>
-            </div>
-
-
-            <div className="parameter-section">
-                <h2>Endpoints</h2>
-                <div className="parameter-group">
-                    <div className="parameter-title">Data Endpoint</div>
-                    <div className="parameter-description">The endpoint of the data server.</div>
+                    <div className="parameter-title">Email</div>
+                    <div className="parameter-description">
+                        The email linked with account. {verifiedEmail &&
+                        <span className="text-green-600">(Verified with the Carmentis email verification oracle)</span>}
+                    </div>
                     <input type="text"
-                           className="parameter-input" value={dataEndpoint}
-                           onChange={event => setDataEndpoint(event.target.value)}/>
+                           className="parameter-input" readOnly={true} value={email}/>
                 </div>
                 <div className="parameter-group">
-                    <div className="parameter-title">Node Endpoint</div>
-                    <div className="parameter-description">The endpoint of the node server.</div>
-                    <input type="text" onChange={event => setNodeEndpoint(event.target.value)}
-                           className="parameter-input" value={nodeEndpoint}/>
+                    <div className="parameter-title">Oracle Data Endpoint</div>
+                    <div className="parameter-description">The endpoint of the oracle data server.</div>
+                    <InputWithDynamicConfirmSaveComponent
+                        value={dataEndpoint}
+                        onChange={setDataEndpoint}
+                        onSave={saveParameters} />
                 </div>
             </div>
 
-            <div className="items-end">
-                <button className="btn-primary btn-highlight" onClick={saveParameters}>Save</button>
+
+
+            <div className="parameter-section">
+                <h2>Network</h2>
+
+                <div className="parameter-group">
+                    <div className="parameter-title">Carmentis Node Endpoint</div>
+                    <div className="parameter-description">
+                        The endpoint of the carmentis node server.
+                        Make sure that this node belongs to the Carmentis network.
+                    </div>
+
+                    <InputWithDynamicConfirmSaveComponent
+                        value={nodeEndpoint}
+                        onChange={setNodeEndpoint}
+                        onSave={saveParameters} />
+                </div>
             </div>
         </div>
     </>

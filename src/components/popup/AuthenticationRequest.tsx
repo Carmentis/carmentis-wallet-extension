@@ -1,7 +1,9 @@
 import React from "react";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
+import {Optional} from "@/src/Optional.tsx";
 
 export function AuthenticationRequest(input: {
+    email: Optional<string>;
     onAccept: () => void,
     onReject: () => void
 }) {
@@ -11,9 +13,17 @@ export function AuthenticationRequest(input: {
                 Authentication Request
             </h2>
             <div className="h-1/4 mb-3">
-                <p>
-                    Do you want to authenticate?
-                </p>
+                {input.email.isEmpty() &&
+                    <p>
+                        Do you agree to authenticate?
+                    </p>
+                }
+                {!input.email.isEmpty() &&
+                    <p>
+                        Do you agree to authenticate as {input.email.unwrap()}?
+                    </p>
+                }
+
             </div>
             <div className="flex flex-row justify-evenly">
                 <button className="w-1/2 p-3 mr-1 btn-primary btn-highlight"
