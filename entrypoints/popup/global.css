@@ -1116,6 +1116,11 @@ p {
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
 }
 
+.bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+}
+
 .bg-green-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(220 252 231 / var(--tw-bg-opacity));
@@ -1138,6 +1143,10 @@ p {
 
 .fill-blue-600 {
   fill: #2563eb;
+}
+
+.p-1 {
+  padding: 0.25rem;
 }
 
 .p-1\.5 {
@@ -1325,6 +1334,10 @@ p {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+.underline {
+  text-decoration-line: underline;
 }
 
 .shadow-lg {

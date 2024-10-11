@@ -1,18 +1,115 @@
 import {Optional} from "@/src/Optional.tsx";
-import {useRef, useState} from "react";
+import {ReactElement, useRef, useState} from "react";
+import assert from "node:assert";
+
+
+interface TextualMessagePart {
+    isField: boolean
+    name: string,
+    value : string
+}
+
+interface ObjectMessagePart {
+    isField: boolean,
+    def: { name: string, flag: number, id: number, maskId: number },
+    field: string,
+    value: object
+}
 
 
 
-function DataTreeViewer(input : {data: object}){
+function DataTreeViewer(input : {data: object}) {
+
     const data = input.data;
     const records = data.record;
 
     // this ref is used to remember the level in which
     let tree = useRef([records]);
-    // this ref is used to have a well-formatted header when digging into the content
-    let path = useRef<string[]>([]);
     let [currentDepth, setCurrentDepth] = useState(0)
     let node = tree.current[currentDepth];
+
+    // this ref is used to have a well-formatted header when digging into the content
+    let path = useRef<string[]>([]);
+
+
+    /**
+     * This function is called when the user wants to access a node in the structure of the block by clicking on the
+     * field name in the message.
+     *
+     * Note: this function currently do *not* support the access to a previous block.
+     *
+     * @param fieldPath The path of the target node.
+     */
+    function goToNode(  fieldPath : string[] ) {
+        console.log("go to node", fieldPath)
+        // the first field should be "this"
+        if ( fieldPath.length === 0 || fieldPath[0] !== "this" ){
+            throw new Error("Cannot access the provided node: The field path is invalid")
+        }
+
+        // the path is already known
+        path.current = fieldPath.slice(1);
+
+        const root = tree.current[0];
+        const updatedTree = [root];
+        let currentNode = root;
+        let index = 1
+        while (index < fieldPath.length) {
+            const childName = fieldPath[index];
+            console.log(currentNode, childName);
+            const child = currentNode[childName];
+            updatedTree.push(child);
+            currentNode = child;
+            index += 1;
+        }
+
+        // update the tree
+        tree.current = updatedTree;
+        setCurrentDepth(index - 1);
+
+
+    }
+
+
+    /**
+    *
+    */
+    function formatMessage( msg : string, msgParts : (TextualMessagePart | ObjectMessagePart)[] ) {
+
+        let result = [];
+
+        for (let i = 0; i < msgParts.length; i++) {
+            const part = msgParts[i];
+            switch (part.isField) {
+                case true:
+                    const fieldName : string = part.def.name;
+                    const fieldPath : string[] = part.field.split(".")
+                    const fieldValue = part.value;
+                    console.log(fieldName, typeof fieldName)
+                    if ( typeof fieldValue === "string" ) {
+                        result.push(<span className="field">{fieldValue}</span>)
+                    } else {
+                        result.push(<span className="underline" onClick={() => {
+                                goToNode(fieldPath);
+                            }}>
+                            {fieldName}
+                        </span>)
+                    }
+
+
+                    break
+
+                case false:
+                    result.push(part.value);
+                    break;
+
+
+            }
+        }
+
+        return result
+    }
+
 
 
     function goToChild( childName : string ) {
@@ -39,9 +136,17 @@ function DataTreeViewer(input : {data: object}){
     }
 
 
-
+    // format the message (defined in the workspace)
+    const msg = data.msg;
+    const msgParts = data.msgParts;
+    const formattedMessage = formatMessage(msg, msgParts);
 
     return <>
+        <div id="event-approval-message" className="p-1 rounded-md bg-gray-100 mb-2">
+            {formattedMessage}
+        </div>
+
+        Ensure that the received data is correct:
         <div className="tree-viewer">
             <table className="w-full mb-2" id="event-approval-table">
                 <tbody id="event-approval-data">

@@ -15,7 +15,7 @@ export function EventRequestApproval(input: {
             </h2>
             <div className="h-1/4 mb-3">
                 <p>
-                    The data associated with this event are displayed below:
+                   The application provides this message:
                 </p>
             </div>
             <RecordDisplayer record={input.data}/>
