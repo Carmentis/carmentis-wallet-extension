@@ -64,7 +64,7 @@ function DataTreeViewer(input : {data: object}){
                             {typeof node[key] === "object" &&
                                 <tr key={key} onClick={() => goToChild(key)}>
                                     <td className="event-approval-data-key">{key}</td>
-                                    <td className="event-approval-data-value">&#8594;</td>
+                                    <td className="event-approval-data-child">&#8594;</td>
                                 </tr>
                             }
                         </>
