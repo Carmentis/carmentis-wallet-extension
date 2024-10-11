@@ -231,6 +231,7 @@ export function PopupDashboard() {
             Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
                 return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
                     return Carmentis.getPublicKey(privateKey).then(publicKey => {
+                        // the client accepts the transaction
                         return request.answer({
                             message: "walletHandshake",
                             recordId: recordId,
@@ -310,7 +311,7 @@ export function PopupDashboard() {
                 recordId: request.data.recordId
             });
         }).catch(error => {
-            console.log("An error occurred while handling requestBlockData:", error)
+            console.error("An error occurred while handling requestBlockData:", error)
         });
     }
 
