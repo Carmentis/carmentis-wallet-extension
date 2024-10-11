@@ -41,11 +41,18 @@ function DataTreeViewer(input : {data: object}) {
      * @param fieldPath The path of the target node.
      */
     function goToNode(  fieldPath : string[] ) {
-        console.log("go to node", fieldPath)
-        // the first field should be "this"
-        if ( fieldPath.length === 0 || fieldPath[0] !== "this" ){
+
+
+        if ( fieldPath.length === 0  ){
             throw new Error("Cannot access the provided node: The field path is invalid")
         }
+
+        // prevent access to last elements
+        if ( fieldPath.includes("last") ) {
+            console.warn("[popup] The current version do not support access to the previous block.")
+            return;
+        }
+
 
         // the path is already known
         path.current = fieldPath.slice(1);
