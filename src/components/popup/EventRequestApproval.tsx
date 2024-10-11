@@ -1,7 +1,10 @@
 import React from "react";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
+import {Optional} from "@/src/Optional.tsx";
+import {RecordDisplayer} from "@/src/components/popup/RecordDisplayer.tsx";
 
 export function EventRequestApproval(input: {
+    data : Optional<object>
     onAccept: () => void,
     onReject: () => void
 }) {
@@ -12,9 +15,10 @@ export function EventRequestApproval(input: {
             </h2>
             <div className="h-1/4 mb-3">
                 <p>
-                    Do you agree?.
+                    The data associated with this event are displayed below:
                 </p>
             </div>
+            <RecordDisplayer record={input.data}/>
             <div className="flex flex-row justify-evenly">
                 <button className="w-1/2 p-3 mr-1 btn-primary btn-highlight"
                         onClick={() => input.onAccept()}>
