@@ -186,12 +186,13 @@ export function PopupDashboard() {
         setApprovedRequest(Optional.From(request))
         switch (request.type) {
             case "signIn": {
+                setShowWaitingScreen(false);
                 setActionRequestState(RequestTreatmentState.SIGNIN_REQUEST_APPROVAL);
                 break;
             }
             case "authentication": {
+                setShowWaitingScreen(false);
                 setActionRequestState(RequestTreatmentState.AUTHENTICATION_REQUEST);
-                //handleRequestAuthentication(request);
                 break;
             }
             case "eventApproval": {
@@ -357,10 +358,11 @@ export function PopupDashboard() {
                 const nbBlocks = flow.flowObject.chain.microBlock.length;
                 const nonce =  flow.flowObject.chain.microBlock[nbBlocks - 1].nonce;
                 console.log("[popup] received flow: ", flow)
-                Carmentis.processRecord(flow, nonce, () => {}, () => {}).then(res => {
+                Carmentis.processRecord(flow, nonce).then(res => {
                     if (res === undefined) {
                         reject("Failure when processing record: empty records.")
                     }
+                    console.log("[popup] processRecord output: ", res)
                     setEventApprovalData(Optional.From(res));
                     resolve()
                 }).catch(reject)
