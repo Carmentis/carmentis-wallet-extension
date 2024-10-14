@@ -70,8 +70,8 @@ export default function Parameters() {
     useEffect(() => {
         // load the organization public key
         const seed = wallet.getSeed();
-        Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
-            return Carmentis.deriveUserPrivateKey(pepper, 1).then(privateKey => {
+        Carmentis.derivePepperFromSeed(seed).then(pepper => {
+            return Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
                 return Carmentis.getPublicKey(privateKey).then(publicKey => {
                     setUserPrivateKey(Encoders.ToHexa(privateKey));
                     setUserPublicKey(Encoders.ToHexa(publicKey));
@@ -148,16 +148,16 @@ export default function Parameters() {
             <div className="parameter-section">
                 <h2>User Keys</h2>
                 <div className="parameter-group">
-                    <div className="parameter-title">User Private Key</div>
-                    <div className="parameter-description">Your private signature key.</div>
+                    <div className="parameter-title">User Authentication Private Key</div>
+                    <div className="parameter-description">Your private signature authentication key.</div>
                     <input type="text" onClick={() => {
                         navigator.clipboard.writeText(userPrivateKey);
                     }}
                            className="parameter-input" readOnly={true} value={userPrivateKey}/>
                 </div>
                 <div className="parameter-group">
-                    <div className="parameter-title">User Public Key</div>
-                    <div className="parameter-description">Your public signature key.</div>
+                    <div className="parameter-title">User Authentication Public Key</div>
+                    <div className="parameter-description">Your public signature authentication key.</div>
                     <input type="text" onClick={() => {
                         navigator.clipboard.writeText(userPublicKey);
                     }}
