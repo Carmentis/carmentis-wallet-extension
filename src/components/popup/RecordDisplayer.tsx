@@ -1,5 +1,5 @@
 import {Optional} from "@/src/Optional.tsx";
-import {ReactElement, useRef, useState} from "react";
+import {ReactElement, useCallback, useRef, useState} from "react";
 import assert from "node:assert";
 
 
@@ -17,19 +17,24 @@ interface ObjectMessagePart {
 }
 
 
+function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
+    // the "this" tree corresponds to the current block being under approval.
+    const trees = {
+        "this": records,
+    };
+
+    // the other trees are defined in the message parts (the last's fields and previous fields associated in the message)
+    for (const msgPart of msgParts) {
+        if ( msgPart.isField && typeof msgPart.value !== "string" ) {
+            trees[msgPart.field] = msgPart.value;
+        }
+    }
+
+    return trees;
+}
 
 function DataTreeViewer(input : {data: object}) {
 
-    const data = input.data;
-    const records = data.record;
-
-    // this ref is used to remember the level in which
-    let tree = useRef([records]);
-    let [currentDepth, setCurrentDepth] = useState(0)
-    let node = tree.current[currentDepth];
-
-    // this ref is used to have a well-formatted header when digging into the content
-    let path = useRef<string[]>([]);
 
 
     /**
@@ -38,50 +43,47 @@ function DataTreeViewer(input : {data: object}) {
      *
      * Note: this function currently do *not* support the access to a previous block.
      *
-     * @param fieldPath The path of the target node.
+     * @param absoluteFieldPath The path of the target node in absolute form. The field path is a string value of the form "<tree>.<path>".
+     * Example: "this.senderDocument.file" is an absolute reference to the "this" tree (associated with the current block) and shows the
+     * "senderDocument.file" structure.
      */
-    function goToNode(  fieldPath : string[] ) {
+    function goToNode( absoluteFieldPath : string ) {
 
 
-        if ( fieldPath.length === 0  ){
+        if ( absoluteFieldPath === ""  ){
             throw new Error("Cannot access the provided node: The field path is invalid")
         }
 
-        // prevent access to last elements
-        if ( fieldPath.includes("last") ) {
-            console.warn("[popup] The current version do not support access to the previous block.")
-            return;
+        console.log(trees.current, typeof trees.current)
+        for (const [treeName, tree] of Object.entries(trees.current)) {
+
+            // if absolute field path references the root of a tree
+            if ( treeName === absoluteFieldPath ) {
+                setDisplayedTree(treeName);
+                setRelativeFieldPath([])
+                break
+            }
+
+
+            // otherwise, the absolute field path contains a non-empty relative field path
+            if ( absoluteFieldPath.includes(treeName) ) {
+                // extract relative field path as a string and convert it as an array of string
+                let relativeFieldPathString : string = absoluteFieldPath.replace(treeName + ".", "");
+                const relativeFieldPath : string[] = relativeFieldPathString.split(".");
+                setDisplayedTree(treeName);
+                setRelativeFieldPath(relativeFieldPath)
+                break
+            }
         }
 
-
-        // the path is already known
-        path.current = fieldPath.slice(1);
-
-        const root = tree.current[0];
-        const updatedTree = [root];
-        let currentNode = root;
-        let index = 1
-        while (index < fieldPath.length) {
-            const childName = fieldPath[index];
-            console.log(currentNode, childName);
-            const child = currentNode[childName];
-            updatedTree.push(child);
-            currentNode = child;
-            index += 1;
-        }
-
-        // update the tree
-        tree.current = updatedTree;
-        setCurrentDepth(index - 1);
-
-
+        return
     }
 
 
     /**
     *
     */
-    function formatMessage( msg : string, msgParts : (TextualMessagePart | ObjectMessagePart)[] ) {
+    function formatMessage( msgParts : (TextualMessagePart | ObjectMessagePart)[] ) : ReactElement[] {
 
         let result = [];
 
@@ -90,14 +92,12 @@ function DataTreeViewer(input : {data: object}) {
             switch (part.isField) {
                 case true:
                     const fieldName : string = part.def.name;
-                    const fieldPath : string[] = part.field.split(".")
                     const fieldValue = part.value;
-                    console.log(fieldName, typeof fieldName)
                     if ( typeof fieldValue === "string" ) {
                         result.push(<span className="field">{fieldValue}</span>)
                     } else {
                         result.push(<span className="underline" onClick={() => {
-                                goToNode(fieldPath);
+                                goToNode(part.field);
                             }}>
                             {fieldName}
                         </span>)
@@ -118,35 +118,76 @@ function DataTreeViewer(input : {data: object}) {
     }
 
 
-
+    /**
+     * Event function called when the user click on an object in the displayed tree to expand the content.
+     *
+     * @param childName The name of the child to expand in the tree.
+     */
     function goToChild( childName : string ) {
-        tree.current.push(node[childName]);
-        path.current.push(childName);
-        setCurrentDepth(currentDepth + 1)
+        setRelativeFieldPath(currentPath => currentPath.concat([childName]));
     }
 
+    /**
+     * Event function called when the user goes up in the tree to display the parent of the current node.
+     */
     function backToParent() {
-        if ( currentDepth === 0 ) {
+        if ( relativeFieldPath.length === 0 ) {
             throw new Error("Cannot back to the parent node in the tree display: already at root");
         }
-        tree.current.pop();
-        path.current.pop();
-        setCurrentDepth(currentDepth - 1)
+        setRelativeFieldPath(currentPath => currentPath.slice(0, -1));
     }
 
+    /**
+     * Event function called when the user wants to display the "this" tree, associated with the current block.
+     */
+    function showThisTree() {
+        setDisplayedTree("this");
+        setRelativeFieldPath([]);
+    }
+
+
+
+    /**
+     * This helper function is used to format the "back" section when the user navigates in the tree.
+     *
+     * Note: This function assumes that the current path is not empty!
+     * This assumption is ensured by the conditional rendering.
+     */
     function formatBack() : string {
-        let content = path.current[0];
-        for (let i = 1; i < path.current.length; i++) {
-            content = content + " > " + path.current[i]
+        let content = relativeFieldPath[0];
+        for (let i = 1; i < relativeFieldPath.length; i++) {
+            content = content + " > " + relativeFieldPath[i]
         }
         return content;
     }
 
 
+    const data = input.data;
+    const records = data.record;
+
     // format the message (defined in the workspace)
-    const msg = data.msg;
     const msgParts = data.msgParts;
-    const formattedMessage = formatMessage(msg, msgParts);
+    const formattedMessage = formatMessage(msgParts);
+
+    // construct the different trees from the record and the message parts.
+    let trees = useRef(constructTree(records, msgParts));
+
+    // by default, the displayed tree is the "this" tree.
+    const [displayedTree, setDisplayedTree] = useState<string>("this");
+
+    // we remember the current path in the current displayed node to remember our location.
+    // An empty array means "show the root of the current tree"
+    const [relativeFieldPath, setRelativeFieldPath] = useState<string[]>([]);
+
+    // prepare the rendering by accessing the node in the specified tree
+    const tree = trees.current[displayedTree];
+    let node = tree;
+    for (const child of relativeFieldPath) {
+        node = node[child];
+    }
+
+    // create a dedicated class to separate the current to the previous blocks to a more enhanced UI
+    const blockClass = displayedTree === "this" ? "current-block" : "anchored-block";
 
     return <>
         <div id="event-approval-message" className="p-1 rounded-md bg-gray-100 mb-2">
@@ -155,13 +196,20 @@ function DataTreeViewer(input : {data: object}) {
 
         Ensure that the received data is correct:
         <div className="tree-viewer">
-            <table className="w-full mb-2" id="event-approval-table">
-                <tbody id="event-approval-data">
-                {currentDepth !== 0 &&
+            <table className={'w-full mb-2 ' + blockClass} id="event-approval-table">
+                <tbody id="event-approval-data" className={blockClass}>
+                {displayedTree !== "this" &&
+                    <tr onClick={showThisTree}>
+                        <td colSpan={2}>&#8592; Back to current block</td>
+                    </tr>
+                }
+
+                {relativeFieldPath.length !== 0 &&
                     <tr onClick={backToParent}>
                         <td colSpan={2}>&#8592; {formatBack()}</td>
                     </tr>
                 }
+
 
                 {
                     Object.keys(node).map((key, index) => (

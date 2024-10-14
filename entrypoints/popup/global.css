@@ -718,10 +718,15 @@ p {
   font-weight: 700;
 }
 
-#event-approval-data tr {
+#event-approval-data.anchored-block tr {
   background-color: #090030;
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+#event-approval-data.current-block tr {
+  background-color: rgb(74, 222, 128);
+  color: rgb(31, 41, 55);
 }
 
 #event-approval-data tr:not(:last-child) {
@@ -1114,11 +1119,6 @@ p {
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
-}
-
-.bg-gray-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 
 .bg-green-100 {

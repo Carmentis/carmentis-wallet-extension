@@ -88,9 +88,14 @@
     #event-approval-data .event-approval-data-key {
         @apply font-bold;
     }
-    #event-approval-data tr {
+    #event-approval-data.anchored-block tr {
         background-color: #090030;
         @apply text-white;
+    }
+
+    #event-approval-data.current-block tr {
+        background-color: rgb(74, 222, 128);
+        color: rgb(31, 41, 55);
     }
 
     #event-approval-data tr:not(:last-child) {

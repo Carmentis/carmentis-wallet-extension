@@ -1,6 +1,7 @@
 build-core:
 	npm install
-	npx tailwindcss -i entrypoints/global.css  -o ./entrypoints/main/global.css -o ./entrypoints/popup/global.css
+	npx tailwindcss -i entrypoints/global.css  -o ./entrypoints/main/global.css
+	npx tailwindcss -i entrypoints/global.css  -o ./entrypoints/popup/global.css
 
 build-chrome: build-core
 	npm run build
