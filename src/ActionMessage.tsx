@@ -3,7 +3,13 @@ export interface ActionMessage {
     action: string,
     data: any,
     receivedAt: number,
-    origin: string
+    origin: string,
+    type : "unknown" | "signIn" | "authentication" | "eventApproval"
+
+    eventApprovalData?: object
+    serverRequest?: object,
+    clientRequest?: object,
+
 }
 
 export interface ActionRequest {

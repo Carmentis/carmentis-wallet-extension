@@ -2,7 +2,7 @@ import "@/entrypoints/style.css"
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {AuthenticationContext, AuthenticationContainer, LoggerContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
-import {ActionMessageContainer, ActionMessageContext} from "@/entrypoints/popup/PopupApp.tsx";
+import {ActionMessageContainer, ActionMessageContext} from "@/src/components/commons/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
@@ -14,51 +14,62 @@ import {SpinningWheel} from "@/src/components/commons/SpinningWheel.tsx";
 import {SignInRequestApproval} from "@/src/components/popup/SignInRequestApproval.tsx";
 import {EventRequestApproval} from "@/src/components/popup/EventRequestApproval.tsx";
 import {AuthenticationRequest} from "@/src/components/popup/AuthenticationRequest.tsx";
+import {SessionStorage} from "@/src/SessionStorage.tsx";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
-    ACTION_REQUEST_APPROVAL = "ACTION_REQUEST_APPROVAL",
-    SIGNIN_REQUEST_APPROVAL = "SIGNIN_REQUEST_APPROVAL",
-    EVENT_APPROVAL = "EVENT_APPROVAL",
-    AUTHENTICATION_REQUEST = "AUTHENTICATION_REQUEST",
+    IN_PROGRESS = "IN_PROGRESS",
     SUCCESS = "SUCCESS",
     ERROR = "ERROR",
+}
+
+
+interface BackgroundTaskExecutionOption {
+    showWaitingScreen?: boolean;
+    closeWaitingScreenOnSuccess?: boolean
 }
 
 export function PopupDashboard() {
 
 
+    // load the different contexts
     let authentication: AuthenticationContainer = useContext(AuthenticationContext);
+    let authenticationContext: AuthenticationContainer = useContext(AuthenticationContext);
+    const { actionMessages, setActionMessages } = useContext(ActionMessageContext);
+    let logger = useContext(LoggerContext);
+
+    // load the authentication data
     const wallet: Wallet = authentication.wallet.unwrap();
     const activeAccountIndex: number = authentication.activeAccountIndex.unwrap();
     let activeAccount: Account = wallet.getAccount(activeAccountIndex);
-    let actionMessages: ActionMessageContainer = useContext(ActionMessageContext);
-    let authenticationContext: AuthenticationContainer = useContext(AuthenticationContext);
-    let logger = useContext(LoggerContext);
+
+    // create a reference on the action messages
+    const [localActionMessageOption, setLocalActionMessageOption] = useState<Optional<ActionMessage>>(
+        Optional.Empty()
+    );
+
+    // initialize the Carmentis wallet callback (should be set at every rendering)
+    Carmentis.wallet.setRequestCallback(handleClientRequest, handleServerRequest)
+
+
+    useEffect(() => {
+        setActionRequestState(RequestTreatmentState.IN_PROGRESS)
+        if ( actionMessages.length === 0 ) {
+            setLocalActionMessageOption(Optional.Empty())
+        } else {
+            setLocalActionMessageOption(Optional.From(actionMessages[0]))
+        }
+    }, [actionMessages]);
 
     // states for the dashboard
-    let [actionRequestState, setActionRequestState] = useState<RequestTreatmentState>(RequestTreatmentState.ACTION_REQUEST_APPROVAL);
     let [showWaitingScreen, setShowWaitingScreen] = useState<boolean>(false);
     let [error, setError] = useState<string>("");
 
-    let [approvedRequest, setApprovedRequest] = useState<Optional<object>>(Optional.Empty());
-    let serverRequest = useRef<Optional<object>>(Optional.Empty());
-    let [eventApprovalData,  setEventApprovalData] = useState<Optional<object>>(Optional.Empty());
+    // if an action message is defined and contains some processing data, then an event approval is under execution
+    // restore it
+    let initialState = RequestTreatmentState.IN_PROGRESS;
+    let [actionRequestState, setActionRequestState] = useState<RequestTreatmentState>(initialState);
 
-    let currentActionMessage : Optional<ActionMessage> = (
-        actionMessages.actionMessages.length === 0 ?
-            Optional.Empty() :
-            Optional.From( actionMessages.actionMessages[0] )
-    );
-
-
-
-
-
-    interface BackgroundTaskExecutionOption {
-        showWaitingScreen?: boolean;
-        closeWaitingScreenOnSuccess?: boolean
-    }
     function executeBackgroundTask(
         task : Promise<void>,
         option : BackgroundTaskExecutionOption = {
@@ -92,12 +103,8 @@ export function PopupDashboard() {
         setError("")
         setActionRequestState(RequestTreatmentState.SUCCESS)
         setShowWaitingScreen(false);
-        actionMessages.clearMessages();
-        setApprovedRequest(Optional.Empty());
-        serverRequest.current = Optional.Empty();
-        setEventApprovalData(Optional.Empty());
+        setActionMessages([])
         setTimeout(() => {
-            setActionRequestState(RequestTreatmentState.ACTION_REQUEST_APPROVAL);
             window.close()
         }, 1000)
 
@@ -111,9 +118,18 @@ export function PopupDashboard() {
         setError(error)
         setActionRequestState(RequestTreatmentState.ERROR);
         setShowWaitingScreen(false);
-        setApprovedRequest(Optional.Empty());
-        serverRequest.current = Optional.Empty();
-        setEventApprovalData(Optional.Empty());
+    }
+
+    /**
+     * Event function called when the user rejects to perform an action.
+     *
+     * This function can be called at several places and is used to clean the state.
+     *
+     */
+    function RejectRequest() {
+        logger.info(`[popup] Reject approval`)
+        setActionMessages([])
+        window.close()
     }
 
 
@@ -131,6 +147,8 @@ export function PopupDashboard() {
             return
         }
 
+        console.log("[popup] at allow QRCode process: ", localActionMessageOption)
+
         logger.info(`[popup] Start QRCode request with ${QRCodeData}`)
         executeBackgroundTask(new Promise<void>((resolve, reject) => {
             return Carmentis.wallet.getRequestByQRCode(QRCodeData)
@@ -139,9 +157,7 @@ export function PopupDashboard() {
                     if (request) {
                         request.accept().then(response => {
                             console.log("[popup] request accepted with response from the server:", response);
-                        }).catch(error => {
-                            reject(error);
-                        })
+                        }).catch(reject)
                     } else {
                         reject("Returned response is empty.")
                     }
@@ -150,23 +166,7 @@ export function PopupDashboard() {
     }
 
 
-    /**
-     * Event function called when the user rejects to perform an action.
-     *
-     * This function can be called at several places and is used to clean the state.
-     *
-     */
-    function RejectRequest() {
-        logger.info(`[popup] Reject approval`)
-        actionMessages.clearMessages()
-        setActionRequestState(RequestTreatmentState.ACTION_REQUEST_APPROVAL);
-        setShowWaitingScreen(false);
-        setError("");
-        setApprovedRequest(Optional.Empty());
-        serverRequest.current = Optional.Empty();
-        setEventApprovalData(Optional.Empty());
-        window.close()
-    }
+
 
 
     /**
@@ -175,43 +175,75 @@ export function PopupDashboard() {
      *
      * @param request The received request to handle.
      */
-    function handleClientRequest(request) {
+    async function handleClientRequest(request) {
         logger.info("[popup] receive client request from operator", request);
-        setApprovedRequest(Optional.From(request))
+
+        if ( actionMessages.length === 0 ) {
+            throw new Error("no action messages");
+        } else {
+            console.log("[popup] there is an action message!", actionMessages);
+        }
+
+        const actionMessage : ActionMessage = actionMessages[0];
+        setActionMessages(messages => {
+            messages[0].clientRequest = request;
+            return messages
+        });
+        console.log("[popup] action messages: ", actionMessages)
+
+
         switch (request.type) {
             case "signIn": {
                 setShowWaitingScreen(false);
-                setActionRequestState(RequestTreatmentState.SIGNIN_REQUEST_APPROVAL);
+                updateActionMessageType("signIn");
                 break;
             }
             case "authentication": {
                 setShowWaitingScreen(false);
-                setActionRequestState(RequestTreatmentState.AUTHENTICATION_REQUEST);
+                updateActionMessageType("authentication")
                 break;
             }
             case "eventApproval": {
-                setActionRequestState(RequestTreatmentState.EVENT_APPROVAL)
-                prepareRequestEventApproval( request );
+                actionMessage.type = "eventApproval";
+                prepareRequestEventApproval(request)
+                updateActionMessageType("eventApproval");
                 break;
             }
             default:
                 AbortWithError("Unknown request type: " + request.type);
                 break;
         }
+
+        function updateActionMessageType(type : "signIn" | "authentication" | "eventApproval") {
+            setActionMessages(messages => {
+                messages[0].type = type;
+                return messages
+            });
+        }
     }
 
 
     /**
-     * This functions is called when the wallet receives a request to sign-in.
+     * This function is called when the user accepts to sign-in.
      *
      *
      */
-    function handleSignInRequest() {
-        let request = approvedRequest.unwrap();
+    function onAcceptSignInRequest() {
 
         // generate the private signature key and derive the public signature key from it
         const wallet: Wallet = authenticationContext.wallet.unwrap();
         const seed: Uint8Array = wallet.getSeed();
+
+        const currentActionMessageOption = localActionMessageOption;
+        if ( currentActionMessageOption.isEmpty()  ) {
+            throw new Error("container Empty container")
+        }
+
+        const currentActionMessage = currentActionMessageOption.unwrap();
+        const request = currentActionMessage.clientRequest;
+
+
+
 
         executeBackgroundTask(new Promise<void>((resolve, reject) => {
             Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
@@ -242,12 +274,9 @@ export function PopupDashboard() {
 
         executeBackgroundTask(new Promise<void>((resolve,reject) => {
             console.log("[popup] executing background request event approval")
-            // TODO SECURITY: Why a constant nonce ?
-            Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
+            Carmentis.derivePepperFromSeed(seed).then(pepper => {
                 return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
                     return Carmentis.getPublicKey(privateKey).then(publicKey => {
-                        // the client accepts the transaction
-                        console.log("[popup] starting walletHandshake")
                         return request.answer({
                             message: "walletHandshake",
                             recordId: recordId,
@@ -269,12 +298,16 @@ export function PopupDashboard() {
     }
 
     /**
-     * This functions is called when the wallet receives an event approval request.
+     * This function is called when the wallet receives an event approval request.
      *
      * An event approval request is called mainly when the approval of a user is required.
      */
     function handleRequestEventApproval() {
-        const request = serverRequest.current.unwrap();
+        const actionMessage = localActionMessageOption.unwrap();
+        if ( !actionMessage.serverRequest ) {
+            throw new Error("Illegal state: the action message should embed a server request.")
+        }
+        const request = actionMessage.serverRequest;
         executeBackgroundTask(new Promise((resolve, reject) => {
             request.answer({
                 message: "confirmRecord",
@@ -294,7 +327,11 @@ export function PopupDashboard() {
      *
      */
     function handleRequestAuthentication() {
-        const request = approvedRequest.unwrap();
+        const actionMessage = localActionMessageOption.unwrap();
+        if ( !actionMessage.clientRequest ) {
+            throw new Error("Illegal state: the action message should embed a client request.")
+        }
+        let request = actionMessage.clientRequest;
 
         // handle the case where the user's email is not verified
         if (!activeAccount.getEmail().isEmpty() && activeAccount.hasVerifiedEmail()) {
@@ -314,22 +351,30 @@ export function PopupDashboard() {
     /**
      * Event function called when a request is received from the server
      *
-     * @param request
+     * @param serverRequest
      */
-    function handleServerRequest(request) {
-        console.log("[popup] receive server request:", request);
-        serverRequest.current = Optional.From(request);
-        switch (request.type) {
+    function handleServerRequest(serverRequest) {
+
+        // debug
+        console.log("[popup] receive server request:", serverRequest);
+        console.log("[popup] action messages: ", actionMessages)
+
+        switch (serverRequest.type) {
             case "blockData": {
-                requestBlockData(request);
+                // we update the serverRequest if and only a request is under processing which is not the case here
+                setActionMessages(messages => {
+                    messages[0].serverRequest = serverRequest;
+                    return messages
+                })
+                requestBlockData(serverRequest);
                 break;
             }
             case "confirmRecord": {
-                handleConfirmRecord(request);
+                handleConfirmRecord(serverRequest);
                 break;
             }
             default:
-                throw new Error("[popup] Unknown request type: " + request.type);
+                throw new Error("[popup] Unknown request type: " + serverRequest.type);
         }
     }
 
@@ -337,17 +382,17 @@ export function PopupDashboard() {
     /**
      * Event function called by the operator to display the content of the block.
      *
-     * @param request
+     * @param serverRequest
      */
-    function requestBlockData(request) {
-        let data = String.fromCharCode.apply(String, request.data.blockData);
+    function requestBlockData(serverRequest) {
+        let data = String.fromCharCode.apply(String, serverRequest.data.blockData);
         console.log("[popup] requestBlockData:", data);
 
         executeBackgroundTask(new Promise<void>((resolve, reject) => {
             Carmentis.prepareApproval(
-                request.data.applicationId,
-                request.data.flowId,
-                new Uint8Array(request.data.blockData)
+                serverRequest.data.applicationId,
+                serverRequest.data.flowId,
+                new Uint8Array(serverRequest.data.blockData)
             ).then(flow => {
                 const nbBlocks = flow.flowObject.chain.microBlock.length;
                 const nonce =  flow.flowObject.chain.microBlock[nbBlocks - 1].nonce;
@@ -357,7 +402,13 @@ export function PopupDashboard() {
                         reject("Failure when processing record: empty records.")
                     }
                     console.log("[popup] processRecord output: ", res)
-                    setEventApprovalData(Optional.From(res));
+
+                    // store the processRecord in the session
+                    setActionMessages(messages => {
+                        messages[0].eventApprovalData = res;
+                        return messages
+                    })
+
                     resolve()
                 }).catch(reject)
 
@@ -374,39 +425,41 @@ export function PopupDashboard() {
         CloseOnSuccess()
     }
 
-    useEffect(() => {
-        Carmentis.wallet.setRequestCallback(handleClientRequest, handleServerRequest)
-    }, []);
 
 
     return <>
         <Navbar activeAccount={activeAccount}/>
         <div className="min-h-full">
-            { !showWaitingScreen && !currentActionMessage.isEmpty() &&
+            { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
                 <>
-                    { actionRequestState == RequestTreatmentState.ACTION_REQUEST_APPROVAL &&
-                        <QRCodeProcessRequestApproval message={currentActionMessage.unwrap()} onAccept={AllowQRCodeProcess} onReject={RejectRequest}/>
+                    { actionRequestState == RequestTreatmentState.IN_PROGRESS &&
+                        <>
+                            { localActionMessageOption.unwrap().type === "unknown" &&
+                                <QRCodeProcessRequestApproval
+                                    message={localActionMessageOption.unwrap()}
+                                    onAccept={AllowQRCodeProcess}
+                                    onReject={RejectRequest}/>
+                            }
+
+                            { localActionMessageOption.unwrap().type === "signIn" &&
+                                <SignInRequestApproval onAccept={onAcceptSignInRequest} onReject={RejectRequest}></SignInRequestApproval>
+                            }
+
+                            { localActionMessageOption.unwrap().type === "eventApproval" &&
+                                <EventRequestApproval
+                                    data={Optional.From(localActionMessageOption.unwrap().eventApprovalData)}
+                                    onAccept={handleRequestEventApproval}
+                                    onReject={RejectRequest}></EventRequestApproval>
+                            }
+
+                            { localActionMessageOption.unwrap().type === "authentication"&&
+                                <AuthenticationRequest
+                                    email={activeAccount.getEmail()}
+                                    onAccept={handleRequestAuthentication}
+                                    onReject={RejectRequest}></AuthenticationRequest>
+                            }
+                        </>
                     }
-
-                    { actionRequestState == RequestTreatmentState.SIGNIN_REQUEST_APPROVAL &&
-                        <SignInRequestApproval onAccept={handleSignInRequest} onReject={RejectRequest}></SignInRequestApproval>
-                    }
-
-                    { actionRequestState == RequestTreatmentState.EVENT_APPROVAL &&
-                        <EventRequestApproval
-                            data={eventApprovalData}
-                            onAccept={handleRequestEventApproval}
-                            onReject={RejectRequest}></EventRequestApproval>
-                    }
-
-                    { actionRequestState == RequestTreatmentState.AUTHENTICATION_REQUEST &&
-                        <AuthenticationRequest
-                            email={activeAccount.getEmail()}
-                            onAccept={handleRequestAuthentication}
-                            onReject={RejectRequest}></AuthenticationRequest>
-                    }
-
-
 
                     {actionRequestState == RequestTreatmentState.ERROR &&
                         <div className="flex flex-col min-h-full w-100 p-4">
@@ -422,17 +475,17 @@ export function PopupDashboard() {
                             </button>
                         </div>
                     }
-                    </>
-                }
-                {showWaitingScreen &&
-                    <div className="w-100 h-100 flex items-center justify-center mt-6">
-                        <div className="h-12 w-12">
+                </>
+            }
+            {showWaitingScreen &&
+                <div className="w-100 h-100 flex items-center justify-center mt-6">
+                    <div className="h-12 w-12">
 
-                            <SpinningWheel/>
-                        </div>
+                        <SpinningWheel/>
                     </div>
+                </div>
 
-                }
+            }
             {actionRequestState == RequestTreatmentState.SUCCESS &&
                 <div className="flex min-h-full justify-center content-center w-100 items-center">
                     <img src="/assets/img/approve.png" className="h-20 w-20" alt=""/>
