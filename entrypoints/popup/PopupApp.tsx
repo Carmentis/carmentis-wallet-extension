@@ -1,28 +1,29 @@
 import '@/entrypoints/style.css'
 import {useContext} from "react";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
-import {
-    AccountCreatedContext,
-    ApplicationInitializedContext, AuthenticationContext,
-    AuthenticationContainer,
-    ContextPage
-} from "@/entrypoints/main/FullPageApp.tsx";
 import Login from "@/src/components/commons/Login.tsx";
 import {PopupDashboard} from "@/src/components/popup/PopupDashboard.tsx";
 import {NoWalletDetected} from "@/src/components/popup/NoWalletDetected.tsx";
 import {ActionMessageHandler} from "@/src/components/commons/ActionMessage.tsx";
+import {AccountSelection} from "@/src/components/commons/AccountSelection.tsx";
+import {
+    AccountCreatedContext,
+    ApplicationInitializedContext, AuthenticationContainer, AuthenticationContext,
+    AuthenticationGuard
+} from "@/src/components/commons/AuthenticationGuard.tsx";
 
 
-
-
-
+/**
+ *
+ * @constructor
+ */
 export function PopupAppEntrypoint() {
     return <>
-        <ContextPage>
+        <AuthenticationGuard>
             <ActionMessageHandler>
                 <PopupApp></PopupApp>
             </ActionMessageHandler>
-        </ContextPage>
+        </AuthenticationGuard>
     </>
 }
 
@@ -43,12 +44,18 @@ function PopupApp() {
             <>
                 { accountCreated &&
                     <>
-                        { authentication.activeAccountIndex.isEmpty() &&
+                        { authentication.wallet.isEmpty() &&
                             <Login></Login>
                         }
-                        { !authentication.activeAccountIndex.isEmpty() &&
+                        { !authentication.wallet.isEmpty() &&
                           <>
-                              <PopupDashboard></PopupDashboard>
+                              { !authentication.wallet.unwrap().getActiveAccount().isEmpty() &&
+                                  <PopupDashboard></PopupDashboard>
+                              }
+                              { authentication.wallet.unwrap().getActiveAccount().isEmpty() &&
+                                  <AccountSelection></AccountSelection>
+                              }
+
                           </>
 
                         }

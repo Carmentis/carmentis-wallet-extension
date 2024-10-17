@@ -1,5 +1,4 @@
 import React from "react";
-import {ActionMessage} from "@/src/ActionMessage.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import {RecordDisplayer} from "@/src/components/popup/RecordDisplayer.tsx";
 

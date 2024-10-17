@@ -1,3 +1,4 @@
+import {b} from "formdata-node/lib/File-cfd9c54a";
 
 export class Optional<T> {
 
@@ -21,6 +22,10 @@ export class Optional<T> {
 
     isEmpty() : boolean {
         return this.value === undefined;
+    }
+
+    isSome() : boolean {
+        return !this.isEmpty()
     }
 
     static Empty<T>() : Optional<T> {

@@ -2,12 +2,12 @@ import {Wallet} from "@/src/Wallet.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
 import browser from 'webextension-polyfill'
+import {Optional} from "@/src/Optional.tsx";
 
 export interface SessionState {
     state: {
         password: string;
         wallet: Wallet;
-        activeAccountIndex: number;
     }
 }
 
@@ -30,7 +30,6 @@ export class SessionStorage {
                     "state": {
                         password: result.state.password,
                         wallet: Wallet.CreateFromDict( result.state.wallet ),
-                        activeAccountIndex: result.state.activeAccountIndex,
                     }
                 });
             })
@@ -41,7 +40,6 @@ export class SessionStorage {
         return browser.storage.session.set({
             state: {
                 wallet: session.state.wallet.data,
-                activeAccountIndex: session.state.activeAccountIndex,
                 password: session.state.password,
             }
         });

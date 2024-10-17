@@ -12,6 +12,12 @@ export class SecureWalletStorage {
 
     }
 
+    /**
+     * Returns a promise checking if the wallet storage contains a wallet or not.
+     *
+     * @constructor
+     *
+     */
     static async IsEmpty() : Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_WALLET);

@@ -33,7 +33,11 @@ export class Encoders {
         } else if (bytes instanceof Uint8Array) {
             return bytes
         } else {
-            throw new Error(`[encoder] invalid type of bytes: expected either Uint8array of Array(number), got ${typeof bytes}`);
+            try {
+                return new Uint8Array(Object.entries(bytes));
+            } catch (e) {
+                throw new Error(`[encoder] invalid type of bytes: expected either Uint8array or Array(number), got ${typeof bytes}`);
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ export function SetupWallet() {
     const password = location.state.password;
 
     // create the wallet
-    const walletContext = Wallet.CreateFromBytes(seed);
+    const walletContext = Wallet.CreateFromSeed(seed);
 
 
     function redirectToMainPage() {

@@ -1,9 +1,7 @@
 
-import React, {Component, Dispatch, SetStateAction, useEffect, useState} from "react";
+import React, {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {useLocation, useNavigate} from "react-router";
-import {Optional} from "@/src/Optional.tsx";
-import {Wallet} from "@/src/Wallet.tsx";
 
 /**
  * Generate a random number included between the two provided (included) bounds.

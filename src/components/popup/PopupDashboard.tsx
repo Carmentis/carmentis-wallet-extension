@@ -1,8 +1,7 @@
 import "@/entrypoints/style.css"
 import React, {useContext, useEffect, useRef, useState} from "react";
-import {AuthenticationContext, AuthenticationContainer, LoggerContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
-import {ActionMessageContainer, ActionMessageContext} from "@/src/components/commons/ActionMessage.tsx";
+import {ActionMessageContext} from "@/src/components/commons/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
@@ -14,7 +13,11 @@ import {SpinningWheel} from "@/src/components/commons/SpinningWheel.tsx";
 import {SignInRequestApproval} from "@/src/components/popup/SignInRequestApproval.tsx";
 import {EventRequestApproval} from "@/src/components/popup/EventRequestApproval.tsx";
 import {AuthenticationRequest} from "@/src/components/popup/AuthenticationRequest.tsx";
-import {SessionStorage} from "@/src/SessionStorage.tsx";
+import {
+    AuthenticationContainer,
+    AuthenticationContext,
+    LoggerContext
+} from "@/src/components/commons/AuthenticationGuard.tsx";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -40,8 +43,7 @@ export function PopupDashboard() {
 
     // load the authentication data
     const wallet: Wallet = authentication.wallet.unwrap();
-    const activeAccountIndex: number = authentication.activeAccountIndex.unwrap();
-    let activeAccount: Account = wallet.getAccount(activeAccountIndex);
+    let activeAccount: Account = wallet.getActiveAccount().unwrap();
 
     // create a reference on the action messages
     const [localActionMessageOption, setLocalActionMessageOption] = useState<Optional<ActionMessage>>(
@@ -52,6 +54,7 @@ export function PopupDashboard() {
     Carmentis.wallet.setRequestCallback(handleClientRequest, handleServerRequest)
 
 
+    // update the page when the action messages is updated
     useEffect(() => {
         setActionRequestState(RequestTreatmentState.IN_PROGRESS)
         if ( actionMessages.length === 0 ) {
@@ -166,9 +169,6 @@ export function PopupDashboard() {
     }
 
 
-
-
-
     /**
      * This function is the client callback function called by the Carmentis SDK when a request is received and
      * must be handled.
@@ -246,23 +246,29 @@ export function PopupDashboard() {
 
 
         executeBackgroundTask(new Promise<void>((resolve, reject) => {
+            const activeAccount = wallet.getActiveAccount().unwrap();
+            wallet.getAccountAuthenticationKeyPair(activeAccount).then(keyPair => {
+                Carmentis.sign(keyPair.privateKey, Encoders.FromHexa(request.data.sessionPublicKey))
+                    .then(signature => {
+                        resolve();
+                        CloseOnSuccess()
+                        request.answer({
+                            success: true,
+                            data: {
+                                pubKey: Encoders.ToHexa(keyPair.publicKey),
+                                sessionPubKeySignature: Encoders.ToHexa(signature)
+                            }
+                        });
+                })
+            })
+            /*
             Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
                 Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
                     Carmentis.getPublicKey(privateKey).then(publicKey => {
-                        Carmentis.sign(privateKey, Encoders.FromHexa(request.data.sessionPublicKey)).then(signature => {
-                            resolve();
-                            CloseOnSuccess()
-                            request.answer({
-                                success: true,
-                                data: {
-                                    pubKey: Encoders.ToHexa(publicKey),
-                                    sessionPubKeySignature: Encoders.ToHexa(signature)
-                                }
-                            });
-                        })
+
                     })
                 })
-            });
+            });*/
         }));
     }
 
@@ -274,6 +280,24 @@ export function PopupDashboard() {
 
         executeBackgroundTask(new Promise<void>((resolve,reject) => {
             console.log("[popup] executing background request event approval")
+
+            const activeAccount = wallet.getActiveAccount().unwrap();
+            wallet.getUserKeyPair(activeAccount, applicationId)
+                .then(userKeyPair => {
+                    return request.answer({
+                        message: "walletHandshake",
+                        recordId: recordId,
+                        publicKey: Encoders.ToHexa(userKeyPair.publicKey)
+                    })
+                }).then(answer => {
+                    console.log("[popup] The anwser has respond with an answer: ", answer)
+                    // we voluntary do not resolve the request since we do want to remove the spinning wheel
+                    //resolve()
+                }).catch(error => {
+                    console.error("[popup] The event approval process has failed: ", error);
+                    reject(error)
+                })
+            /*
             Carmentis.derivePepperFromSeed(seed).then(pepper => {
                 return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
                     return Carmentis.getPublicKey(privateKey).then(publicKey => {
@@ -292,6 +316,7 @@ export function PopupDashboard() {
                 console.error("[popup] The event approval process has failed: ", error);
                 reject(error)
             })
+             */
         }), {
             closeWaitingScreenOnSuccess: false
         });
@@ -428,7 +453,7 @@ export function PopupDashboard() {
 
 
     return <>
-        <Navbar activeAccount={activeAccount}/>
+        <Navbar/>
         <div className="min-h-full">
             { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
                 <>

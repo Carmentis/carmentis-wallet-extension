@@ -1,9 +1,11 @@
 import {ReactElement, useContext, useEffect, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {AuthenticationContext} from "@/entrypoints/main/FullPageApp.tsx";
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
-import {Account} from "@/src/Account.tsx";
+import {Optional} from "@/src/Optional.tsx";
+import {useNavigate} from "react-router";
+import login from "@/src/components/commons/Login.tsx";
+import {AuthenticationContext, WalletContext} from "@/src/components/commons/AuthenticationGuard.tsx";
 
 function InputWithDynamicConfirmSaveComponent(input: {
     value: string,
@@ -39,15 +41,20 @@ function InputWithDynamicConfirmSaveComponent(input: {
 export default function Parameters() {
 
     const authentication = useContext(AuthenticationContext);
-    const activeAccountIndex: number = authentication.activeAccountIndex.unwrap();
-    const wallet : Wallet = authentication.wallet.unwrap();
-
+    const setWallet = authentication.setWallet.unwrap();
+    const walletOption = useContext(WalletContext);
+    const wallet : Wallet = walletOption.unwrap();
+    const activeAccount = wallet.getActiveAccount().unwrap();
 
 
     // state for the name edition
-    const [pseudo, setPseudo] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false);
+    const [pseudo, setPseudo] = useState<string>(wallet.getActiveAccount().unwrap().getPseudo());
+    const [email, setEmail] = useState<string>(activeAccount.getEmail().unwrapOr(""));
+    const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount.hasVerifiedEmail());
+
+    // state for account deletion
+    const [accountDeletionPseudo, setAccountDeletionPseudo] = useState<string>("");
+
 
     // states for the endpoints
     const [dataEndpoint, setDataEndpoint] = useState(wallet.getDataEndpoint());
@@ -58,49 +65,29 @@ export default function Parameters() {
     const [userPrivateKey, setUserPrivateKey] = useState("");
     const [userPublicKey, setUserPublicKey] = useState("");
 
-    // we place the content here to prevent infinite re-rendering
     useEffect(() => {
-        const activeAccountIndex : number = authentication.activeAccountIndex.unwrap();
-        const activeAccount : Account = wallet.getAccount(activeAccountIndex);
+        const activeAccount = wallet.getActiveAccount().unwrap();
+
+        // change the pseudo
         setPseudo(activeAccount.getPseudo());
-        setEmail(activeAccount.getEmail().unwrapOr(""))
-        setVerifiedEmail(activeAccount.hasVerifiedEmail())
-    }, [wallet]);
+        setEmail(activeAccount.getEmail().unwrapOr(""));
+        setVerifiedEmail(activeAccount.hasVerifiedEmail());
 
-    useEffect(() => {
-        // load the organization public key
-        const seed = wallet.getSeed();
-        Carmentis.derivePepperFromSeed(seed).then(pepper => {
-            return Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
-                return Carmentis.getPublicKey(privateKey).then(publicKey => {
-                    setUserPrivateKey(Encoders.ToHexa(privateKey));
-                    setUserPublicKey(Encoders.ToHexa(publicKey));
-                })
+        // load the authentication key pair
+        wallet.getAccountAuthenticationKeyPair(activeAccount)
+            .then(keyPair => {
+                setUserPrivateKey(Encoders.ToHexa(keyPair.privateKey));
+                setUserPublicKey(Encoders.ToHexa(keyPair.publicKey));
             })
-        }).catch(error => {
-            console.error(error);
-            // TODO: Handle error
-        })
+
     }, [wallet]);
 
 
-    // states for the operator keys
-    const [organisationPrivateKey, setOrganisationPrivateKey] = useState<string>("");
-    const [organisationPublicKey, setOrganisationPublicKey] = useState<string>("");
 
-    useEffect(() => {
-        // load the organization public key
-        const seed = wallet.getSeed();
-        Carmentis.deriveOrganizationPrivateKey(seed, 1).then( organisationPrivateKey => {
-            return Carmentis.getPublicKey(organisationPrivateKey).then(organisationPublicKey => {
-                setOrganisationPublicKey(Encoders.ToHexa(organisationPublicKey));
-                setOrganisationPrivateKey(Encoders.ToHexa(organisationPrivateKey));
-            })
-        }).catch(error => {
-            console.error(error);
-        })
-    }, [wallet]);
-
+    const navigate = useNavigate();
+    function goToMain() {
+        navigate("/")
+    }
 
 
     /**
@@ -116,17 +103,46 @@ export default function Parameters() {
 
 
 
-        // update the pseudo
-        wallet.updatePseudo( activeAccountIndex, pseudo );
+        // update the wallet
+        setWallet(walletOption => {
+            const wallet = walletOption.unwrap();
+            const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
 
-        const updateWallet = authentication.updateWallet.unwrap();
-        updateWallet(wallet).then(_ => {
+            // update the pseudo
+            wallet.updatePseudo( activeAccountIndex, pseudo );
 
+            // update the endpoints
+            wallet.setEndpoints(
+                nodeEndpoint,
+                dataEndpoint
+            );
+
+            return Optional.From(wallet)
         });
     }
 
+    /**
+     * This function is fired when the user wants to delete the current active account.
+     */
+    function deleteActiveAccount() {
+        if ( activeAccount.getPseudo() === accountDeletionPseudo ) {
+            console.log(`[parameters] deleting ${activeAccount.getPseudo()}`)
+            setWallet(walletOption => {
+                const wallet = walletOption.unwrap();
+                wallet.deleteActiveAccount();
+                return Optional.From(wallet)
+            })
+        }
+    }
+
     return <>
-        <h1>Parameters</h1>
+        <div className="flex justify-between">
+            <h1>Parameters</h1>
+            <button onClick={goToMain} className="btn-primary btn-highlight">
+                Menu
+            </button>
+        </div>
+
         <div className="p-4">
 
 
@@ -138,7 +154,7 @@ export default function Parameters() {
                     <InputWithDynamicConfirmSaveComponent
                         value={pseudo}
                         onChange={setPseudo}
-                        onSave={saveParameters} />
+                        onSave={saveParameters}/>
 
                 </div>
 
@@ -182,10 +198,9 @@ export default function Parameters() {
                     <InputWithDynamicConfirmSaveComponent
                         value={dataEndpoint}
                         onChange={setDataEndpoint}
-                        onSave={saveParameters} />
+                        onSave={saveParameters}/>
                 </div>
             </div>
-
 
 
             <div className="parameter-section">
@@ -201,9 +216,29 @@ export default function Parameters() {
                     <InputWithDynamicConfirmSaveComponent
                         value={nodeEndpoint}
                         onChange={setNodeEndpoint}
-                        onSave={saveParameters} />
+                        onSave={saveParameters}/>
                 </div>
             </div>
+
+            { wallet.getAllAccounts().length !== 1 &&
+                <div className="parameter-section">
+                    <h2>Dangerous Zone</h2>
+
+                    <div className="parameter-group text-red-500">
+                        <div className="parameter-title">Account Deletion</div>
+                        <div className="parameter-description">
+                            Delete the current account named <b>{activeAccount.getPseudo()}</b>.
+                            Write your account name below to confirm the deletion.
+                        </div>
+                        <input type="text" className="parameter-input" value={accountDeletionPseudo}
+                               onChange={e => setAccountDeletionPseudo(e.target.value)}/>
+                        <div className="flex justify-end items-end space-x-1 mt-1">
+                            <button className="btn-primary bg-red-500" onClick={deleteActiveAccount}>Delete</button>
+                        </div>
+
+                    </div>
+                </div>
+            }
         </div>
     </>
 }
