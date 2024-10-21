@@ -62,7 +62,7 @@ export function Dashboard() : ReactElement {
                 <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                     <div
                          className="flex items-center rtl:space-x-reverse h-4 border-gray-100  py-4 px-1">
-                        <DropdownAccountSelection></DropdownAccountSelection>
+                        <DropdownAccountSelection allowAccountCreation={true} width={60}></DropdownAccountSelection>
                     </div>
 
 

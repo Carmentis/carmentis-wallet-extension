@@ -1106,6 +1106,10 @@ p{
   width: 100%;
 }
 
+.w-40{
+  width: 10rem;
+}
+
 .min-w-72{
   min-width: 18rem;
 }

@@ -1,7 +1,9 @@
 import React, {useContext, useState} from "react";
 import {AuthenticationContainer, AuthenticationContext} from "@/src/components/commons/AuthenticationGuard.tsx";
+import {AccountSelection} from "@/src/components/commons/AccountSelection.tsx";
+import {DropdownAccountSelection} from "@/src/components/dashboard/DropdownAccountSelection.tsx";
 
-export function Navbar() {
+export function DashboardNavbar() {
 
     // load the authentication context
     const authentication: AuthenticationContainer = useContext(AuthenticationContext);
@@ -24,16 +26,11 @@ export function Navbar() {
         })
     }
 
+
     return <nav className="bg-white border-gray-200 dark:bg-gray-900 border-b-2 border-gray-100">
         <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
             <div className="flex items-center space-x-3 rtl:space-x-reverse h-2">
-                <img src="https://t4.ftcdn.net/jpg/05/49/98/39/360_F_549983970_bRCkYfk0P6PP5fKbMhZMIb07mCJ6esXL.jpg"
-                     className="h-6"
-                />
-                <span
-                    className="self-center text-xl font-semibold whitespace-nowrap text-black">
-                        {activeAccount.getPseudo()}
-                    </span>
+                <DropdownAccountSelection  allowAccountCreation={false} width={40} ></DropdownAccountSelection>
             </div>
 
             <div className="relative inline-block text-left">

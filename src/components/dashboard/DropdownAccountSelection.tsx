@@ -6,7 +6,12 @@ import {Optional} from "@/src/Optional.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {AccountCreationModal} from "@/src/components/dashboard/AccountCreationModal.tsx";
 
-export function DropdownAccountSelection() {
+export function DropdownAccountSelection( input : {allowAccountCreation : boolean, width: number } ) {
+
+    // by default the account creation is enabled
+    const allowAccountCreation = typeof input.allowAccountCreation === "boolean" ?
+        input.allowAccountCreation : true;
+
     const authentication = useContext(AuthenticationContext);
     const wallet: Wallet = authentication.wallet.unwrap();
     const activeAccount: Account = wallet.getActiveAccount().unwrap();
@@ -84,7 +89,7 @@ export function DropdownAccountSelection() {
 
     return <>
         <div id="dropdownUsers" onMouseLeave={onLeavePopup}
-             className={"bg-white  w-60 dark:bg-gray-700 border-2 border-gray-100 " + dropdownClass}>
+             className={`bg-white  w-${input.width} dark:bg-gray-700 border-2 border-gray-100 ` + dropdownClass}>
             <div onClick={() => setShowAccountSelectionMenu(true)}
                  className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                 <img className="w-6 h-6 me-2 rounded-full"
@@ -95,7 +100,7 @@ export function DropdownAccountSelection() {
                             </span>
             </div>
             {showAccountSelectionMenu &&
-                <div className="border-t-2 border-gray-100 absolute bg-white w-60 rounded-b-lg" hidden={!showAccountSelectionMenu}>
+                <div className={`border-t-2 border-gray-100 absolute bg-white w-${input.width} rounded-b-lg`} hidden={!showAccountSelectionMenu}>
                     <ul className="overflow-y-auto text-gray-700 dark:text-gray-200"
                         aria-labelledby="dropdownUsersButton">
                         { inactiveAccounts.map( account => {
@@ -111,23 +116,25 @@ export function DropdownAccountSelection() {
                         })}
                     </ul>
 
-                    <div onClick={() => setShowAccountCreation(true)}
-                         className="flex items-center p-3 text-sm font-medium text-blue-600 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:border-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-500 hover:underline">
-                        <svg className="w-4 h-4 me-2" aria-hidden="true"
-                             xmlns="http://www.w3.org/2000/svg"
-                             fill="currentColor" viewBox="0 0 20 18">
-                            <path
-                                d="M6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Zm11-3h-2V5a1 1 0 0 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 0 0 2 0V9h2a1 1 0 1 0 0-2Z"/>
-                        </svg>
-                        Add new user
-                    </div>
+                    {allowAccountCreation &&
+                        <div onClick={() => setShowAccountCreation(true)}
+                             className="flex items-center p-3 text-sm font-medium text-blue-600 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:border-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-500 hover:underline">
+                            <svg className="w-4 h-4 me-2" aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 fill="currentColor" viewBox="0 0 20 18">
+                                <path
+                                    d="M6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Zm11-3h-2V5a1 1 0 0 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 0 0 2 0V9h2a1 1 0 1 0 0-2Z"/>
+                            </svg>
+                            Add new user
+                        </div>
+                    }
 
 
                 </div>
             }
         </div>
 
-        { showAccountCreation && <AccountCreationModal
+        {showAccountCreation && <AccountCreationModal
             inputValue={newAccountPseudo}
             onChange={setNewAccountPseudo}
             onClose={() => {
@@ -139,7 +146,7 @@ export function DropdownAccountSelection() {
                 setShowAccountSelectionMenu(false);
                 createAndActiveNewAccount()
             }}
-        /> }
+        />}
     </>;
 }
 
