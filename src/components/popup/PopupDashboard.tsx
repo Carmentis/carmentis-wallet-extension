@@ -24,7 +24,7 @@ import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
 import {Account, EmailValidationProofData} from "@/src/Account.tsx";
 import {QRCodeProcessRequestApproval} from "@/src/components/popup/QRCodeProcessRequestApproval.tsx";
-import {DashboardNavbar} from "@/src/components/popup/DashboardNavbar.tsx";
+import {PopupNavbar} from "@/src/components/popup/PopupNavbar.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import {SpinningWheel} from "@/src/components/commons/SpinningWheel.tsx";
 import {SignInRequestApproval} from "@/src/components/popup/SignInRequestApproval.tsx";
@@ -535,7 +535,7 @@ export function PopupDashboard() {
 
 
     return <>
-        <DashboardNavbar/>
+        <PopupNavbar/>
         <div className="min-h-full">
             { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
                 <>

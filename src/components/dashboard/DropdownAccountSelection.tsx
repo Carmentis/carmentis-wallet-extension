@@ -23,7 +23,7 @@ import {Optional} from "@/src/Optional.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {AccountCreationModal} from "@/src/components/dashboard/AccountCreationModal.tsx";
 
-export function DropdownAccountSelection( input : {allowAccountCreation : boolean, width: number } ) {
+export function DropdownAccountSelection( input : {allowAccountCreation : boolean, large : boolean } ) {
 
     // by default the account creation is enabled
     const allowAccountCreation = typeof input.allowAccountCreation === "boolean" ?
@@ -106,7 +106,10 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
 
     return <>
         <div id="dropdownUsers" onMouseLeave={onLeavePopup}
-             className={`bg-white  w-${input.width} dark:bg-gray-700 border-2 border-gray-100 ` + dropdownClass}>
+             className={
+            `bg-white dark:bg-gray-700 border-2 border-gray-100 ` + dropdownClass +
+                 (input.large ? " account-selection-large" : " account-selection-small")
+            }>
             <div onClick={() => setShowAccountSelectionMenu(true)}
                  className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                 <img className="w-6 h-6 me-2 rounded-full"
@@ -117,7 +120,7 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
                             </span>
             </div>
             {showAccountSelectionMenu &&
-                <div className={`border-t-2 border-gray-100 absolute bg-white w-${input.width} rounded-b-lg`} hidden={!showAccountSelectionMenu}>
+                <div className={`border-t-2 border-gray-100 absolute bg-white rounded-b-lg ` +  (input.large ? "account-selection-large" : "account-selection-small")} hidden={!showAccountSelectionMenu}>
                     <ul className="overflow-y-auto text-gray-700 dark:text-gray-200"
                         aria-labelledby="dropdownUsersButton">
                         { inactiveAccounts.map( account => {

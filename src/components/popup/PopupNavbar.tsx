@@ -20,7 +20,7 @@ import {AuthenticationContainer, AuthenticationContext} from "@/src/components/c
 import {AccountSelection} from "@/src/components/commons/AccountSelection.tsx";
 import {DropdownAccountSelection} from "@/src/components/dashboard/DropdownAccountSelection.tsx";
 
-export function DashboardNavbar() {
+export function PopupNavbar() {
 
     // load the authentication context
     const authentication: AuthenticationContainer = useContext(AuthenticationContext);
@@ -31,7 +31,6 @@ export function DashboardNavbar() {
 
     // the account selection menu
     const [showDropdownMenu, setShowDropdownMenu] = useState<boolean>(false);
-    const [showAccountsSelectionMenu, setShowAccountsSelectionMenu] = useState<boolean>(false);
 
     /**
      * This function is called when the user wants to see the extension in the main view.
@@ -46,8 +45,8 @@ export function DashboardNavbar() {
 
     return <nav className="bg-white border-gray-200 dark:bg-gray-900 border-b-2 border-gray-100">
         <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-            <div className="flex items-center space-x-3 rtl:space-x-reverse h-2">
-                <DropdownAccountSelection  allowAccountCreation={false} width={40} ></DropdownAccountSelection>
+            <div className="flex items-center space-x-3 rtl:space-x-reverse h-2 relative">
+                <DropdownAccountSelection  allowAccountCreation={false} large={false} ></DropdownAccountSelection>
             </div>
 
             <div className="relative inline-block text-left">
@@ -64,7 +63,7 @@ export function DashboardNavbar() {
                 </div>
 
 
-                <div hidden={!showDropdownMenu}
+                <div hidden={!showDropdownMenu} onMouseLeave={() => setShowDropdownMenu(false)}
                      className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                      role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
                     <div className="py-1" role="none">

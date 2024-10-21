@@ -17,7 +17,7 @@
 
 import {Optional} from "@/src/Optional.tsx";
 import {ReactElement, useCallback, useRef, useState} from "react";
-import assert from "node:assert";
+import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 
 
 interface TextualMessagePart {
@@ -182,6 +182,11 @@ export function DataTreeViewer(input : {data: object}) {
     const data = input.data;
     const records = data.record;
 
+    // get the current nonce corresponding to the index of the current block
+    console.log(data)
+    const nonceOfThisTree = data.data.microBlock.nonce;
+    const currentNonce = useRef<number>(nonceOfThisTree);
+
     // format the message (defined in the workspace)
     const msgParts = data.msgParts;
     const formattedMessage = formatMessage(msgParts);
@@ -201,6 +206,23 @@ export function DataTreeViewer(input : {data: object}) {
     let node = tree;
     for (const child of relativeFieldPath) {
         node = node[child];
+    }
+
+    // we use a state to display a loading element
+    const [isLoading, setIsLoading] = useState(false);
+
+    // functions to go in the previous and next block
+    function goPreviousBlock() {
+        if (1 < currentNonce.current) {
+            currentNonce.current--;
+            setIsLoading(true);
+            Carmentis.loadPublicDataFromMicroBlock(currentNonce.current)
+                .then(data => {
+                    console.log(data);
+                    //trees[currentNonce.current] = data;
+                    setIsLoading(false);
+                });
+        }
     }
 
     // create a dedicated class to separate the current to the previous blocks to a more enhanced UI

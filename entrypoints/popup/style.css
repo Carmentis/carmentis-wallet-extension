@@ -64,9 +64,9 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-#root {
-  height: 400px;
-  width: 300px;
+html, body, #root {
+  height: 500px;
+  width: 357px;
 }
 
 @media (prefers-color-scheme: light) {

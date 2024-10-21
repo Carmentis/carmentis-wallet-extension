@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {ReactElement, useContext, useEffect, useRef, useState, useTransition} from "react";
+import React, {memo, ReactElement, useContext, useEffect, useRef, useState, useTransition} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
 import '../../../entrypoints/main/global.css'
 
@@ -36,6 +36,7 @@ import {Optional} from "@/src/Optional.tsx";
 import {Formatter} from "@/src/Formatter.tsx";
 import {Flow} from "@/src/components/popup/PopupDashboard.tsx"
 import {b} from "formdata-node/lib/File-cfd9c54a";
+import {FlowDetailComponent, SpanWithLoader} from "@/src/components/dashboard/FlowDetailComponent.tsx";
 
 
 /**
@@ -79,7 +80,8 @@ export function Dashboard() : ReactElement {
                 <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                     <div
                          className="flex items-center rtl:space-x-reverse h-4 border-gray-100  py-4 px-1">
-                        <DropdownAccountSelection allowAccountCreation={true} width={60}></DropdownAccountSelection>
+
+                        <DropdownAccountSelection allowAccountCreation={true} large={true}></DropdownAccountSelection>
                     </div>
 
 
@@ -254,7 +256,7 @@ export function DashboardMainContent() {
                         <SpanWithLoader text={numberOfFlows} isLoading={isLoading}></SpanWithLoader>
                     </div>
                     <div className="overview-section">
-                        <h3>Spent Gaz</h3>
+                        <h3>Spent Gas</h3>
                         <SpanWithLoader text={spentGaz} isLoading={isLoading}></SpanWithLoader>
                     </div>
                 </div>
@@ -286,7 +288,7 @@ export function DashboardMainContent() {
                                     className={
                                         "hover:bg-gray-100 hover:cursor-pointer " + (
                                             chosenFlowId !== undefined && chosenFlowId.flowId === flow.flowId ?
-                                                "bg-blue-100" : ""
+                                                "bg-gray-200" : ""
                                         )
                                     }
                                     onClick={() => {
@@ -298,7 +300,7 @@ export function DashboardMainContent() {
                                     <td>{flow.flowLength}</td>
                                     <td onClick={() => window.open("https://" + flow.applicationDomain, "_blank")} className="hover:cursor-pointer">{flow.applicationDomain}</td>
                                     <td onClick={() => window.open(wallet.getDataEndpoint() + "/explorer/microchain/0x" + flow.flowId)}>
-                                        <button className="btn-primary">View on explorer</button>
+                                        <button className="btn-primary">Explore flow</button>
                                     </td>
                                 </tr>)
                             }
@@ -319,245 +321,5 @@ export function DashboardMainContent() {
 }
 
 
-function FlowDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
-    // load history
-    const walletOption = useContext(WalletContext);
-    const wallet = walletOption.unwrap();
-    const history = wallet.getActiveAccount().unwrap().getHistoryReader();
-
-    const [isLoading, setTransition] = useTransition();
-
-    // load all the blocks associated with the flow
-    const [blocks, setBlocks] = useState<MicroBlock[]|undefined>();
-
-    // state to show the data of a chosen block
-    const [chosenBlock, setChosenBlock] = useState<{
-        applicationId: string;
-        flowId: string;
-        block: MicroBlock
-    }|undefined>();
-
-
-
-    useEffect(() => {
-        setChosenBlock(undefined)
-        setTransition(() => {
-            console.log("[flow details]", input, wallet.getActiveAccount().unwrap());
-            const allBlocks = history.getAllBlocksByFlowId(
-                input.chosenFlow.applicationId,
-                input.chosenFlow.flowId
-            );
-            setBlocks(allBlocks);
-        })
-    }, [input, wallet]);
-
-    return <>
-        <h3>Flow History</h3>
-        { isLoading &&
-            <Skeleton count={5} /> // Five-line loading skeleton
-        }
-        {!isLoading && blocks !== undefined &&
-            <>
-            <p><b>Flow Id:</b> {input.chosenFlow.flowId}</p>
-            <div className="rounded-gray">
-                <table className="table table-auto w-full text-sm text-left rtl:text-right ">
-                    <thead className="text-xs uppercase bg-gray-50 d">
-                    <tr>
-                        <th>#</th>
-                        <th>Master block</th>
-                        <th>Micro block</th>
-                        <th>Created at</th>
-                        <th>Gas</th>
-
-                        <th>By</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {blocks.map(block =>
-                        <tr key={block.microBlockId} onClick={() => {setChosenBlock({
-                            applicationId: input.chosenFlow.applicationId,
-                            flowId: input.chosenFlow.flowId,
-                            block: block
-                        })}}>
-                            <td>{block.nonce}</td>
-                            <td className="underline"
-                                onClick={() => {
-                                if ( block.masterBlock ) {
-                                    window.open(
-                                        wallet.getDataEndpoint() + "/explorer/masterblock/" +
-                                        block.masterBlock.toString().padStart(9, "0")
-                                    )
-                                }
-                            }}>
-                                {block.masterBlock}
-                            </td>
-                            <td className="underline"
-                                onClick={() => window.open(wallet.getDataEndpoint() + "/explorer/microblock/0x" + block.microBlockId)}>
-                                {block.microBlockId.slice(0, 20) + "..."}
-                            </td>
-                            <td>{Formatter.formatDate(block.ts)}</td>
-                            <td>{block.gas}</td>
-                            <td>{block.isInitiator ? "You" : "--"}</td>
-
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>
-            </>
-
-        }
-
-
-        { chosenBlock !== undefined &&
-            <MicroBlockDataViewer
-                key={chosenBlock.block.microBlockId}
-                applicationId={chosenBlock.applicationId}
-                flowId={chosenBlock.flowId}
-                block={chosenBlock.block}
-            />
-        }
-    </>
-}
-
-function MicroBlockDataViewer({applicationId, flowId, block}: {applicationId: string, flowId: string, block: MicroBlock}) {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [dataTree, setDataTree] = useState<object>({});
-
-    useEffect(() => {
-        if ( block.isInitiator ) {
-            setDataTree(block.data.record)
-            setIsLoading(false)
-        } else {
-            console.log(block)
-            Carmentis.loadPublicDataFromMicroBlock( applicationId, flowId, block.nonce )
-                .then( data => {
-                    setDataTree(data.record)
-                    setIsLoading(false)
-                } )
-
-        }
-    }, []);
-
-    return <>
-        <>
-            <h3 className="mt-3">Block Data</h3>
-            {isLoading &&
-                <Skeleton count={5} /> // Five-line loading skeleton
-            }
-
-            { !isLoading &&
-                <DataTreeViewer data={dataTree} />
-            }
-
-        </>
-
-
-    </>
-}
-
-
-export function DataTreeViewer(input : {data: object}) {
-
-    /**
-     * Event function called when the user click on an object in the displayed tree to expand the content.
-     *
-     * @param childName The name of the child to expand in the tree.
-     */
-    function goToChild( childName : string ) {
-        setRelativeFieldPath(currentPath => currentPath.concat([childName]));
-    }
-
-    /**
-     * Event function called when the user goes up in the tree to display the parent of the current node.
-     */
-    function backToParent() {
-        if ( relativeFieldPath.length === 0 ) {
-            throw new Error("Cannot back to the parent node in the tree display: already at root");
-        }
-        setRelativeFieldPath(currentPath => currentPath.slice(0, -1));
-    }
-
-
-
-    /**
-     * This helper function is used to format the "back" section when the user navigates in the tree.
-     *
-     * Note: This function assumes that the current path is not empty!
-     * This assumption is ensured by the conditional rendering.
-     */
-    function formatBack() : string {
-        let content = relativeFieldPath[0];
-        for (let i = 1; i < relativeFieldPath.length; i++) {
-            content = content + " > " + relativeFieldPath[i]
-        }
-        return content;
-    }
-
-
-    
-    // we remember the current path in the current displayed node to remember our location.
-    // An empty array means "show the root of the current tree"
-    const [relativeFieldPath, setRelativeFieldPath] = useState<string[]>([]);
-
-    // prepare the rendering by accessing the node in the specified tree
-    const tree = input.data;
-    let node = tree;
-    for (const child of relativeFieldPath) {
-        node = node[child];
-    }
-
-    return <>
-        <div className="tree-viewer" id="block-data-tree-viewer">
-            <table className={'w-full mb-2 border-1 border-gray-100'}>
-                <tbody>
-
-                {relativeFieldPath.length !== 0 &&
-                    <tr onClick={backToParent}>
-                        <td colSpan={2}>&#8592; {formatBack()}</td>
-                    </tr>
-                }
-
-
-                {
-                    Object.keys(node).map((key, index) => (
-                        <tr key={index} onClick={() => {
-                            if (typeof node[key] === "object") {
-                                goToChild(key)
-                            }
-                        }}>
-                            <td className="event-approval-data-key">{key}</td>
-                            {typeof node[key] === "object" &&
-                                <td className="event-approval-data-child">&#8594;</td>
-                            }
-                            {typeof node[key] !== "object" &&
-                                <td className="event-approval-data-value">{node[key]}</td>
-                            }
-
-
-
-                        </tr>
-                        ))
-                }
-                </tbody>
-            </table>
-
-        </div>
-    </>;
-}
-
-
-function SpanWithLoader(input: { text: string | undefined, isLoading : boolean }) {
-
-    return (
-        <div>
-            {input.isLoading ? (
-                <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-10"></div>
-            ) : (
-                <span>{input.text}</span>
-            )}
-        </div>
-    );
-};
 
 export default Dashboard;

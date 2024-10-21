@@ -683,6 +683,14 @@ video {
   text-align: right;
 }
 
+.account-selection-large{
+  width: 15rem;
+}
+
+.account-selection-small{
+  width: 10rem;
+}
+
 .btn-primary{
   border-radius: 0.375rem;
   padding-top: 0.5rem;
