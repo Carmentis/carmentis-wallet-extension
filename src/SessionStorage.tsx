@@ -2,7 +2,6 @@ import {Wallet} from "@/src/Wallet.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
 import browser from 'webextension-polyfill'
-import {Optional} from "@/src/Optional.tsx";
 
 export interface SessionState {
     state: {

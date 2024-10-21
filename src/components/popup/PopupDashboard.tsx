@@ -18,6 +18,7 @@ import {
     AuthenticationContext,
     LoggerContext
 } from "@/src/components/commons/AuthenticationGuard.tsx";
+import browser from "webextension-polyfill";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -32,6 +33,45 @@ interface BackgroundTaskExecutionOption {
     closeWaitingScreenOnSuccess?: boolean
 }
 
+export interface RecordConfirmationData {
+    // these variables are obtained at the processRecord step
+    applicationId: string | undefined
+    applicationVersion: number | undefined,
+    applicationName: string | undefined,
+    rootDomain: string | undefined,
+    ts: number | undefined,
+    gas: number | undefined,
+    gasPrice: number | undefined,
+    data: object | undefined
+
+    // these variables are obtained at the confirmRequest step
+    flowId: string | undefined,
+    microBlockId: string | undefined,
+    nonce: number | undefined,
+    authorPublicKey: string | undefined,
+}
+
+export interface Flow {
+    applicationId: string;
+    appDescription: {
+        name: string,
+        rootDomain: string,
+    },
+    "flowObject": {
+        "chain": {
+            "microBlock":
+                {
+                    "version": 1,
+                    "nonce": 1,
+                    "ts": 1729169460,
+                    "gas": 1890,
+                    "gasPrice": 100000,
+                }[]
+        }
+    }
+}
+
+
 export function PopupDashboard() {
 
 
@@ -43,6 +83,7 @@ export function PopupDashboard() {
 
     // load the authentication data
     const wallet: Wallet = authentication.wallet.unwrap();
+    const setWallet = authentication.setWallet.unwrap();
     let activeAccount: Account = wallet.getActiveAccount().unwrap();
 
     // create a reference on the action messages
@@ -52,6 +93,22 @@ export function PopupDashboard() {
 
     // initialize the Carmentis wallet callback (should be set at every rendering)
     Carmentis.wallet.setRequestCallback(handleClientRequest, handleServerRequest)
+
+    // create some references to handle the confirmation of the block and add it in the history
+    const confirmRecordDetails = useRef<RecordConfirmationData>({
+        applicationId: undefined,
+        applicationName: undefined,
+        applicationVersion: undefined,
+        flowId: undefined,
+        gas: undefined,
+        gasPrice: undefined,
+        microBlockId: undefined,
+        nonce: undefined,
+        rootDomain: undefined,
+        ts: undefined,
+        data: undefined,
+        authorPublicKey: undefined
+    })
 
 
     // update the page when the action messages is updated
@@ -108,7 +165,7 @@ export function PopupDashboard() {
         setShowWaitingScreen(false);
         setActionMessages([])
         setTimeout(() => {
-            window.close()
+            //window.close()
         }, 1000)
 
     }
@@ -232,8 +289,6 @@ export function PopupDashboard() {
 
         // generate the private signature key and derive the public signature key from it
         const wallet: Wallet = authenticationContext.wallet.unwrap();
-        const seed: Uint8Array = wallet.getSeed();
-
         const currentActionMessageOption = localActionMessageOption;
         if ( currentActionMessageOption.isEmpty()  ) {
             throw new Error("container Empty container")
@@ -261,22 +316,12 @@ export function PopupDashboard() {
                         });
                 })
             })
-            /*
-            Carmentis.derivePepperFromSeed(seed, 1).then(pepper => {
-                Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
-                    Carmentis.getPublicKey(privateKey).then(publicKey => {
-
-                    })
-                })
-            });*/
         }));
     }
 
 
     function prepareRequestEventApproval( request ) {
         const [applicationId, recordId] = request.data.id.split("-");
-
-        const seed = wallet.getSeed();
 
         executeBackgroundTask(new Promise<void>((resolve,reject) => {
             console.log("[popup] executing background request event approval")
@@ -297,26 +342,6 @@ export function PopupDashboard() {
                     console.error("[popup] The event approval process has failed: ", error);
                     reject(error)
                 })
-            /*
-            Carmentis.derivePepperFromSeed(seed).then(pepper => {
-                return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
-                    return Carmentis.getPublicKey(privateKey).then(publicKey => {
-                        return request.answer({
-                            message: "walletHandshake",
-                            recordId: recordId,
-                            publicKey: Encoders.ToHexa(publicKey)
-                        })
-                    })
-                })
-            }).then(answer => {
-                console.log("[popup] The anwser has respond with an answer: ", answer)
-                // we voluntary do not resolve the request since we do want to remove the spinning wheel
-                //resolve()
-            }).catch(error => {
-                console.error("[popup] The event approval process has failed: ", error);
-                reject(error)
-            })
-             */
         }), {
             closeWaitingScreenOnSuccess: false
         });
@@ -327,7 +352,7 @@ export function PopupDashboard() {
      *
      * An event approval request is called mainly when the approval of a user is required.
      */
-    function handleRequestEventApproval() {
+    function acceptRequestEventApproval() {
         const actionMessage = localActionMessageOption.unwrap();
         if ( !actionMessage.serverRequest ) {
             throw new Error("Illegal state: the action message should embed a server request.")
@@ -338,11 +363,11 @@ export function PopupDashboard() {
                 message: "confirmRecord",
                 recordId: request.data.recordId
             });
+
             request.clientAnswer({
                 success: true,
                 recordId: request.data.recordId
             });
-            CloseOnSuccess();
         }));
     }
 
@@ -404,6 +429,8 @@ export function PopupDashboard() {
     }
 
 
+
+
     /**
      * Event function called by the operator to display the content of the block.
      *
@@ -418,18 +445,32 @@ export function PopupDashboard() {
                 serverRequest.data.applicationId,
                 serverRequest.data.flowId,
                 new Uint8Array(serverRequest.data.blockData)
-            ).then(flow => {
-                const nbBlocks = flow.flowObject.chain.microBlock.length;
-                const nonce =  flow.flowObject.chain.microBlock[nbBlocks - 1].nonce;
+            ).then((flow : Flow) => {
                 console.log("[popup] received flow: ", flow)
+
+                // process the record based on the current block
+                const nbBlocks = flow.flowObject.chain.microBlock.length;
+                const currentBlock = flow.flowObject.chain.microBlock[nbBlocks-1];
+                const nonce =  currentBlock.nonce;
                 Carmentis.processRecord(flow, nonce).then(res => {
+                    console.log("[popup] processRecord output: ", res)
                     if (res === undefined) {
                         reject("Failure when processing record: empty records.")
                     }
-                    console.log("[popup] processRecord output: ", res)
+
+                    // store the record details from the result
+                    confirmRecordDetails.current.applicationId = flow.applicationId;
+                    confirmRecordDetails.current.gas = currentBlock.gas;
+                    confirmRecordDetails.current.gasPrice = currentBlock.gasPrice;
+                    confirmRecordDetails.current.ts = currentBlock.ts;
+                    confirmRecordDetails.current.applicationName = flow.appDescription.name;
+                    confirmRecordDetails.current.applicationVersion = currentBlock.version;
+                    confirmRecordDetails.current.rootDomain = flow.appDescription.rootDomain;
+                    confirmRecordDetails.current.data = res
+
 
                     // store the processRecord in the session
-                    setActionMessages(messages => {
+                    setActionMessages((messages : ActionMessage[]) => {
                         messages[0].eventApprovalData = res;
                         return messages
                     })
@@ -437,7 +478,7 @@ export function PopupDashboard() {
                     resolve()
                 }).catch(reject)
 
-            }).catch(error => {
+            }).catch((error : Error) => {
                 console.error("An error occurred while handling requestBlockData:", error)
                 reject(error)
             });
@@ -445,8 +486,32 @@ export function PopupDashboard() {
 
     }
 
-    function handleConfirmRecord(request) {
+    interface ConfirmRecordRequest {
+        type: "confirmRecord";
+        data: {
+            flowId: string,
+            microBlockId: string,
+            nonce: number
+        }
+    }
+    function handleConfirmRecord(request: ConfirmRecordRequest) {
         console.log("[popup] confirm record:", request);
+
+        // set the final block's information in the history
+        confirmRecordDetails.current.flowId = request.data.flowId;
+        confirmRecordDetails.current.microBlockId = request.data.microBlockId;
+        confirmRecordDetails.current.nonce = request.data.nonce;
+
+        // insert the block in the wallet
+        setWallet(walletOption => {
+            const wallet = walletOption.unwrap();
+            const updatedWallet = wallet.addApprovedBlockInActiveAccountHistory(
+                {...confirmRecordDetails.current}
+            );
+            return Optional.From(updatedWallet)
+        })
+
+
         CloseOnSuccess()
     }
 
@@ -473,7 +538,7 @@ export function PopupDashboard() {
                             { localActionMessageOption.unwrap().type === "eventApproval" &&
                                 <EventRequestApproval
                                     data={Optional.From(localActionMessageOption.unwrap().eventApprovalData)}
-                                    onAccept={handleRequestEventApproval}
+                                    onAccept={acceptRequestEventApproval}
                                     onReject={RejectRequest}></EventRequestApproval>
                             }
 

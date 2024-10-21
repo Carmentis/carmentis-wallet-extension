@@ -1,0 +1,59 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    #overview {
+        @apply rounded-md;
+        border: 1px solid #ebebeb;
+    }
+
+    .overview-section {
+        @apply w-full p-4;
+    }
+
+    .overview-section:not(:last-child) {
+        border-right: 1px solid #ebebeb;
+    }
+
+    .rounded-gray {
+        @apply rounded-md;
+        border: 1px solid #ebebeb;
+    }
+
+    .dashboard-section table td, .dashboard-section table th {
+        @apply p-2;
+    }
+
+    #block-data-tree-viewer table {
+        @apply rounded-md;
+        border: 1px solid #ebebeb;
+    }
+
+    #block-data-tree-viewer tr:not(:last-child) {
+        border-bottom: 1px solid #ebebeb;
+    }
+
+    #block-data-tree-viewer tr:hover td{
+        background: #ebebeb;
+        cursor: pointer;
+    }
+
+    #block-data-tree-viewer tr:last-child {
+        @apply rounded-b-md;
+    }
+
+    #block-data-tree-viewer tr:first-child {
+        border-top-left-radius: 5px;
+    }
+
+    #block-data-tree-viewer .event-approval-data-child {
+        background: rgb(255,255,255);
+        background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 17%, rgba(235,235,235,1) 100%);
+    }
+
+    #block-data-tree-viewer tr td:last-child {
+        @apply text-right;
+    }
+}

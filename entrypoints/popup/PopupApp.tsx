@@ -50,7 +50,7 @@ function PopupApp() {
                         { !authentication.wallet.isEmpty() &&
                           <>
                               { !authentication.wallet.unwrap().getActiveAccount().isEmpty() &&
-                                  <PopupDashboard></PopupDashboard>
+                                  <PopupDashboard key={authentication.wallet.unwrap().getActiveAccount().unwrap().getId()}></PopupDashboard>
                               }
                               { authentication.wallet.unwrap().getActiveAccount().isEmpty() &&
                                   <AccountSelection></AccountSelection>

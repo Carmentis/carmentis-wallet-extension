@@ -207,7 +207,7 @@ export function AuthenticationGuard(props: { children: ReactElement }) {
                 <WalletContext.Provider value={wallet}>
                     <AccountCreatedContext.Provider value={accountCreated}>
                         <ApplicationInitializedContext.Provider value={applicationInitialized}>
-                            {props.children}
+                                {props.children}
                         </ApplicationInitializedContext.Provider>
                     </AccountCreatedContext.Provider>
                 </WalletContext.Provider>

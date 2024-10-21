@@ -36,6 +36,7 @@ export function EmailValidation() {
         console.log("[main] proceed to the update of the wallet")
         const setWallet = authentication.setWallet.unwrap();
         const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
+        setEmail("") // clearing the email is done after the end of the function
         setWallet(walletOption => {
             const wallet = walletOption.unwrap();
             const updatedWallet = wallet.updateAccountEmail( activeAccountIndex, email );
@@ -45,15 +46,13 @@ export function EmailValidation() {
 
     function verifyEmail() {
         setEmailValidationInProgress(true);
-        const seed = wallet.getSeed();
-        // TODO SECURITY: Why a constant nonce ?
         const activeAccount = wallet.getActiveAccount().unwrap();
         wallet.getAccountAuthenticationKeyPair(activeAccount)
             .then(keyPair => {
                 Carmentis.dataServerQuery(
                     "email-validator/initialize",
                     {
-                        email    : email,
+                        email    : activeAccount.getEmail().unwrap(),
                         publicKey: Encoders.ToHexa(keyPair.publicKey),
                     }
                 ).then(answer => {

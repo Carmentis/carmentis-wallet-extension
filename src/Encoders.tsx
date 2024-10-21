@@ -11,12 +11,18 @@ export class Encoders {
     /**
      * Returns a hexadecimal string as an array of bytes.
      *
-     * @param str
+     * @param data
      */
-    static FromHexa(str : string) {
-        if (str == null || typeof str !== "string" || !str.match(/^([\da-f]{2})*$/gi)) {
-            throw new Error("Invalid hex format.");
+    static FromHexa(data : any) {
+        if (data == null || typeof data !== "string") {
+            throw new Error(`Cannot compute hex of type different of string: got ${typeof data}`);
         }
+
+        const str = (data as string);
+        if ( !(data as string).match(/^([\da-f]{2})*$/gi) ){
+            throw new Error(`Invalid hex format: got '${data}'.`);
+        }
+
         const chars : string[] | null =  str.match(/../g);
         if (chars === null) {
             throw new Error("Invalid hex format.");

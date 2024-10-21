@@ -53,7 +53,7 @@ function FullPageApp() : ReactElement {
                                     <AccountSelection/>
                                 }
                                 { authentication.wallet.unwrap().getActiveAccountIndex().isSome() &&
-                                    <Dashboard></Dashboard>
+                                    <Dashboard key={authentication.wallet.unwrap().getActiveAccount().unwrap().getId()}></Dashboard>
                                 }
                             </>
                         }

@@ -1,4 +1,4 @@
-import {ReactElement, useContext, useEffect, useState} from "react";
+import React, {ReactElement, useContext, useEffect, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
 import {Wallet} from "@/src/Wallet.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
@@ -6,6 +6,7 @@ import {Optional} from "@/src/Optional.tsx";
 import {useNavigate} from "react-router";
 import login from "@/src/components/commons/Login.tsx";
 import {AuthenticationContext, WalletContext} from "@/src/components/commons/AuthenticationGuard.tsx";
+import {EmailValidation} from "@/src/components/dashboard/EmailValidation.tsx";
 
 function InputWithDynamicConfirmSaveComponent(input: {
     value: string,
@@ -59,6 +60,7 @@ export default function Parameters() {
     // states for the endpoints
     const [dataEndpoint, setDataEndpoint] = useState(wallet.getDataEndpoint());
     const [nodeEndpoint, setNodeEndpoint] = useState(wallet.getNodeEndpoint());
+    const [webSocketNodeEndpoint, setWebSocketNodeEndpoint] = useState(wallet.getWebSocketNodeEndpoint());
 
 
     // states for the user keys
@@ -114,7 +116,8 @@ export default function Parameters() {
             // update the endpoints
             wallet.setEndpoints(
                 nodeEndpoint,
-                dataEndpoint
+                dataEndpoint,
+                webSocketNodeEndpoint
             );
 
             return Optional.From(wallet)
@@ -136,15 +139,17 @@ export default function Parameters() {
     }
 
     return <>
-        <div className="flex justify-between">
-            <h1>Parameters</h1>
-            <button onClick={goToMain} className="btn-primary btn-highlight">
-                Menu
-            </button>
-        </div>
+        <div className="md:container md:mx-auto">
 
-        <div className="p-4">
+            <div className="flex justify-between mb-2">
+                <h1>Parameters</h1>
+                <button onClick={goToMain} className="btn-primary btn-highlight">
+                    Menu
+                </button>
+            </div>
 
+
+            <EmailValidation/>
 
             <div className="parameter-section">
                 <h2>General</h2>
@@ -218,9 +223,22 @@ export default function Parameters() {
                         onChange={setNodeEndpoint}
                         onSave={saveParameters}/>
                 </div>
+
+                <div className="parameter-group">
+                    <div className="parameter-title">Node Web Socket Endpoint</div>
+                    <div className="parameter-description">
+                        The endpoint of the web socket node server.
+                        Make sure that the node belongs to Carmentis network.
+                    </div>
+
+                    <InputWithDynamicConfirmSaveComponent
+                        value={webSocketNodeEndpoint}
+                        onChange={setWebSocketNodeEndpoint}
+                        onSave={saveParameters}/>
+                </div>
             </div>
 
-            { wallet.getAllAccounts().length !== 1 &&
+            {wallet.getAllAccounts().length !== 1 &&
                 <div className="parameter-section">
                     <h2>Dangerous Zone</h2>
 

@@ -17,7 +17,7 @@ interface ObjectMessagePart {
 }
 
 
-function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
+export function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
     // the "this" tree corresponds to the current block being under approval.
     const trees = {
         "this": records,
@@ -33,7 +33,7 @@ function constructTree( records : object, msgParts : (TextualMessagePart | Objec
     return trees;
 }
 
-function DataTreeViewer(input : {data: object}) {
+export function DataTreeViewer(input : {data: object}) {
 
 
 

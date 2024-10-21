@@ -2,9 +2,11 @@ import {Account, AccountData, EmailValidationProofData} from "@/src/Account.tsx"
 import {Encoders} from "@/src/Encoders.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
+import {RecordConfirmationData} from "@/src/components/popup/PopupDashboard.tsx";
 
 const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
 const DEFAULT_DATA_ENDPOINT = "https://data.testapps.carmentis.io"
+const DEFAULT_WEBSOCKET_NODE_ENDPOINT = "wss://node.testapps.carmentis.io/websocket"
 
 export interface WalletData {
     seed : Array | undefined;
@@ -13,6 +15,7 @@ export interface WalletData {
     activeAccountId : string | undefined;
     nodeEndpoint: string;
     dataEndpoint: string;
+    webSocketNodeEndpoint: string;
 }
 
 export class Wallet {
@@ -25,7 +28,6 @@ export class Wallet {
 
 
     empty() : Wallet {
-        //return new Wallet(undefined, []);
         const createdAccount = Account.Default();
         return new Wallet({
             seed: undefined,
@@ -33,7 +35,8 @@ export class Wallet {
             counter: 1,
             activeAccountId : createdAccount.getId(),
             nodeEndpoint : DEFAULT_NODE_ENDPOINT,
-            dataEndpoint : DEFAULT_DATA_ENDPOINT
+            dataEndpoint : DEFAULT_DATA_ENDPOINT,
+            webSocketNodeEndpoint: DEFAULT_WEBSOCKET_NODE_ENDPOINT
         })
     }
 
@@ -51,6 +54,13 @@ export class Wallet {
         return this.data.nodeEndpoint;
     }
 
+    /**
+     * Returns the endpoint for the web socket node server.
+     */
+    getWebSocketNodeEndpoint() : string {
+        return this.data.webSocketNodeEndpoint
+    }
+
     static CreateFromSeed(seed : Uint8Array) : Wallet {
         if ( !seed ) {
             throw new Error( "Cannot instantiate a wallet from undefined seed" );
@@ -64,7 +74,8 @@ export class Wallet {
             counter: 1,
             activeAccountId : createdAccount.getId(),
             nodeEndpoint : DEFAULT_NODE_ENDPOINT,
-            dataEndpoint : DEFAULT_DATA_ENDPOINT
+            dataEndpoint : DEFAULT_DATA_ENDPOINT,
+            webSocketNodeEndpoint: DEFAULT_WEBSOCKET_NODE_ENDPOINT
         })
     }
 
@@ -81,7 +92,8 @@ export class Wallet {
             activeAccountId : undefined,
             counter: 1,
             nodeEndpoint : DEFAULT_NODE_ENDPOINT,
-            dataEndpoint : DEFAULT_DATA_ENDPOINT
+            dataEndpoint : DEFAULT_DATA_ENDPOINT,
+            webSocketNodeEndpoint: DEFAULT_WEBSOCKET_NODE_ENDPOINT
         })
     }
 
@@ -187,11 +199,13 @@ export class Wallet {
      *
      * @param nodeEndpoint Endpoint of the node server.
      * @param dataEndpoint Endpoint of the data server.
+     * @param webSocketNodeEndpoint Endpoint of the web socket node server.
      */
-    setEndpoints(nodeEndpoint : string, dataEndpoint : string) : void {
+    setEndpoints(nodeEndpoint: string, dataEndpoint: string, webSocketNodeEndpoint: string) : void {
         // TODO checks that URL format of the endpoints
         this.data.dataEndpoint = dataEndpoint;
         this.data.nodeEndpoint = nodeEndpoint;
+        this.data.webSocketNodeEndpoint = webSocketNodeEndpoint;
     }
 
     /**
@@ -286,4 +300,13 @@ export class Wallet {
         walletData.counter = this.data.counter + 1;
         return Wallet.CreateFromDict(walletData);
     }
+
+
+
+    addApprovedBlockInActiveAccountHistory(record : RecordConfirmationData) : Wallet {
+        const activeAccount = this.getActiveAccount().unwrap();
+        activeAccount.addApprovedBlock( record )
+        return this;
+    }
 }
+
