@@ -86,6 +86,8 @@ export class Wallet {
             throw new Error( "Cannot instantiate a wallet from undefined seed" );
         }
 
+        console.log("[wallet] Creating wallet from seed:", seed)
+
         //return new Wallet(seed, [Account.Default().data]);
         const createdAccount = Account.Default();
         return new Wallet({
@@ -141,7 +143,12 @@ export class Wallet {
         if (this.data.seed === undefined) {
             throw new Error( "Illegal state: The seed is undefined" );
         }
-        return Encoders.ToUint8Array(this.data.seed);
+
+        const seed = Encoders.ToUint8Array(this.data.seed);
+        console.log("[wallet] obtained seed:", seed)
+
+        // TODO remove
+        return seed
     }
 
     static CreateFromDict(wallet : WalletData) {
@@ -263,6 +270,7 @@ export class Wallet {
     getUserKeyPair(account : Account, applicationId : string) : Promise<{privateKey: object, publicKey: object}>  {
         return new Promise((resolve, reject) => {
             const seed = this.getSeed();
+            console.log("[wallet] deriving user key pair from seed:", seed)
             Carmentis.derivePepperFromSeed(seed, account.getNonce()).then(pepper => {
                 return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
                     return Carmentis.getPublicKey(privateKey).then(publicKey => {
@@ -283,6 +291,7 @@ export class Wallet {
     getAccountAuthenticationKeyPair(account : Account) : Promise<{privateKey: object, publicKey: object}> {
         return new Promise((resolve, reject) => {
             const seed = this.getSeed();
+            console.log("[wallet] deriving user key pair from seed:", seed)
             return Carmentis.derivePepperFromSeed(seed, account.getNonce()).then(pepper => {
                 return Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
                     return Carmentis.getPublicKey(privateKey).then(publicKey => {

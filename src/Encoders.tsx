@@ -57,7 +57,7 @@ export class Encoders {
             return bytes
         } else {
             try {
-                return new Uint8Array(Object.entries(bytes));
+                return new Uint8Array(Object.values(bytes));
             } catch (e) {
                 throw new Error(`[encoder] invalid type of bytes: expected either Uint8array or Array(number), got ${typeof bytes}`);
             }
