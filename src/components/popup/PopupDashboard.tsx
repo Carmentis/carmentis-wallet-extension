@@ -15,7 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import "@/entrypoints/style.css"
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {ActionMessage} from "@/src/ActionMessage.tsx";
 import {ActionMessageContext} from "@/src/components/commons/ActionMessage.tsx";

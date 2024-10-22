@@ -15,7 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import '@/entrypoints/style.css'
 import {useContext} from "react";
 import {Splashscreen} from "@/src/components/commons/Splashscreen.tsx";
 import Login from "@/src/components/commons/Login.tsx";
