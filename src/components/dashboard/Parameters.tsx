@@ -35,11 +35,19 @@ function InputWithDynamicConfirmSaveComponent(input: {
     const [hasChanged, setHasChanged] = useState<boolean>(false);
 
 
+    /**
+     * Event function fired when the field has changed.
+     *
+     * @param updatedValue
+     */
     function onChange(updatedValue : string): void {
         setHasChanged(true);
         input.onChange(updatedValue);
     }
 
+    /**
+     * Event function fired when the user wants to save the field value.
+     */
     function onSave() {
         setHasChanged(false);
         input.onSave()
