@@ -16,7 +16,7 @@
  */
 
 import {Optional} from "@/src/Optional.tsx";
-import {ReactElement, useCallback, useRef, useState} from "react";
+import React, {ReactElement, useCallback, useRef, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 
 
@@ -34,24 +34,30 @@ interface ObjectMessagePart {
 }
 
 
-export function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
-    // the "this" tree corresponds to the current block being under approval.
-    const trees = {
-        "this": records,
-    };
 
-    // the other trees are defined in the message parts (the last's fields and previous fields associated in the message)
-    for (const msgPart of msgParts) {
-        if ( msgPart.isField && typeof msgPart.value !== "string" ) {
-            trees[msgPart.field] = msgPart.value;
+export function DataTreeViewer(input : {
+    applicationId: string,
+    flowId : string | undefined,
+    nonce: number,
+    data: object
+}) {
+
+
+    function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
+        // the "this" tree corresponds to the current block being under approval.
+        const trees = {
+            "this": records,
+        };
+
+        // the other trees are defined in the message parts (the last's fields and previous fields associated in the message)
+        for (const msgPart of msgParts) {
+            if ( msgPart.isField && typeof msgPart.value !== "string" ) {
+                trees[msgPart.field] = msgPart.value;
+            }
         }
+
+        return trees;
     }
-
-    return trees;
-}
-
-export function DataTreeViewer(input : {data: object}) {
-
 
 
     /**
@@ -229,6 +235,12 @@ export function DataTreeViewer(input : {data: object}) {
     const blockClass = displayedTree === "this" ? "current-block" : "anchored-block";
 
     return <>
+        <div className="h-1/4 mb-3">
+            <p>
+                The application provides this message:
+            </p>
+        </div>
+
         <div id="event-approval-message" className="p-1 rounded-md bg-gray-100 mb-2">
             {formattedMessage}
         </div>
@@ -254,7 +266,7 @@ export function DataTreeViewer(input : {data: object}) {
                     Object.keys(node).map((key, index) => (
                         <tr key={key}>
                             <td onClick={() => {
-                                if (typeof node[key] === "object" ) {
+                                if (typeof node[key] === "object") {
                                     goToChild(key)
                                 }
                             }}
@@ -276,13 +288,24 @@ export function DataTreeViewer(input : {data: object}) {
         </div>
     </>;
 }
-export function RecordDisplayer(input : {record: Optional<object>}) {
+
+export function RecordDisplayer(input: {
+    applicationId: string,
+    flowId: string | undefined,
+    nonce: number,
+    record: Optional<object>,
+}) {
     return <>
-        { input.record.isEmpty() &&
+        {input.record.isEmpty() &&
             <p>Loading...</p>
         }
         { !input.record.isEmpty() &&
-            <DataTreeViewer data={input.record.unwrap()}/>
+            <DataTreeViewer
+                applicationId={input.applicationId}
+                flowId={input.flowId}
+                nonce={input.nonce}
+                data={input.record.unwrap()
+            }/>
         }
     </>
 }

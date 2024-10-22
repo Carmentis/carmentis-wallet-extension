@@ -15,6 +15,9 @@ zip-chrome: build-core
 zip-firefox: build-core
 	npm run zip:firefox
 
+docs:
+	npx typedoc --skipErrorChecking {src,entrypoints}/**/*.tsx
 
 
 
+.PHONY: docs

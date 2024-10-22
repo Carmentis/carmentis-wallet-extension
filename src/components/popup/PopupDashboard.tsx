@@ -50,6 +50,18 @@ interface BackgroundTaskExecutionOption {
     closeWaitingScreenOnSuccess?: boolean
 }
 
+interface ServerRequest {
+    "type": "blockData" | "confirmRecord",
+    "data": {
+        "recordId": string,
+        "applicationId": string,
+        "flowId": string | undefined,
+        "blockData": string
+    }
+}
+
+
+
 export interface RecordConfirmationData {
     // these variables are obtained at the processRecord step
     applicationId: string | undefined
@@ -420,7 +432,7 @@ export function PopupDashboard() {
      *
      * @param serverRequest
      */
-    function handleServerRequest(serverRequest) {
+    function handleServerRequest(serverRequest : ServerRequest | ConfirmRecordRequest) {
 
         // debug
         console.log("[popup] receive server request:", serverRequest);
@@ -433,11 +445,11 @@ export function PopupDashboard() {
                     messages[0].serverRequest = serverRequest;
                     return messages
                 })
-                requestBlockData(serverRequest);
+                requestBlockData(serverRequest as ServerRequest);
                 break;
             }
             case "confirmRecord": {
-                handleConfirmRecord(serverRequest);
+                handleConfirmRecord(serverRequest as ConfirmRecordRequest);
                 break;
             }
             default:
@@ -453,9 +465,9 @@ export function PopupDashboard() {
      *
      * @param serverRequest
      */
-    function requestBlockData(serverRequest) {
+    function requestBlockData(serverRequest : ServerRequest) {
         let data = String.fromCharCode.apply(String, serverRequest.data.blockData);
-        console.log("[popup] requestBlockData:", data);
+        console.log("[popup] requestBlockData:", serverRequest, data);
 
         executeBackgroundTask(new Promise<void>((resolve, reject) => {
             Carmentis.prepareApproval(
@@ -484,6 +496,7 @@ export function PopupDashboard() {
                     confirmRecordDetails.current.applicationVersion = currentBlock.version;
                     confirmRecordDetails.current.rootDomain = flow.appDescription.rootDomain;
                     confirmRecordDetails.current.data = res
+                    confirmRecordDetails.current.flowId = serverRequest.data.flowId
 
 
                     // store the processRecord in the session
@@ -532,9 +545,12 @@ export function PopupDashboard() {
         CloseOnSuccess()
     }
 
+    if ( localActionMessageOption.isSome() ) {
 
 
-    return <>
+        console.log("WOW", localActionMessageOption.unwrap())
+    }
+        return <>
         <PopupNavbar/>
         <div className="min-h-full">
             { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
@@ -554,6 +570,9 @@ export function PopupDashboard() {
 
                             { localActionMessageOption.unwrap().type === "eventApproval" &&
                                 <EventRequestApproval
+                                    applicationId={confirmRecordDetails.current.applicationId}
+                                    flowId={confirmRecordDetails.current.flowId}
+                                    nonce={confirmRecordDetails.current.nonce}
                                     data={Optional.From(localActionMessageOption.unwrap().eventApprovalData)}
                                     onAccept={acceptRequestEventApproval}
                                     onReject={RejectRequest}></EventRequestApproval>

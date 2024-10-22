@@ -20,6 +20,9 @@ import {Optional} from "@/src/Optional.tsx";
 import {RecordDisplayer} from "@/src/components/popup/RecordDisplayer.tsx";
 
 export function EventRequestApproval(input: {
+    applicationId : string,
+    flowId : string | undefined,
+    nonce : number,
     data : Optional<object>
     onAccept: () => void,
     onReject: () => void
@@ -29,12 +32,12 @@ export function EventRequestApproval(input: {
             <h2 className="w-100 flex-none mb-3">
                 Event Approval Request
             </h2>
-            <div className="h-1/4 mb-3">
-                <p>
-                   The application provides this message:
-                </p>
-            </div>
-            <RecordDisplayer record={input.data}/>
+
+            <RecordDisplayer
+                applicationId={input.applicationId}
+                flowId={input.flowId}
+                nonce={input.nonce}
+                record={input.data}/>
             <div className="flex flex-row justify-evenly">
                 <button className="w-1/2 p-3 mr-1 btn-primary btn-highlight"
                         onClick={() => input.onAccept()}>
