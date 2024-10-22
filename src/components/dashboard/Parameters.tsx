@@ -56,6 +56,37 @@ function InputWithDynamicConfirmSaveComponent(input: {
     </>;
 }
 
+function InputNumberWithDynamicConfirmSaveComponent(input: {
+    value: number,
+    onChange:(value: number) => void,
+    onSave:() => void,
+}) : ReactElement {
+
+    const [hasChanged, setHasChanged] = useState<boolean>(false);
+
+
+    function onChange(updatedValue : number): void {
+        setHasChanged(true);
+        input.onChange(updatedValue);
+    }
+
+    function onSave() {
+        setHasChanged(false);
+        input.onSave()
+    }
+
+    return <>
+        <input type="number" onChange={e => onChange(parseInt(e.target.value))}
+               className="parameter-input" value={input.value}/>
+
+        { hasChanged &&
+            <div className="flex justify-end items-end space-x-1 mt-1">
+                <button className="btn-primary btn-highlight" onClick={onSave}>Save</button>
+            </div>
+        }
+    </>;
+}
+
 export default function Parameters() {
 
     const authentication = useContext(AuthenticationContext);
@@ -65,10 +96,11 @@ export default function Parameters() {
     const activeAccount = wallet.getActiveAccount().unwrap();
 
 
-    // state for the name edition
+    // state for the pseudo, email and nonce edition
     const [pseudo, setPseudo] = useState<string>(wallet.getActiveAccount().unwrap().getPseudo());
     const [email, setEmail] = useState<string>(activeAccount.getEmail().unwrapOr(""));
     const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount.hasVerifiedEmail());
+    const [nonce, setNonce] = useState<number>(activeAccount.getNonce());
 
     // state for account deletion
     const [accountDeletionPseudo, setAccountDeletionPseudo] = useState<string>("");
@@ -88,9 +120,11 @@ export default function Parameters() {
         const activeAccount = wallet.getActiveAccount().unwrap();
 
         // change the pseudo
+        console.log("Account:", activeAccount)
         setPseudo(activeAccount.getPseudo());
         setEmail(activeAccount.getEmail().unwrapOr(""));
         setVerifiedEmail(activeAccount.hasVerifiedEmail());
+        setNonce(activeAccount.getNonce());
 
         // load the authentication key pair
         wallet.getAccountAuthenticationKeyPair(activeAccount)
@@ -127,10 +161,9 @@ export default function Parameters() {
             const wallet = walletOption.unwrap();
             const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
 
-            // update the pseudo
+            // update pseudo, nonce and endpoints
             wallet.updatePseudo( activeAccountIndex, pseudo );
-
-            // update the endpoints
+            wallet.updateNonce( activeAccountIndex, nonce );
             wallet.setEndpoints(
                 nodeEndpoint,
                 dataEndpoint,
@@ -176,6 +209,19 @@ export default function Parameters() {
                     <InputWithDynamicConfirmSaveComponent
                         value={pseudo}
                         onChange={setPseudo}
+                        onSave={saveParameters}/>
+
+                </div>
+
+                <div className="parameter-group">
+                    <div className="parameter-title">Account Nonce</div>
+                    <div className="parameter-description">
+                        The nonce of your account.
+                        The nonce is used to derive a different key pair for each account.
+                    </div>
+                    <InputNumberWithDynamicConfirmSaveComponent
+                        value={nonce}
+                        onChange={setNonce}
                         onSave={saveParameters}/>
 
                 </div>

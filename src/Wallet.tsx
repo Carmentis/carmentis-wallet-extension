@@ -20,6 +20,7 @@ import {Encoders} from "@/src/Encoders.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {RecordConfirmationData} from "@/src/components/popup/PopupDashboard.tsx";
+import Guard from "@/src/Guard.tsx";
 
 const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
 const DEFAULT_DATA_ENDPOINT = "https://data.testapps.carmentis.io"
@@ -336,6 +337,20 @@ export class Wallet {
         const activeAccount = this.getActiveAccount().unwrap();
         activeAccount.addApprovedBlock( record )
         return this;
+    }
+
+    /**
+     * Update the nonce of the specified account.
+     *
+     * @param accountIndex The index of the updated account.
+     * @param nonce The new value of the nonce.
+     */
+    updateNonce(accountIndex: number, nonce: number) : Wallet {
+        if ( accountIndex < 0 || this.data.accounts.length <= accountIndex ) {
+            throw new Error(`Invalid account index: got ${accountIndex} but have ${this.data.accounts.length} accounts`);
+        }
+        this.data.accounts[accountIndex].nonce = Guard.PreventUndefined(nonce);
+        return this
     }
 }
 
