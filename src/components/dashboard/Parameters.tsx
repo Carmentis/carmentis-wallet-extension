@@ -29,6 +29,7 @@ function InputWithDynamicConfirmSaveComponent(input: {
     value: string,
     onChange:(value: string) => void,
     onSave:() => void,
+    protect: boolean
 }) : ReactElement {
 
     const [hasChanged, setHasChanged] = useState<boolean>(false);
@@ -45,7 +46,7 @@ function InputWithDynamicConfirmSaveComponent(input: {
     }
 
     return <>
-        <input type="text" onChange={e => onChange(e.target.value)}
+        <input type={ input.protect ? "password" : "text" } onChange={e => onChange(e.target.value)}
                className="parameter-input" value={input.value}/>
 
         { hasChanged &&
@@ -101,6 +102,7 @@ export default function Parameters() {
     const [email, setEmail] = useState<string>(activeAccount.getEmail().unwrapOr(""));
     const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount.hasVerifiedEmail());
     const [nonce, setNonce] = useState<number>(activeAccount.getNonce());
+    const [showPrivateKeys, setShowPrivateKeys] = useState<boolean>(false);
 
     // state for account deletion
     const [accountDeletionPseudo, setAccountDeletionPseudo] = useState<string>("");
@@ -207,6 +209,7 @@ export default function Parameters() {
                     <div className="parameter-title">Account Name</div>
                     <div className="parameter-description">The name of your account.</div>
                     <InputWithDynamicConfirmSaveComponent
+                        protect={false}
                         value={pseudo}
                         onChange={setPseudo}
                         onSave={saveParameters}/>
@@ -234,10 +237,25 @@ export default function Parameters() {
                 <div className="parameter-group">
                     <div className="parameter-title">User Authentication Private Key</div>
                     <div className="parameter-description">Your private signature authentication key.</div>
-                    <input type="text" onClick={() => {
-                        navigator.clipboard.writeText(userPrivateKey);
-                    }}
-                           className="parameter-input" readOnly={true} value={userPrivateKey}/>
+
+                    <div className="parameter-icon-input bg-gray-200 flex flex-column p-2 rounded-md ">
+                        <svg onClick={() => setShowPrivateKeys(!showPrivateKeys)}
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             className="pr-2 mr-2 w-6 h-6 border-r-2 border-gray-300 hover:cursor-pointer"
+                             viewBox="0 0 16 16">
+                            <path
+                                d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                            <path
+                                d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                        </svg>
+
+                        <input className="block w-full bg-gray-200"
+                            type={showPrivateKeys ? "text" : "password"} onClick={() => {
+                            navigator.clipboard.writeText(userPrivateKey);
+                        }}  readOnly={true} value={userPrivateKey}/>
+                    </div>
+
+
                 </div>
                 <div className="parameter-group">
                     <div className="parameter-title">User Authentication Public Key</div>
@@ -264,6 +282,7 @@ export default function Parameters() {
                     <div className="parameter-title">Oracle Data Endpoint</div>
                     <div className="parameter-description">The endpoint of the oracle data server.</div>
                     <InputWithDynamicConfirmSaveComponent
+                        protect={false}
                         value={dataEndpoint}
                         onChange={setDataEndpoint}
                         onSave={saveParameters}/>
@@ -282,6 +301,7 @@ export default function Parameters() {
                     </div>
 
                     <InputWithDynamicConfirmSaveComponent
+                        protect={false}
                         value={nodeEndpoint}
                         onChange={setNodeEndpoint}
                         onSave={saveParameters}/>
@@ -295,6 +315,7 @@ export default function Parameters() {
                     </div>
 
                     <InputWithDynamicConfirmSaveComponent
+                        protect={false}
                         value={webSocketNodeEndpoint}
                         onChange={setWebSocketNodeEndpoint}
                         onSave={saveParameters}/>
