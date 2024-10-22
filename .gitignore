@@ -1,3 +1,7 @@
+# ignore the generated file styles
+entrypoints/popup/global.css
+entrypoints/main/global.css
+
 # Logs
 logs
 *.log
