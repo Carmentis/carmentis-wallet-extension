@@ -1,3 +1,5 @@
+
+
 build-core:
 	npm install
 	npx tailwindcss -i entrypoints/global.css  -o ./entrypoints/main/global.css
@@ -18,6 +20,7 @@ zip-firefox: build-core
 docs:
 	npx typedoc --skipErrorChecking {src,entrypoints}/**/*.tsx
 
-
+publish:
+	@echo "Publishing version $(grep "[0-9].[0-9].[0-9]" wxt.config.ts -o)?"
 
 .PHONY: docs
