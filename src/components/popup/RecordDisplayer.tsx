@@ -252,21 +252,22 @@ export function DataTreeViewer(input : {data: object}) {
 
                 {
                     Object.keys(node).map((key, index) => (
-                        <>
-
-                            {typeof node[key] === "string" &&
-                                <tr key={key}>
-                                    <td className="event-approval-data-key">{key}</td>
-                                    <td className="event-approval-data-value">{node[key]}</td>
-                                </tr>
+                        <tr key={key}>
+                            <td onClick={() => {
+                                if (typeof node[key] === "object" ) {
+                                    goToChild(key)
+                                }
+                            }}
+                                className="event-approval-data-key">
+                                {key}
+                            </td>
+                            {typeof node[key] !== "object" &&
+                                <td className="event-approval-data-value">{node[key]}</td>
                             }
                             {typeof node[key] === "object" &&
-                                <tr key={key} onClick={() => goToChild(key)}>
-                                    <td className="event-approval-data-key">{key}</td>
-                                    <td className="event-approval-data-child">&#8594;</td>
-                                </tr>
+                                <td className="event-approval-data-child">&#8594;</td>
                             }
-                        </>
+                        </tr>
                     ))
                 }
                 </tbody>
