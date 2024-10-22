@@ -15,7 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {createContext} from 'react';
 import ReactDOM from 'react-dom/client';
 import {PopupAppEntrypoint} from './PopupApp.tsx';
 import './style.css'
