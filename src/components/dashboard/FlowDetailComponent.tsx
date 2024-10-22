@@ -143,6 +143,14 @@ function MicroBlockDataViewer({applicationId, flowId, block}: {
     const [dataTree, setDataTree] = useState<object>({});
 
     useEffect(() => {
+        Carmentis.loadPublicDataFromMicroBlock( applicationId, flowId, block.nonce )
+            .then( data => {
+                setDataTree(data.record)
+                setIsLoading(false)
+            } )
+
+        // we do not access the locally available data anymore.
+        /*
         if ( block.isInitiator ) {
             setDataTree(block.data.record)
             setIsLoading(false)
@@ -155,6 +163,7 @@ function MicroBlockDataViewer({applicationId, flowId, block}: {
                 } )
 
         }
+         */
     }, []);
 
     return <>
