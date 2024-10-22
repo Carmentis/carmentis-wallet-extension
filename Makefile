@@ -21,6 +21,6 @@ docs:
 	npx typedoc --skipErrorChecking {src,entrypoints}/**/*.tsx
 
 publish:
-	@echo "Publishing version $(grep "[0-9].[0-9].[0-9]" wxt.config.ts -o)?"
+	./scripts/publish.sh
 
 .PHONY: docs
