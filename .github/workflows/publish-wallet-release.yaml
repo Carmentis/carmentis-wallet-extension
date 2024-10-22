@@ -23,5 +23,6 @@ jobs:
       - name: Publish release
         uses: ghalactic/github-release-from-tag@v5
         with:
+          draft: "false"
           assets: |
             - path: .output/carmentis-wallet-extension*
