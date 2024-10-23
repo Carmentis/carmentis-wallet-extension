@@ -1,3 +1,4 @@
+#!bash
 #
 # Copyright (c) Carmentis. All rights reserved.
 # Licensed under the Apache 2.0 licence.
@@ -15,11 +16,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 VERSION=$(grep "[0-9].[0-9].[0-9]" wxt.config.ts -o)
 echo "[🚀] Launching v$VERSION release script"
 
 # Check for uncommitted changes
-if [[ -z $(git status --porcelain) ]]; then
+if [[ -n "$(git status --porcelain)" ]]; then
     echo "You have uncommitted changes:"
     git status --short
 
