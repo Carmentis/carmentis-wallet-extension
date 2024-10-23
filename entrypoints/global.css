@@ -101,8 +101,16 @@
     .parameter-input[readonly] {
         @apply bg-gray-200 appearance-none text-gray-700;
     }
+    
 
+    #popup-dashboard-main-container {
+        background: rgb(6,181,123);
+        background: -moz-radial-gradient(circle, rgba(6,181,123,0.10058548009367676) 0%, rgba(255,255,255,1) 99%);
+        background: -webkit-radial-gradient(circle, rgba(6,181,123,0.10058548009367676) 0%, rgba(255,255,255,1) 99%);
+        background: radial-gradient(circle, rgba(6,181,123,0.10058548009367676) 0%, rgba(255,255,255,1) 99%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#06b57b",endColorstr="#ffffff",GradientType=1);
 
+    }
 
 
 

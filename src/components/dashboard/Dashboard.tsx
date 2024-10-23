@@ -157,8 +157,10 @@ export function DashboardMainContent() {
 
     // states for the chosen flow
     const [chosenFlowId, setChosenFlowId] = useState<{applicationId: string, flowId: string}|undefined>();
-
     const [isLoading, setTransition] = useTransition();
+
+    // navigator
+    const navigate = useNavigate();
 
     function putDataInStates() {
         // count the number of applications
@@ -243,7 +245,7 @@ export function DashboardMainContent() {
     return <>
         <div className="container mx-auto px-4">
 
-            <div className="dashboard-section mb-20">
+            <div className="dashboard-section mb-5">
                 <h3>Overview</h3>
 
                 <div id="overview" className=" flex justify-evenly">
@@ -261,6 +263,15 @@ export function DashboardMainContent() {
                     </div>
                 </div>
             </div>
+
+            { activeAccount.getEmail().isEmpty() &&
+
+                <button type="button" className="brand-bar bg-green-100 p-4 rounded-md w-full text-left hover:underline mb-4" onClick={() => {
+                    navigate("/parameters")
+                }}>
+                    Configure your email with your email
+                </button>
+            }
 
 
             <div className="dashboard-section mb-4">

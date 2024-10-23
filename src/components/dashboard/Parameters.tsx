@@ -189,7 +189,7 @@ export default function Parameters() {
      */
     function deleteActiveAccount() {
         if ( activeAccount.getPseudo() === accountDeletionPseudo ) {
-            console.log(`[parameters] deleting ${activeAccount.getPseudo()}`)
+            console.log(`[g] deleting ${activeAccount.getPseudo()}`)
             setWallet(walletOption => {
                 const wallet = walletOption.unwrap();
                 wallet.deleteActiveAccount();
@@ -268,10 +268,21 @@ export default function Parameters() {
                 <div className="parameter-group">
                     <div className="parameter-title">User Authentication Public Key</div>
                     <div className="parameter-description">Your public signature authentication key.</div>
-                    <input type="text" onClick={() => {
+                    <input  type="text" onClick={() => {
                         navigator.clipboard.writeText(userPublicKey);
                     }}
-                           className="parameter-input" readOnly={true} value={userPublicKey}/>
+                           className="parameter-input mb-2" readOnly={true} value={userPublicKey}/>
+                    { userPublicKey &&
+                        <div className="flex items-end">
+                            <button
+                                className="btn-primary btn-highlight"
+                                onClick={() => {
+                                    window.open(`mailto:?subject=Public%20key&body=Hey%20!%0A%0AHere%20is%20my%20public%20key%3A%0A%0A${userPublicKey}`)
+                                }}>
+                                Share your public key
+                            </button>
+                        </div>
+                    }
                 </div>
             </div>
 

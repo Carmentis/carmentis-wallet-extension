@@ -550,14 +550,17 @@ export function PopupDashboard() {
         CloseOnSuccess()
     }
 
-    if ( localActionMessageOption.isSome() ) {
-
-
-        console.log("WOW", localActionMessageOption.unwrap())
-    }
-        return <>
+    return <>
         <PopupNavbar/>
         <div className="h-full">
+            {/* Default page when no action is requested. */}
+            { !showWaitingScreen && localActionMessageOption.isEmpty() &&
+                <div id="popup-dashboard-main-container" className="h-full w-full flex justify-center items-center">
+                    <img src="/assets/img/logo.svg" className="w-20 h-20" alt=""/>
+                </div>
+            }
+
+            {/* Pages when an action is requested. */}
             { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
                 <>
                     { actionRequestState == RequestTreatmentState.IN_PROGRESS &&
