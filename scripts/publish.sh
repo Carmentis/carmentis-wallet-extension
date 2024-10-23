@@ -16,8 +16,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+set -e
 
 VERSION=$(grep "[0-9].[0-9].[0-9]" wxt.config.ts -o)
+TAG_VERSION="v$VERSION"
 echo "[🚀] Launching v$VERSION release script"
 
 # Check for uncommitted changes
@@ -33,9 +35,10 @@ else
     echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-      echo "git push origin :refs/tags/v$VERSION"
-      echo "git tag --annotate --cleanup=whitespace --edit --message "Release v$VERSION" --force v$VERSION"
+      git tag --annotate --cleanup=whitespace --edit --message "Release $TAG_VERSION" --force "$TAG_VERSION"
       echo "[🚀] The tag associated with the release has been created."
+      git push origin "$TAG_VERSION"
+      echo "[🚀] The tag has been published, the release is building now."
     else
         echo "Abort"
     fi
