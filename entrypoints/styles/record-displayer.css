@@ -122,9 +122,16 @@
         background: rgb(74, 222, 128);
     }
 
-    #record-data-tree-viewer.anchored-block td {
-        background: #090030;
-        @apply text-white;
+    table.anchored-block  {
+        @apply rounded-md border-gray-100 border-2;
+    }
+
+    table.anchored-block tr:first-child {
+        @apply rounded-t-md;
+    }
+
+    table.anchored-block tr:first-child td:first-child {
+        @apply rounded-tl-md;
     }
 
 
