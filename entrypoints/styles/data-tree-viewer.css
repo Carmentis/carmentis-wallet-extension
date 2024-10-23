@@ -15,33 +15,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer components {
-    #overview {
+
+    .data-tree-viewer table {
         @apply rounded-md;
         border: 1px solid #ebebeb;
     }
 
-    .overview-section {
-        @apply w-full p-4;
+    .data-tree-viewer tr:not(:last-child) {
+        border-bottom: 1px solid #ebebeb;
     }
 
-    .overview-section:not(:last-child) {
-        border-right: 1px solid #ebebeb;
+    .data-tree-viewer tr:hover td {
+        background: #ebebeb;
+        cursor: pointer;
     }
 
-    .rounded-gray {
-        @apply rounded-md;
-        border: 1px solid #ebebeb;
+    .data-tree-viewer tr:last-child {
+        @apply rounded-b-md;
     }
 
-    .dashboard-section table td, .dashboard-section table th {
-        @apply p-2;
+    .data-tree-viewer tr:first-child {
+        border-top-left-radius: 5px;
     }
 
+    .data-tree-viewer .event-approval-data-child {
+        background: rgb(255, 255, 255);
+        background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 17%, rgba(235, 235, 235, 1) 100%);
+    }
 
+    .data-tree-viewer tr td:last-child {
+        @apply text-right;
+    }
 }

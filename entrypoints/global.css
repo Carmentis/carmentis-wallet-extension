@@ -16,6 +16,8 @@
  */
 
 @import "styles/dashboard.css";
+@import "styles/record-displayer.css";
+@import "styles/data-tree-viewer.css";
 
 @tailwind base;
 @tailwind components;

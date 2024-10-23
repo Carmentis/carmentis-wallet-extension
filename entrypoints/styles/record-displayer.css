@@ -21,26 +21,43 @@
 @tailwind utilities;
 
 @layer components {
-    #overview {
-        @apply rounded-md;
+    .button-group {
         border: 1px solid #ebebeb;
+        border-radius: 5px;
     }
 
-    .overview-section {
-        @apply w-full p-4;
-    }
-
-    .overview-section:not(:last-child) {
-        border-right: 1px solid #ebebeb;
-    }
-
-    .rounded-gray {
-        @apply rounded-md;
-        border: 1px solid #ebebeb;
-    }
-
-    .dashboard-section table td, .dashboard-section table th {
+    .button-group button {
         @apply p-2;
+        border-radius: 0;
+    }
+
+    .button-group button[disabled] {
+        @apply bg-gray-100;
+    }
+
+    .button-group button:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+    }
+
+    .button-group button:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+
+    #record-data-tree-viewer.running-block td {
+        background: rgb(74, 222, 128);
+    }
+
+    #record-data-tree-viewer.anchored-block td {
+        background: #090030;
+        @apply text-white;
+    }
+
+
+    .message {
+        @apply rounded-md;
     }
 
 

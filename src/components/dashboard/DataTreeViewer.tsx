@@ -69,7 +69,7 @@ export function DataTreeViewer(input : {data: object}) {
     }
 
     return <>
-        <div className="tree-viewer" id="block-data-tree-viewer">
+        <div className="tree-viewer data-tree-viewer" id="block-data-tree-viewer">
             <table className={'w-full mb-2 border-1 border-gray-100'}>
                 <tbody>
 

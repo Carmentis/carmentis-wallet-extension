@@ -29,6 +29,7 @@ import {SpinningWheel} from "@/src/components/commons/SpinningWheel.tsx";
 import {SignInRequestApproval} from "@/src/components/popup/SignInRequestApproval.tsx";
 import {EventRequestApproval} from "@/src/components/popup/EventRequestApproval.tsx";
 import {AuthenticationRequest} from "@/src/components/popup/AuthenticationRequest.tsx";
+import "react-loading-skeleton/dist/skeleton.css";
 import {
     AuthenticationContainer,
     AuthenticationContext,
@@ -84,9 +85,13 @@ export interface Flow {
     appDescription: {
         name: string,
         rootDomain: string,
+        homepageUrl: string,
+        logoUrl: string,
     },
     "flowObject": {
         "chain": {
+            currentNonce: number,
+            hash: Uint8Array,
             "microBlock":
                 {
                     "version": 1,
@@ -496,6 +501,7 @@ export function PopupDashboard() {
                     confirmRecordDetails.current.rootDomain = flow.appDescription.rootDomain;
                     confirmRecordDetails.current.data = res
                     confirmRecordDetails.current.flowId = serverRequest.data.flowId
+                    confirmRecordDetails.current.nonce = flow.flowObject.chain.currentNonce;
 
 
                     // store the processRecord in the session
@@ -551,7 +557,7 @@ export function PopupDashboard() {
     }
         return <>
         <PopupNavbar/>
-        <div className="min-h-full">
+        <div className="h-full">
             { !showWaitingScreen && !localActionMessageOption.isEmpty()  &&
                 <>
                     { actionRequestState == RequestTreatmentState.IN_PROGRESS &&
@@ -587,7 +593,7 @@ export function PopupDashboard() {
                     }
 
                     {actionRequestState == RequestTreatmentState.ERROR &&
-                        <div className="flex flex-col min-h-full w-100 p-4">
+                        <div className="flex flex-col h-full w-full p-4">
                             <h3>Request Error</h3>
                             <p>An error has been detected during the execution of the process.</p>
                             <p className="p-4 bg-red-100 rounded-md w-100 ">
@@ -603,7 +609,7 @@ export function PopupDashboard() {
                 </>
             }
             {showWaitingScreen &&
-                <div className="w-100 h-100 flex items-center justify-center mt-6">
+                <div className="w-full h-full flex items-center justify-center mt-6">
                     <div className="h-12 w-12">
 
                         <SpinningWheel/>

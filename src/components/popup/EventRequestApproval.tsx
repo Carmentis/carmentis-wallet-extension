@@ -18,6 +18,7 @@
 import React from "react";
 import {Optional} from "@/src/Optional.tsx";
 import {RecordDisplayer} from "@/src/components/popup/RecordDisplayer.tsx";
+import Skeleton from "react-loading-skeleton";
 
 export function EventRequestApproval(input: {
     applicationId : string,
@@ -27,17 +28,25 @@ export function EventRequestApproval(input: {
     onAccept: () => void,
     onReject: () => void
 }) {
-    return <div className="min-h-full">
-        <div className="w-100 p-4">
-            <h2 className="w-100 flex-none mb-3">
+    return <div className="h-full">
+        <div className="w-full p-4">
+            <h2 className="w-full h-full flex-none mb-3">
                 Event Approval Request
             </h2>
+            { input.data.isSome() &&
+                <RecordDisplayer
+                    applicationId={input.applicationId}
+                    flowId={input.flowId}
+                    nonce={input.nonce}
+                    record={input.data.unwrap()}/>
+            }
+            { input.data.isEmpty() &&
+                <>
+                    <Skeleton count={1} height={50} />
+                    <Skeleton count={5}></Skeleton>
+                </>
+            }
 
-            <RecordDisplayer
-                applicationId={input.applicationId}
-                flowId={input.flowId}
-                nonce={input.nonce}
-                record={input.data}/>
             <div className="flex flex-row justify-evenly">
                 <button className="w-1/2 p-3 mr-1 btn-primary btn-highlight"
                         onClick={() => input.onAccept()}>

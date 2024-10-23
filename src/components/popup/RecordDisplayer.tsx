@@ -16,8 +16,11 @@
  */
 
 import {Optional} from "@/src/Optional.tsx";
-import React, {ReactElement, useCallback, useRef, useState} from "react";
+import React, {Dispatch, ReactElement, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
+import Skeleton from "react-loading-skeleton";
+import {Encoders} from "@/src/Encoders.tsx";
+
 
 
 interface TextualMessagePart {
@@ -35,77 +38,73 @@ interface ObjectMessagePart {
 
 
 
-export function DataTreeViewer(input : {
+/**
+ * This component is used to print the content of the current block but also previous block.
+ * @param input
+ * @constructor
+ */
+export function RecordDisplayer(input: {
     applicationId: string,
-    flowId : string | undefined,
+    flowId: string | undefined,
     nonce: number,
-    data: object
+    record: object,
 }) {
 
+    function setBlock( nonce : number, fieldPath : string[] ) {
+        setIsLoading(true);
+        currentNonce.current = nonce;
 
-    function constructTree( records : object, msgParts : (TextualMessagePart | ObjectMessagePart)[]  ) {
-        // the "this" tree corresponds to the current block being under approval.
-        const trees = {
-            "this": records,
-        };
+        // if the current (not anchored yet) block is required, in this case no network connection is done
+        if ( nonce === input.nonce ) {
+            setDisplayedData(initialBlockData)
+            setRelativeFieldPath( fieldPath )
+            setIsLoading(false);
+        } else {
+            let applicationId =  Encoders.FromHexa(input.applicationId),
+                flowId = Encoders.FromHexa(input.flowId);
 
-        // the other trees are defined in the message parts (the last's fields and previous fields associated in the message)
-        for (const msgPart of msgParts) {
-            if ( msgPart.isField && typeof msgPart.value !== "string" ) {
-                trees[msgPart.field] = msgPart.value;
-            }
+            console.log("[popup] request done with:", applicationId, flowId, nonce)
+            Carmentis.loadPublicDataFromMicroBlock(
+                input.applicationId,
+                input.flowId,
+                nonce
+            ).then(data => {
+                    setDisplayedData(data.record)
+                    setRelativeFieldPath( fieldPath )
+                    setIsLoading(false);
+                });
         }
 
-        return trees;
     }
 
 
     /**
-     * This function is called when the user wants to access a node in the structure of the block by clicking on the
-     * field name in the message.
+     * Event function fired when the user clicks on a field in the formatted message to go to the associated node.
      *
-     * Note: this function currently do *not* support the access to a previous block.
+     * @param fieldPath {string} - The path to access the field in the specified block (see `nonce`).
+     * @param nonce {number} - The index of the block in which this field is contained. This value is useful to access
+     * the value of precise field in a given block without exploring all the chain.
      *
-     * @param absoluteFieldPath The path of the target node in absolute form. The field path is a string value of the form "<tree>.<path>".
-     * Example: "this.senderDocument.file" is an absolute reference to the "this" tree (associated with the current block) and shows the
-     * "senderDocument.file" structure.
+     * Note: In case where a previous field is referred, but the current block is the first block of the chain,
+     * then a warning is raised. Since this issue will be fairly common, it is a better solution to prevent this issue
+     * smoothly, rather to raise an error blocking the event validation process.
      */
-    function goToNode( absoluteFieldPath : string ) {
+    function goToNode( fieldPath : string, nonce : number ) {
 
+        // delete the prefix of the field path
+        const relativeFieldPath : string[] = fieldPath
+            .replace("last.", "")
+            .replace("this.", "")
+            .replace("prev.", "")
+            .split(".");
 
-        if ( absoluteFieldPath === ""  ){
-            throw new Error("Cannot access the provided node: The field path is invalid")
-        }
-
-        console.log(trees.current, typeof trees.current)
-        for (const [treeName, tree] of Object.entries(trees.current)) {
-
-            // if absolute field path references the root of a tree
-            if ( treeName === absoluteFieldPath ) {
-                setDisplayedTree(treeName);
-                setRelativeFieldPath([])
-                break
-            }
-
-
-            // otherwise, the absolute field path contains a non-empty relative field path
-            if ( absoluteFieldPath.includes(treeName) ) {
-                // extract relative field path as a string and convert it as an array of string
-                let relativeFieldPathString : string = absoluteFieldPath.replace(treeName + ".", "");
-                const relativeFieldPath : string[] = relativeFieldPathString.split(".");
-                setDisplayedTree(treeName);
-                setRelativeFieldPath(relativeFieldPath)
-                break
-            }
-        }
-
+        setBlock(nonce, relativeFieldPath)
         return
     }
 
-
     /**
-    *
-    */
+     *
+     */
     function formatMessage( msgParts : (TextualMessagePart | ObjectMessagePart)[] ) : ReactElement[] {
 
         let result = [];
@@ -120,8 +119,8 @@ export function DataTreeViewer(input : {
                         result.push(<span className="field">{fieldValue}</span>)
                     } else {
                         result.push(<span className="underline" onClick={() => {
-                                goToNode(part.field);
-                            }}>
+                            goToNode(part.field, part.nonce);
+                        }}>
                             {fieldName}
                         </span>)
                     }
@@ -140,102 +139,44 @@ export function DataTreeViewer(input : {
         return result
     }
 
-
-    /**
-     * Event function called when the user click on an object in the displayed tree to expand the content.
-     *
-     * @param childName The name of the child to expand in the tree.
-     */
-    function goToChild( childName : string ) {
-        setRelativeFieldPath(currentPath => currentPath.concat([childName]));
-    }
-
-    /**
-     * Event function called when the user goes up in the tree to display the parent of the current node.
-     */
-    function backToParent() {
-        if ( relativeFieldPath.length === 0 ) {
-            throw new Error("Cannot back to the parent node in the tree display: already at root");
-        }
-        setRelativeFieldPath(currentPath => currentPath.slice(0, -1));
-    }
-
-    /**
-     * Event function called when the user wants to display the "this" tree, associated with the current block.
-     */
-    function showThisTree() {
-        setDisplayedTree("this");
-        setRelativeFieldPath([]);
-    }
-
-
-
-    /**
-     * This helper function is used to format the "back" section when the user navigates in the tree.
-     *
-     * Note: This function assumes that the current path is not empty!
-     * This assumption is ensured by the conditional rendering.
-     */
-    function formatBack() : string {
-        let content = relativeFieldPath[0];
-        for (let i = 1; i < relativeFieldPath.length; i++) {
-            content = content + " > " + relativeFieldPath[i]
-        }
-        return content;
-    }
-
-
-    const data = input.data;
-    const records = data.record;
-
-    // get the current nonce corresponding to the index of the current block
-    console.log(data)
-    const nonceOfThisTree = data.data.microBlock.nonce;
-    const currentNonce = useRef<number>(nonceOfThisTree);
+    console.log(input)
+    const record = input.record;
+    const initialBlockData = record.record;
+    const isFirstBlock = input.flowId === undefined;
 
     // format the message (defined in the workspace)
-    const msgParts = data.msgParts;
+    const msgParts = record.msgParts;
     const formattedMessage = formatMessage(msgParts);
 
-    // construct the different trees from the record and the message parts.
-    let trees = useRef(constructTree(records, msgParts));
-
-    // by default, the displayed tree is the "this" tree.
-    const [displayedTree, setDisplayedTree] = useState<string>("this");
 
     // we remember the current path in the current displayed node to remember our location.
     // An empty array means "show the root of the current tree"
+    const currentNonce = useRef(input.nonce);
+    const [displayedData, setDisplayedData] = useState<object>(initialBlockData);
     const [relativeFieldPath, setRelativeFieldPath] = useState<string[]>([]);
-
-    // prepare the rendering by accessing the node in the specified tree
-    const tree = trees.current[displayedTree];
-    let node = tree;
-    for (const child of relativeFieldPath) {
-        node = node[child];
-    }
 
     // we use a state to display a loading element
     const [isLoading, setIsLoading] = useState(false);
 
     // functions to go in the previous and next block
-    function goPreviousBlock() {
+    function goToPreviousBlock() {
         if (1 < currentNonce.current) {
-            currentNonce.current--;
-            setIsLoading(true);
-            Carmentis.loadPublicDataFromMicroBlock(currentNonce.current)
-                .then(data => {
-                    console.log(data);
-                    //trees[currentNonce.current] = data;
-                    setIsLoading(false);
-                });
+            setBlock( currentNonce.current - 1, [] )
+        }
+    }
+
+    // functions to go in the previous and next block
+    function goToNextBlock() {
+        if (currentNonce.current < input.nonce) {
+            setBlock( currentNonce.current + 1, [] )
         }
     }
 
     // create a dedicated class to separate the current to the previous blocks to a more enhanced UI
-    const blockClass = displayedTree === "this" ? "current-block" : "anchored-block";
+    //const blockClass = displayedTree === "this" ? "current-block" : "anchored-block";
 
     return <>
-        <div className="h-1/4 mb-3">
+        <div className="mb-3">
             <p>
                 The application provides this message:
             </p>
@@ -246,66 +187,151 @@ export function DataTreeViewer(input : {
         </div>
 
         Ensure that the received data is correct:
-        <div className="tree-viewer">
-            <table className={'w-full mb-2 ' + blockClass} id="event-approval-table">
-                <tbody id="event-approval-data" className={blockClass}>
-                {displayedTree !== "this" &&
-                    <tr onClick={showThisTree}>
-                        <td colSpan={2}>&#8592; Back to current block</td>
-                    </tr>
+        { isLoading &&
+            <div className="w-full mb-2">
+                <Skeleton count={3}></Skeleton>
+                <div className="flex flex-row mt-1">
+                    <div className="w-1/2 pr-1">
+                        <Skeleton count={1} height={30}></Skeleton>
+                    </div>
+                    <div className="w-1/2 pl-1">
+                        <Skeleton count={1} height={30}></Skeleton>
+                    </div>
+                </div>
+            </div>
+        }
+        {!isLoading &&
+            <>
+                <DataTreeViewer
+                    key={currentNonce.current}
+                    className={ currentNonce.current === input.nonce ? "running-block" : "anchored-block" }
+                    tree={displayedData}
+                    relativePath={relativeFieldPath}
+                    setRelativePath={setRelativeFieldPath}
+                />
+                { !isFirstBlock &&
+                    <div className="button-group w-full mb-2">
+                        <button type="button" disabled={currentNonce.current == 1} className={"w-1/2"} onClick={goToPreviousBlock}>
+                            Previous block
+                        </button>
+                        <button type="button"  disabled={currentNonce.current == input.nonce} className={"w-1/2"} onClick={goToNextBlock}>
+                            Next block
+                        </button>
+                    </div>
                 }
-
-                {relativeFieldPath.length !== 0 &&
-                    <tr onClick={backToParent}>
-                        <td colSpan={2}>&#8592; {formatBack()}</td>
-                    </tr>
+                { currentNonce.current != input.nonce &&
+                    <p className="w-full p-2 mb-2 bg-gray-100 message">
+                        You are seeing the {currentNonce.current}-th block on {input.nonce} blocks.
+                    </p>
                 }
-
-
-                {
-                    Object.keys(node).map((key, index) => (
-                        <tr key={key}>
-                            <td onClick={() => {
-                                if (typeof node[key] === "object") {
-                                    goToChild(key)
-                                }
-                            }}
-                                className="event-approval-data-key">
-                                {key}
-                            </td>
-                            {typeof node[key] !== "object" &&
-                                <td className="event-approval-data-value">{node[key]}</td>
-                            }
-                            {typeof node[key] === "object" &&
-                                <td className="event-approval-data-child">&#8594;</td>
-                            }
-                        </tr>
-                    ))
-                }
-                </tbody>
-            </table>
-
-        </div>
+            </>
+        }
     </>;
 }
 
-export function RecordDisplayer(input: {
-    applicationId: string,
-    flowId: string | undefined,
-    nonce: number,
-    record: Optional<object>,
+
+export function DataTreeViewer(input: {
+    tree: object,
+    relativePath: string[],
+    setRelativePath: Dispatch<SetStateAction<string[]>>,
+    className : string
 }) {
-    return <>
-        {input.record.isEmpty() &&
-            <p>Loading...</p>
+
+    // compute the initial tree based on the provided relativePath
+    const tree = input.tree;
+    const relativePath = input.relativePath;
+    let currentNode = tree;
+    for (const child of relativePath) {
+        currentNode = currentNode[child]
+    }
+
+    // initialise the state displaying the node
+    const [node, setNode] = useState<object>(currentNode);
+
+    // update the displayed tree if the relative path is changed
+    useEffect(() => {
+        const tree = input.tree;
+        const relativePath = input.relativePath;
+        let currentNode = tree;
+        for (const child of relativePath) {
+            currentNode = currentNode[child]
         }
-        { !input.record.isEmpty() &&
-            <DataTreeViewer
-                applicationId={input.applicationId}
-                flowId={input.flowId}
-                nonce={input.nonce}
-                data={input.record.unwrap()
-            }/>
+        setNode(currentNode);
+    }, [input.relativePath]);
+
+
+    /**
+     * Event function called when the user click on an object in the displayed tree to expand the content.
+     *
+     * @param childName The name of the child to expand in the tree.
+     */
+    function goToChild(childName: string) {
+        input.setRelativePath(currentPath => currentPath.concat([childName]));
+    }
+
+    /**
+     * Event function called when the user goes up in the tree to display the parent of the current node.
+     */
+    function backToParent() {
+        if (input.relativePath.length === 0) {
+            throw new Error("Cannot back to the parent node in the tree display: already at root");
         }
-    </>
+        input.setRelativePath(currentPath => currentPath.slice(0, -1));
+    }
+
+
+    /**
+     * This helper function is used to format the "back" section when the user navigates in the tree.
+     *
+     * Note: This function assumes that the current path is not empty!
+     * This assumption is ensured by the conditional rendering.
+     */
+    function formatBack(): string {
+        const relativeFieldPath = input.relativePath;
+        let content = relativeFieldPath[0];
+        for (let i = 1; i < relativeFieldPath.length; i++) {
+            content = content + " > " + relativeFieldPath[i]
+        }
+        return content;
+    }
+
+
+    return <div className="tree-viewer mb-2">
+        <table className={ `w-full mb-2 data-tree-viewer ${input.className}` } id="record-data-tree-viewer">
+            <tbody id="event-approval-data">
+
+
+            {input.relativePath.length !== 0 &&
+                <tr onClick={backToParent}>
+                    <td colSpan={2}>&#8592; {formatBack()}</td>
+                </tr>
+            }
+
+
+            {
+                Object.keys(node).map((key, index) => (
+                    <tr key={key}>
+                        <td onClick={() => {
+                            if (typeof node[key] === "object") {
+                                goToChild(key)
+                            }
+                        }}
+                            className="event-approval-data-key">
+                            {key}
+                        </td>
+                        {typeof node[key] !== "object" &&
+                            <td className="event-approval-data-value">{node[key]}</td>
+                        }
+                        {typeof node[key] === "object" &&
+                            <td className="event-approval-data-child">&#8594;</td>
+                        }
+                    </tr>
+                ))
+            }
+            </tbody>
+        </table>
+
+    </div>
+
+
 }
