@@ -21,6 +21,7 @@ import {RecordDisplayer} from "@/src/components/popup/RecordDisplayer.tsx";
 import Skeleton from "react-loading-skeleton";
 
 export function EventRequestApproval(input: {
+    applicationName : string,
     applicationId : string,
     flowId : string | undefined,
     nonce : number,
@@ -35,6 +36,7 @@ export function EventRequestApproval(input: {
             </h2>
             { input.data.isSome() &&
                 <RecordDisplayer
+                    applicationName={input.applicationName}
                     applicationId={input.applicationId}
                     flowId={input.flowId}
                     nonce={input.nonce}

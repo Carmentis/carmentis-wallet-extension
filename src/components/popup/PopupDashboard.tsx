@@ -575,6 +575,7 @@ export function PopupDashboard() {
 
                             { localActionMessageOption.unwrap().type === "eventApproval" &&
                                 <EventRequestApproval
+                                    applicationName={confirmRecordDetails.current.applicationName}
                                     applicationId={confirmRecordDetails.current.applicationId}
                                     flowId={confirmRecordDetails.current.flowId}
                                     nonce={confirmRecordDetails.current.nonce}

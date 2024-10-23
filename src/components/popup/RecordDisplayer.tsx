@@ -44,11 +44,14 @@ interface ObjectMessagePart {
  * @constructor
  */
 export function RecordDisplayer(input: {
+    applicationName: string,
     applicationId: string,
     flowId: string | undefined,
     nonce: number,
     record: object,
 }) {
+
+
 
     function setBlock( nonce : number, fieldPath : string[] ) {
         setIsLoading(true);
@@ -139,7 +142,6 @@ export function RecordDisplayer(input: {
         return result
     }
 
-    console.log(input)
     const record = input.record;
     const initialBlockData = record.record;
     const isFirstBlock = input.flowId === undefined;
@@ -176,14 +178,11 @@ export function RecordDisplayer(input: {
     //const blockClass = displayedTree === "this" ? "current-block" : "anchored-block";
 
     return <>
-        <div className="mb-3">
-            <p>
-                The application provides this message:
+        <div id="event-approval-message">
+            <p id="event-approval-message-origin">Message from <b>{input.applicationName}</b></p>
+            <p id="event-approval-message-content">
+                {formattedMessage}
             </p>
-        </div>
-
-        <div id="event-approval-message" className="p-1 rounded-md bg-gray-100 mb-2">
-            {formattedMessage}
         </div>
 
         Ensure that the received data is correct:
@@ -220,9 +219,14 @@ export function RecordDisplayer(input: {
                     </div>
                 }
                 { currentNonce.current != input.nonce &&
-                    <p className="w-full p-2 mb-2 bg-gray-100 message">
-                        You are seeing the {currentNonce.current}-th block on {input.nonce} blocks.
-                    </p>
+                    <div className="w-full bg-gray-100" id="on-chain-progression">
+                        <p id="block-progression">Block {currentNonce.current}/{input.nonce}</p>
+                        <button
+                            onClick={() => setBlock(input.nonce, [])}
+                            type="button" id="back-to-current-block">
+                            Back to current block
+                        </button>
+                    </div>
                 }
             </>
         }
@@ -310,12 +314,13 @@ export function DataTreeViewer(input: {
 
             {
                 Object.keys(node).map((key, index) => (
-                    <tr key={key}>
-                        <td onClick={() => {
+                    <tr key={key}
+                        onClick={() => {
                             if (typeof node[key] === "object") {
                                 goToChild(key)
                             }
-                        }}
+                        }}>
+                        <td
                             className="event-approval-data-key">
                             {key}
                         </td>

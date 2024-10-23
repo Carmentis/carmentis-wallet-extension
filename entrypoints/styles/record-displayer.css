@@ -21,6 +21,78 @@
 @tailwind utilities;
 
 @layer components {
+
+    #event-approval-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    #event-approval-data {
+        width: 100%;
+        display: table;
+    }
+
+    #event-approval-data .event-approval-data-key {
+        @apply font-bold;
+    }
+    #event-approval-data.anchored-block tr {
+        background-color: #090030;
+        @apply text-white;
+    }
+
+    #event-approval-data.current-block tr {
+        background-color: rgb(74, 222, 128);
+        color: rgb(31, 41, 55);
+    }
+
+    #event-approval-data tr:not(:last-child) {
+        @apply border-gray-200;
+        border-bottom: 1px;
+        border-style: solid;
+    }
+
+    #event-approval-data tr:first-child, #event-approval-data tr:first-child td:first-child {
+        border-top-left-radius: 5px;
+    }
+    #event-approval-data tr:first-child, #event-approval-data tr:first-child td:last-child {
+        border-top-right-radius: 5px;
+    }
+    #event-approval-data tr:last-child, #event-approval-data tr:last-child td:first-child {
+        border-bottom-left-radius: 5px;
+    }
+    #event-approval-data tr:last-child, #event-approval-data tr:last-child td:last-child {
+        border-bottom-right-radius: 5px;
+    }
+
+    #event-approval-data tr:last-child {
+        @apply rounded-b-md;
+    }
+
+    #event-approval-data .event-approval-data-child {
+        text-align: right;
+    }
+
+    #event-approval-data td {
+        @apply p-1;
+    }
+
+
+    #event-approval-message {
+        @apply bg-gray-100 rounded-md;
+    }
+
+    #event-approval-message-origin {
+        @apply p-1 mb-0;
+        border-bottom: 1px solid #ebebeb;
+    }
+
+    #event-approval-message-content {
+        @apply p-1;
+    }
+
+
     .button-group {
         border: 1px solid #ebebeb;
         border-radius: 5px;
@@ -58,6 +130,27 @@
 
     .message {
         @apply rounded-md;
+    }
+
+    .tree-viewer {
+        @apply overflow-auto;
+    }
+
+    #on-chain-progression {
+        @apply flex flex-row items-center rounded-md mb-2 border-gray-100;
+    }
+
+    #block-progression {
+        @apply p-2 m-0 w-4/12 text-center;
+        border-right: 1px solid #ebebeb;
+    }
+
+    #back-to-current-block {
+        @apply w-8/12 h-8 block bg-white;
+        border: 1px solid #ebebeb;
+        border-radius: 0;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
     }
 
 

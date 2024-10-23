@@ -48,7 +48,7 @@
         background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 17%, rgba(235, 235, 235, 1) 100%);
     }
 
-    .data-tree-viewer tr td:last-child {
+    .data-tree-viewer tr td.event-approval-data-child {
         @apply text-right;
     }
 }
