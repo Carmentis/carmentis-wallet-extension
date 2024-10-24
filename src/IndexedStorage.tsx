@@ -16,11 +16,11 @@
  */
 
 import {Account, MicroBlock, Application, Flow} from "@/src/Account.tsx";
-import {FlowView} from "@/src/AccountHistoryReader.tsx";
 import {RecordConfirmationData} from "@/src/components/popup/PopupDashboard.tsx";
 import Guard from "@/src/Guard.tsx";
 import {IllegalStateError} from "@/src/errors.tsx";
 import {Optional} from "@/src/Optional.tsx";
+import {FlowView} from "@/src/FlowView.tsx";
 
 export class IndexedStorage {
 

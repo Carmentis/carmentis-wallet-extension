@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {memo, ReactElement, useContext, useEffect, useRef, useState, useTransition} from "react";
+import React, {ReactElement, useContext, useEffect, useRef, useState, useTransition} from "react";
 import {Wallet} from "@/src/Wallet.tsx";
 import '../../../entrypoints/main/global.css'
 
@@ -23,7 +23,6 @@ import {Route, Routes, useNavigate} from "react-router";
 import Parameters from "@/src/components/dashboard/Parameters.tsx";
 import {AuthenticationContext, WalletContext} from "@/src/components/commons/AuthenticationGuard.tsx";
 import {DropdownAccountSelection} from "@/src/components/dashboard/DropdownAccountSelection.tsx";
-import {FlowView} from "@/src/AccountHistoryReader.tsx";
 import Skeleton from "react-loading-skeleton";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 
@@ -34,7 +33,7 @@ import {FlowDetailComponent, SpanWithLoader} from "@/src/components/dashboard/Fl
 import {IndexedStorage} from "@/src/IndexedStorage.tsx";
 import {Encoders} from "@/src/Encoders.tsx";
 import {MicroBlock} from "@/src/Account.tsx";
-import {type} from "node:os";
+import {FlowView} from "@/src/FlowView.tsx";
 
 
 /**
@@ -47,7 +46,6 @@ export function Dashboard() : ReactElement {
     // load the authentication context
     const authentication = useContext(AuthenticationContext);
     const wallet = authentication.wallet.unwrap();
-    const activeAccount = wallet.getActiveAccount().unwrap();
 
     // state to show the navigation
     const [showMenu, setShowMenu] = useState<boolean>(false);
@@ -140,12 +138,9 @@ export function Dashboard() : ReactElement {
 export function DashboardMainContent() {
 
     // get the active account and its history
-    const authentication = useContext(AuthenticationContext);
     const walletOption = useContext(WalletContext);
     const wallet : Wallet = walletOption.unwrap();
-    const setWallet = authentication.setWallet.unwrap();
     const activeAccount = wallet.getActiveAccount().unwrap();
-    //const history = activeAccount.getHistoryReader();
 
     // states for the dashboard
     const [numberOfApplications, setNumberOfApplications] = useState<number|undefined>();
@@ -161,9 +156,7 @@ export function DashboardMainContent() {
     const navigate = useNavigate();
 
 
-
     function putDataInStates() {
-
         IndexedStorage.CreateDatabase(activeAccount).then(async (db : IndexedStorage ) => {
             db.getNumberOfApplications().then(setNumberOfApplications);
             db.getFlowsNumberOfAccount().then(setNumberOfFlows);

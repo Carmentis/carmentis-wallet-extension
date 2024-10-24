@@ -19,7 +19,6 @@ import {Account, AccountData, EmailValidationProofData} from "@/src/Account.tsx"
 import {Encoders} from "@/src/Encoders.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import {RecordConfirmationData} from "@/src/components/popup/PopupDashboard.tsx";
 import Guard from "@/src/Guard.tsx";
 
 const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
@@ -28,9 +27,12 @@ const DEFAULT_WEBSOCKET_NODE_ENDPOINT = "wss://node.testapps.carmentis.io/websoc
 
 /**
  * Represents the internal structure of the wallet.
+ *
+ * This structure is used by the {@link Wallet} class but also to be easily
+ * serialized by {@link JSON.stringify}.
  */
 export interface WalletData {
-    seed : Array | undefined;
+    seed : Uint8Array | undefined;
     counter : number;
     accounts : AccountData[];
     activeAccountId : string | undefined;
@@ -39,6 +41,9 @@ export interface WalletData {
     webSocketNodeEndpoint: string;
 }
 
+/**
+ *
+ */
 export class Wallet {
 
     data : WalletData
@@ -48,6 +53,9 @@ export class Wallet {
     }
 
 
+    /**
+     * Returns an empty wallet containing no seed and a default account.
+     */
     empty() : Wallet {
         const createdAccount = Account.Default();
         return new Wallet({
@@ -82,14 +90,22 @@ export class Wallet {
         return this.data.webSocketNodeEndpoint
     }
 
+    /**
+     * Creates and returns a new wallet from the given seed.
+     *
+     * The returned wallet is initialized with a default account.
+     *
+     * @param seed The seed used by the wallet.
+     *
+     * @constructor
+     */
     static CreateFromSeed(seed : Uint8Array) : Wallet {
+
         if ( !seed ) {
             throw new Error( "Cannot instantiate a wallet from undefined seed" );
         }
 
         console.log("[wallet] Creating wallet from seed:", seed)
-
-        //return new Wallet(seed, [Account.Default().data]);
         const createdAccount = Account.Default();
         return new Wallet({
             seed: seed,
@@ -100,8 +116,17 @@ export class Wallet {
             dataEndpoint : DEFAULT_DATA_ENDPOINT,
             webSocketNodeEndpoint: DEFAULT_WEBSOCKET_NODE_ENDPOINT
         })
+
     }
 
+    /**
+     *  Creates and returns a new wallet from seed and accounts.
+     *
+     * @param seed The seed used by the wallet.
+     * @param accounts The accounts installed in the wallet.
+     *
+     * @constructor
+     */
     static CreateFromSeedAndAccounts(seed : Uint8Array, accounts : AccountData[] ) : Wallet {
         if ( !seed ) {
             throw new Error( "Cannot instantiate a wallet from undefined seed" );
@@ -121,6 +146,19 @@ export class Wallet {
     }
 
 
+    /**
+     * Returns the current active account.
+     *
+     * Note that the current account might be missing. For this reason, the function returns
+     * an {@link Optional}.
+     *
+     * Example:
+     * ```ts
+     * const activeAccountOption : Option<Account> = wallet.getActiveAccount();
+     * activeAccountOption.isSome();
+     * const activeAccount = activeAccountOption.unwrap();
+     * ```
+     */
     getActiveAccount() : Optional<Account> {
         const activeAccountIndexOption = this.getActiveAccountIndex();
         if ( activeAccountIndexOption.isEmpty() ) {
@@ -268,8 +306,16 @@ export class Wallet {
         return Wallet.CreateFromDict(walletData);
     }
 
+    /**
+     * Returns the key pair based in the provided account and application id.
+     *
+     * @param account The account used to generate the key pair.
+     * @param applicationId The id of the application in which the user wants to obtain the key pair.
+     */
     getUserKeyPair(account : Account, applicationId : string) : Promise<{privateKey: object, publicKey: object}>  {
+
         return new Promise((resolve, reject) => {
+
             const seed = this.getSeed();
             console.log("[wallet] deriving user key pair from seed:", seed)
             Carmentis.derivePepperFromSeed(seed, account.getNonce()).then(pepper => {
@@ -280,11 +326,13 @@ export class Wallet {
                             publicKey: publicKey
                         })
                     })
-                })
+                });
+
             }).catch((error : Error) => {
                 reject(error);
             })
         })
+
     }
 
 
@@ -325,19 +373,21 @@ export class Wallet {
         return this.data.counter;
     }
 
+    /**
+     * Returns a wallet with an incremented nonce.
+     *
+     * ```ts
+     * const beforeNonce = wallet.getNonce(); // 1
+     * wallet = wallet.incrementNonce();
+     * const afterNonce = wallet.getNonce(); // 2
+     * ```
+     */
     incrementNonce() : Wallet {
         const walletData = {...this.data};
         walletData.counter = this.data.counter + 1;
         return Wallet.CreateFromDict(walletData);
     }
 
-
-
-    addApprovedBlockInActiveAccountHistory(record : RecordConfirmationData) : Wallet {
-        const activeAccount = this.getActiveAccount().unwrap();
-        activeAccount.addApprovedBlock( record )
-        return this;
-    }
 
     /**
      * Update the nonce of the specified account.
