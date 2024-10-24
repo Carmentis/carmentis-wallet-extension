@@ -36,6 +36,7 @@ import {
     LoggerContext
 } from "@/src/components/commons/AuthenticationGuard.tsx";
 import browser from "webextension-polyfill";
+import {IndexedStorage} from "@/src/IndexedStorage.tsx";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -537,7 +538,14 @@ export function PopupDashboard() {
         confirmRecordDetails.current.microBlockId = request.data.microBlockId;
         confirmRecordDetails.current.nonce = request.data.nonce;
 
-        // insert the block in the wallet
+        // insert the block in indexeddb
+        IndexedStorage.CreateDatabase(activeAccount).then((db : IndexedStorage) => {
+            return db.addApprovedBlockInActiveAccountHistory( confirmRecordDetails.current )
+        }).then(() => {
+            CloseOnSuccess()
+        })
+
+        /*
         setWallet(walletOption => {
             const wallet = walletOption.unwrap();
             const updatedWallet = wallet.addApprovedBlockInActiveAccountHistory(
@@ -548,6 +556,7 @@ export function PopupDashboard() {
 
 
         CloseOnSuccess()
+         */
     }
 
     return <>

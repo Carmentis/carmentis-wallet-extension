@@ -19,7 +19,6 @@ import React, {memo, ReactElement, useContext, useEffect, useRef, useState, useT
 import {Wallet} from "@/src/Wallet.tsx";
 import '../../../entrypoints/main/global.css'
 
-import {EmailValidation} from "@/src/components/dashboard/EmailValidation.tsx";
 import {Route, Routes, useNavigate} from "react-router";
 import Parameters from "@/src/components/dashboard/Parameters.tsx";
 import {AuthenticationContext, WalletContext} from "@/src/components/commons/AuthenticationGuard.tsx";
@@ -30,13 +29,12 @@ import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 
 
 import 'react-loading-skeleton/dist/skeleton.css'
-import {MicroBlock} from "@/src/Account.tsx";
-import {Encoders} from "@/src/Encoders.tsx";
-import {Optional} from "@/src/Optional.tsx";
 import {Formatter} from "@/src/Formatter.tsx";
-import {Flow} from "@/src/components/popup/PopupDashboard.tsx"
-import {b} from "formdata-node/lib/File-cfd9c54a";
 import {FlowDetailComponent, SpanWithLoader} from "@/src/components/dashboard/FlowDetailComponent.tsx";
+import {IndexedStorage} from "@/src/IndexedStorage.tsx";
+import {Encoders} from "@/src/Encoders.tsx";
+import {MicroBlock} from "@/src/Account.tsx";
+import {type} from "node:os";
 
 
 /**
@@ -147,7 +145,7 @@ export function DashboardMainContent() {
     const wallet : Wallet = walletOption.unwrap();
     const setWallet = authentication.setWallet.unwrap();
     const activeAccount = wallet.getActiveAccount().unwrap();
-    const history = activeAccount.getHistoryReader();
+    //const history = activeAccount.getHistoryReader();
 
     // states for the dashboard
     const [numberOfApplications, setNumberOfApplications] = useState<number|undefined>();
@@ -162,12 +160,16 @@ export function DashboardMainContent() {
     // navigator
     const navigate = useNavigate();
 
+
+
     function putDataInStates() {
-        // count the number of applications
-        setNumberOfApplications(history.getNumberOfApplications())
-        setNumberOfFlows(history.getNumberOfFlows())
-        setSpentGaz(history.getSpentGaz())
-        setFlows(history.getAllFlows())
+
+        IndexedStorage.CreateDatabase(activeAccount).then(async (db : IndexedStorage ) => {
+            db.getNumberOfApplications().then(setNumberOfApplications);
+            db.getFlowsNumberOfAccount().then(setNumberOfFlows);
+            db.getSpentGaz().then(setSpentGaz)
+            db.getAllFlowsOfAccount().then(setFlows)
+        });
     }
 
 
@@ -188,47 +190,61 @@ export function DashboardMainContent() {
 
 
     function synchronizeWithBlockchain() {
-        // get the history reader
-        const historyReader = activeAccount.getHistoryReader();
-        const historyWriter = activeAccount.getHistoryWriter();
 
-        for (const flow of  historyReader.getAllFlows() ) {
-            const flowId = flow.flowId;
-            const applicationId = flow.applicationId;
+        IndexedStorage.CreateDatabase(activeAccount).then(async (db : IndexedStorage ) => {
+            try {
 
-            Carmentis.getMicroChain(Encoders.FromHexa(flowId))
-                .then(async response => {
+                const flows = await db.getAllFlowsOfAccount();
+                for (const flow of flows) {
 
-                    // browse each block anchored in the micro chain.
-                    let isModified = false;
-                    for (const block of response.microBlock) {
-                        const importMicroBlock : MicroBlock = {
-                            data: undefined,
-                            gas: block.gas,
-                            gasPrice: 0,
-                            isInitiator: false,
-                            masterBlock: block.masterBlock,
-                            microBlockId: Encoders.ToHexa(block.hash),
-                            nonce: block.nonce,
-                            ts: block.ts,
-                            version: block.version
+                    const flowId = flow.flowId;
+                    const microChain = await Carmentis.getMicroChain(Encoders.FromHexa(flowId));
+                    const blocksOnChain = microChain.microBlock;
+                    for (const block of blocksOnChain) {
+
+                        const microBlockId: string = Encoders.ToHexa(block.hash);
+                        const foundInDatabase = await db.checkMicroBlockExists(
+                            flow.flowId,
+                            block.nonce
+                        );
+                        if ( foundInDatabase ) {
+                            if ( typeof block.masterBlock === "number" ) {
+                                console.log("[dashbord] update of existing block:", block)
+
+                                await db.updateMasterMicroBlock(
+                                    microBlockId,
+                                    block.masterBlock
+                                )
+                            }
+                        } else {
+
+                            const importMicroBlock : MicroBlock = {
+                                accountId: activeAccount.getId(),
+                                applicationId: flow.applicationId,
+                                flowId: flowId,
+                                data: undefined,
+                                gas: block.gas,
+                                gasPrice: block.gasPrice,
+                                isInitiator: false,
+                                masterBlock: block.masterBlock,
+                                microBlockId: Encoders.ToHexa(block.hash),
+                                nonce: block.nonce,
+                                ts: block.ts,
+                                version: block.version
+                            }
+                            console.log("[dashboard] add in database:", importMicroBlock)
+                            await db.addMicroBlock( importMicroBlock );
+
                         }
-
-                        const modificationInThisBlock = historyWriter.addMicroBlock(applicationId, flowId, importMicroBlock);
-                        isModified = isModified || modificationInThisBlock;
                     }
 
-                    // update the wallet if a modification occurs
-                    if (isModified) {
-                        console.log("[dashboard] the wallet includes more modification: ", wallet)
-                        setWallet(Optional.From(wallet))
-                    }
+                }
 
-                })
-                .catch(error => console.error(error));
-        }
+            } catch (e : any) {
+                throw new Error(e);
+            }
+        })
 
-        //const flowId = "17F56E3276F5FAE3F452206F69B4EEC0494DC744AC4D6F9E1F2AA1DB13091952"
     }
 
 
@@ -327,7 +343,9 @@ export function DashboardMainContent() {
                     <FlowDetailComponent key={chosenFlowId.flowId} chosenFlow={chosenFlowId}/>
                 </div>
             }
+
         </div>
+
     </>
 }
 

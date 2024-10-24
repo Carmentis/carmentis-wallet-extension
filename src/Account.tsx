@@ -39,9 +39,17 @@ export interface EmailValidationProofData {
  * Structure representing the application.
  */
 export interface Application {
+    accountId: string,
     applicationName: string,
     rootDomain: string,
-    microBlocksByFlowId: { [key: string]: MicroBlock[] };
+    applicationId: string,
+    //microBlocksByFlowId: { [key: string]: MicroBlock[] };
+}
+
+export interface Flow {
+    flowId : string,
+    accountId: string,
+    applicationId: string,
 }
 
 /**
@@ -49,6 +57,9 @@ export interface Application {
  *
  */
 export interface MicroBlock {
+    applicationId: string,
+    flowId: string,
+    accountId: string,
     microBlockId: string,
     nonce: number,
     ts: number,
@@ -80,7 +91,6 @@ export interface AccountData {
     pseudo: string;
     email: string | undefined;
     emailValidationProof: EmailValidationProofData | undefined
-    applicationByApplicationId: { [key: string]: Application  }
 }
 
 
@@ -123,7 +133,6 @@ export class Account {
             email: undefined,
             emailValidationProof: undefined,
             nonce: DEFAULT_NONCE,
-            applicationByApplicationId: {}
         })
     }
 
@@ -168,7 +177,6 @@ export class Account {
             id: this.GenerateAccountId(),
             nonce: nonce,
             pseudo: accountPseudo,
-            applicationByApplicationId: {},
         });
     }
 
@@ -190,22 +198,18 @@ export class Account {
 
 
     getHistoryReader() : AccountHistoryReader {
-        return new AccountHistoryReader(
-            this.data.applicationByApplicationId
-        )
+        return new AccountHistoryReader()
     }
 
     getHistoryWriter() : AccountHistoryWriter {
-        return new AccountHistoryWriter(
-            this.data.applicationByApplicationId
-        )
+        return new AccountHistoryWriter()
     }
 
     addApprovedBlock(record: RecordConfirmationData) {
         const flowId : string = Guard.PreventUndefined(record.flowId);
         const block : MicroBlock = {
             isInitiator: true,
-            data: Guard.PreventUndefined(record.data),
+            //data: Guard.PreventUndefined(record.data),
             gas: Guard.PreventUndefined(record.gas),
             gasPrice: Guard.PreventUndefined(record.gasPrice),
             microBlockId: Guard.PreventUndefined(record.microBlockId),
@@ -215,6 +219,8 @@ export class Account {
             masterBlock: undefined
         }
 
+        // TODO rewrite
+        /*
         // if the application exists, contains a micro-chain having the provided flowId then add the block to it
         // or create the application and initiate it with the microChain
         const applicationId : string = Guard.PreventUndefined(record.applicationId);
@@ -237,5 +243,7 @@ export class Account {
                 microBlocksByFlowId: microChainByFlowId
             }
         }
+
+         */
     }
 }

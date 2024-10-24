@@ -23,12 +23,13 @@ import Skeleton from "react-loading-skeleton";
 import {Formatter} from "@/src/Formatter.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
 import {DataTreeViewer} from "@/src/components/dashboard/DataTreeViewer.tsx";
+import {IndexedStorage} from "@/src/IndexedStorage.tsx";
 
 export function FlowDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
     // load history
     const walletOption = useContext(WalletContext);
     const wallet = walletOption.unwrap();
-    const history = wallet.getActiveAccount().unwrap().getHistoryReader();
+    const activeAccount = wallet.getActiveAccount().unwrap();
 
     const [isLoading, setTransition] = useTransition();
 
@@ -48,11 +49,13 @@ export function FlowDetailComponent(input: { chosenFlow: { applicationId: string
         setChosenBlock(undefined)
         setTransition(() => {
             console.log("[flow details]", input, wallet.getActiveAccount().unwrap());
-            const allBlocks = history.getAllBlocksByFlowId(
-                input.chosenFlow.applicationId,
-                input.chosenFlow.flowId
-            );
-            setBlocks(allBlocks);
+            IndexedStorage.CreateDatabase(activeAccount).then((db : IndexedStorage) => {
+                db.getAllBlocksByFlowId(input.chosenFlow.flowId).then((blocks : MicroBlock[]) => {
+                    blocks.sort( (b1, b2) => b1.nonce < b2.nonce ? -1 : 1 )
+                    setBlocks(blocks);
+                });
+            })
+
         })
     }, [input, wallet]);
 
@@ -148,38 +151,16 @@ function MicroBlockDataViewer({applicationId, flowId, block}: {
                 setDataTree(data.record)
                 setIsLoading(false)
             } )
-
-        // we do not access the locally available data anymore.
-        /*
-        if ( block.isInitiator ) {
-            setDataTree(block.data.record)
-            setIsLoading(false)
-        } else {
-            console.log(block)
-            Carmentis.loadPublicDataFromMicroBlock( applicationId, flowId, block.nonce )
-                .then( data => {
-                    setDataTree(data.record)
-                    setIsLoading(false)
-                } )
-
-        }
-         */
     }, []);
 
     return <>
-        <>
-            <h3 className="mt-3">Block Data</h3>
-            {isLoading &&
-                <Skeleton count={5} /> // Five-line loading skeleton
-            }
-
-            { !isLoading &&
-                <DataTreeViewer data={dataTree} />
-            }
-
-        </>
-
-
+        <h3 className="mt-3">Block Data</h3>
+        {isLoading &&
+            <Skeleton count={5} /> // Five-line loading skeleton
+        }
+        { !isLoading &&
+            <DataTreeViewer data={dataTree} />
+        }
     </>
 }
 
@@ -187,7 +168,6 @@ function MicroBlockDataViewer({applicationId, flowId, block}: {
 
 
 export function SpanWithLoader(input: { text: string | undefined, isLoading : boolean }) {
-
     return (
         <div>
             {input.isLoading ? (
@@ -197,4 +177,4 @@ export function SpanWithLoader(input: { text: string | undefined, isLoading : bo
             )}
         </div>
     );
-};
+}
