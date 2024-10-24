@@ -4,7 +4,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   manifest: {
     name: 'Carmentis Wallet',
-    version: '0.6.5',
+    version: '0.6.6',
     description: 'Carmentis Wallet',
     host_permissions: ['*://*/*'],
     browser_action: {},
