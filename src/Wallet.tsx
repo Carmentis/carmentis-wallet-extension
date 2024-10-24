@@ -317,10 +317,9 @@ export class Wallet {
         return new Promise((resolve, reject) => {
 
             const seed = this.getSeed();
-            console.log("[wallet] deriving user key pair from seed:", seed)
-            Carmentis.derivePepperFromSeed(seed, account.getNonce()).then(pepper => {
-                return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then(privateKey => {
-                    return Carmentis.getPublicKey(privateKey).then(publicKey => {
+            Carmentis.derivePepperFromSeed(seed, account.getNonce()).then((pepper: Uint8Array) => {
+                return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then((privateKey : Uint8Array) => {
+                    return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {
                         resolve({
                             privateKey: privateKey,
                             publicKey: publicKey
@@ -341,16 +340,16 @@ export class Wallet {
         return new Promise((resolve, reject) => {
             const seed = this.getSeed();
             console.log("[wallet] deriving user key pair from seed:", seed)
-            return Carmentis.derivePepperFromSeed(seed, account.getNonce()).then(pepper => {
-                return Carmentis.deriveAuthenticationPrivateKey(pepper).then(privateKey => {
-                    return Carmentis.getPublicKey(privateKey).then(publicKey => {
+            return Carmentis.derivePepperFromSeed(seed, account.getNonce()).then((pepper : Uint8Array) => {
+                return Carmentis.deriveAuthenticationPrivateKey(pepper).then((privateKey : Uint8Array) => {
+                    return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {
                         resolve({
                             privateKey: privateKey,
                             publicKey: publicKey
                         })
                     })
                 })
-            }).catch(error => {
+            }).catch((error : Error) => {
                 console.error(error);
                 reject(error)
                 // TODO: Handle error
