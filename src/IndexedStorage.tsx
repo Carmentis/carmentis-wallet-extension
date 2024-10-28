@@ -26,27 +26,26 @@ export class IndexedStorage {
 
 
     static CreateDatabase(account : Account) : Promise<IndexedStorage> {
+        const dbName = "account-" + account.getId();
         return new Promise((resolve, reject) => {
-            var open = indexedDB.open("Wallet", 1);
+
+            var open = indexedDB.open(dbName , 1);
 
             // Create the schema
             open.onupgradeneeded = function() {
                 var db = open.result;
 
                 // create the application table
-                var store = db.createObjectStore("Application", {keyPath: ["accountId", "applicationId"]});
-                store.createIndex("by_account", ["accountId"]);
+                db.createObjectStore("Application", {keyPath: ["applicationId"]});
 
                 // create the flow table
-                store = db.createObjectStore("Flow", {keyPath: ["accountId", "flowId"]});
-                store.createIndex("by_application", ["accountId", "applicationId"]);
-                store.createIndex("by_account", ["accountId"]);
+                var store = db.createObjectStore("Flow", {keyPath: ["flowId"]});
+                store.createIndex("by_application", ["applicationId"]);
 
                 // create the micro block table
-                store = db.createObjectStore("MicroBlock", {keyPath: ["accountId", "microBlockId"]});
-                store.createIndex("by_flow", ["accountId", "flowId"]); // to access all blocks in a flow
-                store.createIndex("by_account", ["accountId"]); // to access the length of a micro-block
-                store.createIndex("by_flow_nonce", ["accountId", "flowId", "nonce"]); // to access a micro-block in flow at position
+                store = db.createObjectStore("MicroBlock", {keyPath: ["microBlockId"]});
+                store.createIndex("by_flow", ["flowId"]); // to access all blocks in a flow
+                store.createIndex("by_flow_nonce", ["flowId", "nonce"]); // to access a micro-block in flow at position
 
             };
 
@@ -84,8 +83,7 @@ export class IndexedStorage {
     getNumberOfApplications() : Promise<number> {
         return new Promise((resolve, reject) => {
             const store = this.getApplicationStore("readonly");
-            const index = store.index('by_account');
-            const request = index.count([this.account.getId()]);
+            const request = store.count()
             request.onsuccess = () => {
                 resolve(request.result);  // The result is the count of objects
             };
@@ -105,8 +103,7 @@ export class IndexedStorage {
     getFlowsNumberOfAccount() : Promise<number> {
         return new Promise((resolve, reject) => {
             const store = this.getFlowStore("readonly");
-            const index = store.index('by_account');
-            const request = index.count([this.account.getId()]);
+            const request = store.count();
             request.onsuccess = () => {
                 resolve(request.result);  // The result is the count of objects
             };
@@ -116,25 +113,6 @@ export class IndexedStorage {
             };
         })
 
-    }
-
-
-
-
-    getAllApplicationsOfAccount() : Promise<Application[]> {
-        return new Promise((resolve, reject) => {
-
-            const store = this.getApplicationStore("readonly");
-            const index = store.index('by_account');
-            const request = index.getAll([this.account.getId()]);
-            request.onsuccess = () => {
-                resolve(request.result);  // The result is the array of applications
-            };
-
-            request.onerror = (event) => {
-                reject(`Error while accessing applications: ${(event.target as IDBRequest).error}`);
-            };
-        })
     }
 
 
@@ -143,7 +121,7 @@ export class IndexedStorage {
 
             const store = this.getMicroBlockStore("readonly");
             const index = store.index('by_flow');
-            const request = index.count([this.account.getId(), flowId]);
+            const request = index.count([flowId]);
 
             request.onsuccess = () => {
                 resolve(request.result);  // The result is the count of objects
@@ -157,53 +135,10 @@ export class IndexedStorage {
     }
 
 
-    getAllFlowsOfAccountFromApplication(application : Application ) : Promise<FlowView[]> {
-       return new Promise((resolve, reject) => {
-
-           const store = this.getFlowStore("readonly");
-           const index = store.index('by_application');
-           const results: FlowView[] = [];
-
-           const request = index.getAll([
-               this.account.getId(),
-               application.applicationId
-           ]);
-
-           request.onsuccess = async () => {
-
-               const flows = request.result;
-               for (const flow of flows) {
-
-                   const flowLength = await this.getFlowLength(flow.flowId);
-                   const flowView: FlowView = {
-                       applicationDomain: application.rootDomain,
-                       applicationId: application.applicationId,
-                       applicationName: application.applicationName,
-                       flowId: flow.flowId,
-                       flowLength: flowLength,
-                       lastUpdate: 0 // TODO
-                   }
-
-                   results.push(flowView);
-
-               }
-
-               resolve(results);
-
-           };
-
-           request.onerror = (event) => {
-               reject(`Error while accessing flows: ${(event.target as IDBRequest).error}`);
-           };
-
-       });
-
-    }
-
     getApplicationByApplicationId( applicationId : string ) : Promise<Application> {
         return new Promise((resolve, reject) => {
             const store = this.getApplicationStore("readonly");
-            const request = store.get([this.account.getId(), applicationId]);
+            const request = store.get([applicationId]);
             request.onsuccess = () => { resolve(request.result); };
             request.onerror = (event) => { reject() }
         })
@@ -216,8 +151,7 @@ export class IndexedStorage {
         return new Promise(async (resolve, reject) => {
             try {
                 const store = this.getFlowStore("readonly");
-                const index = store.index('by_account');
-                const request = index.getAll([this.account.getId()]);
+                const request = store.getAll();
 
 
                 request.onsuccess = async () => {
@@ -227,13 +161,14 @@ export class IndexedStorage {
                     for (const flow of flows) {
 
                         const application : Application = await this.getApplicationByApplicationId(flow.applicationId);
+                        const newestBlock : MicroBlock =  await this.getNewestBlockInFlow(flow.flowId);
                         const flowView: FlowView = {
                             applicationDomain: application.rootDomain,
                             applicationId: application.applicationId,
                             applicationName: application.applicationName,
                             flowId: flow.flowId,
                             flowLength: await this.getFlowLength(flow.flowId),
-                            lastUpdate: 0 // TODO
+                            lastUpdate: newestBlock.ts,
                         }
                         flowViews.push(flowView);
 
@@ -250,6 +185,31 @@ export class IndexedStorage {
         })
     }
 
+    getNewestBlockInFlow(flowId : string) : Promise<MicroBlock> {
+        return new Promise((resolve, reject) => {
+
+            const store = this.getMicroBlockStore("readonly");
+            const index = store.index('by_flow');
+            const request = index.getAll([ flowId ]);
+
+            request.onsuccess = async () => {
+
+                const blocks : MicroBlock[] = request.result;
+                let newestBlock = blocks[0];
+                for (const block of blocks) {
+                    if ( newestBlock.ts < block.ts ) {
+                        newestBlock = block;
+                    }
+                }
+                resolve(newestBlock);
+
+            }
+
+            request.onerror = () => { reject() }
+
+        });
+    }
+
 
     /**
      * Returns the spent gas.
@@ -263,8 +223,8 @@ export class IndexedStorage {
             try {
 
                 const store = this.getMicroBlockStore("readonly");
-                const index = store.index('by_account');
-                const request = index.getAll([this.account.getId()]);
+                const request = store.getAll();
+                //const request = index.getAll([this.account.getId()]);
                 let spentGas = 0;
 
                 request.onsuccess = function () {
@@ -287,7 +247,7 @@ export class IndexedStorage {
 
             const store = this.getMicroBlockStore("readonly");
             const index = store.index('by_flow');
-            const request = index.getAll([this.account.getId(), flowId]);
+            const request = index.getAll([flowId]);
 
             request.onsuccess = () => {
                 resolve(request.result);
@@ -373,7 +333,7 @@ export class IndexedStorage {
 
             const store = this.getMicroBlockStore("readonly");
             const index = store.index('by_flow_nonce');
-            const request = index.count([ this.account.getId(), flowId, nonce ]);
+            const request = index.count([ flowId, nonce ]);
 
             request.onsuccess = () => {
                 const matchesNumber = request.result;
@@ -394,7 +354,7 @@ export class IndexedStorage {
         return new Promise(async (resolve, reject) => {
 
             const store = this.getMicroBlockStore("readonly");
-            const request = store.get([this.account.getId(), microBlockId])
+            const request = store.get([microBlockId])
 
             request.onsuccess = () => {
                 const block = request.result;
