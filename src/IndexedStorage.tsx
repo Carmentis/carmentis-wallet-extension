@@ -22,10 +22,31 @@ import {IllegalStateError} from "@/src/errors.tsx";
 import {Optional} from "@/src/Optional.tsx";
 import {FlowView} from "@/src/FlowView.tsx";
 
+/**
+ * Interface to query the indexed database.
+ */
 export class IndexedStorage {
 
 
-    static CreateDatabase(account : Account) : Promise<IndexedStorage> {
+    /**
+     * Connects to the database.
+     *
+     * The database in which the interface connects is specialized for the provided account.
+     * In other words, all accessed objects are implicitly associated with the provided account.
+     *
+     * Example:
+     * ```ts
+     * const account : Account = ...;
+     * IndexedStorage.ConnectDatabase(account).then(db => {
+     *      // Do query here
+     * });
+     * ```
+     *
+     * @param account The account for which the accessed data is associated with.
+     *
+     * @constructor
+     */
+    static ConnectDatabase(account : Account) : Promise<IndexedStorage> {
         const dbName = "account-" + account.getId();
         return new Promise((resolve, reject) => {
 
@@ -56,24 +77,20 @@ export class IndexedStorage {
         });
     }
 
-    constructor(private db : IDBDatabase, private account : Account) {
+    /**
+     * Constructor for the {@link IndexedStorage} object.
+     *
+     * This constructor is private and should not be used externally.
+     *
+     * @param db The database.
+     * @param account The account.
+     * @private
+     */
+    private constructor(private db : IDBDatabase, private account : Account) {
     }
 
 
-    private getApplicationStore(  mode : "readonly" | "readwrite" ) : IDBObjectStore {
-        const transaction = this.db.transaction("Application", mode);
-        return transaction.objectStore('Application');
-    }
 
-    private getFlowStore( mode : "readonly" | "readwrite" ) : IDBObjectStore {
-        const transaction = this.db.transaction("Flow", mode);
-        return transaction.objectStore('Flow');
-    }
-
-    private getMicroBlockStore( mode : "readonly" | "readwrite" ) : IDBObjectStore {
-        const transaction = this.db.transaction("MicroBlock", mode);
-        return transaction.objectStore('MicroBlock');
-    }
 
 
 
@@ -116,6 +133,11 @@ export class IndexedStorage {
     }
 
 
+    /**
+     * Returns the length of the specified flow.
+     *
+     * @param flowId The identifier of the flow.
+     */
     getFlowLength(flowId : string) : Promise<number> {
         return new Promise((resolve, reject) => {
 
@@ -135,6 +157,11 @@ export class IndexedStorage {
     }
 
 
+    /**
+     * Returns the application having the provided identifier.
+     *
+     * @param applicationId The identifier of the application.
+     */
     getApplicationByApplicationId( applicationId : string ) : Promise<Application> {
         return new Promise((resolve, reject) => {
             const store = this.getApplicationStore("readonly");
@@ -185,6 +212,11 @@ export class IndexedStorage {
         })
     }
 
+    /**
+     * Returns the newest block in the flow having the provided flow identifier.
+     *
+     * @param flowId The identifier of the flow.
+     */
     getNewestBlockInFlow(flowId : string) : Promise<MicroBlock> {
         return new Promise((resolve, reject) => {
 
@@ -242,6 +274,11 @@ export class IndexedStorage {
         })
     }
 
+    /**
+     * Returns all blocks in the flow having the provided flow identifier.
+     *
+     * @param flowId The identifier of the flow.
+     */
     getAllBlocksByFlowId(flowId: string) : Promise<MicroBlock[]> {
         return new Promise((resolve, reject) => {
 
@@ -260,6 +297,11 @@ export class IndexedStorage {
         });
     }
 
+    /**
+     * Adds an approved block in the database.
+     *
+     * @param record The approved block.
+     */
     addApprovedBlockInActiveAccountHistory(record: RecordConfirmationData) : Promise<[void, void, void]> {
         const application : Application = {
             rootDomain: Guard.PreventUndefined(record.rootDomain),
@@ -298,37 +340,27 @@ export class IndexedStorage {
         ])
     }
 
+    /**
+     * Adds a micro block in the database.
+     *
+     * @param microBlock The micro block to add in database.
+     */
     addMicroBlock( microBlock : MicroBlock ) : Promise<void> {
         return this.addInStore(this.getMicroBlockStore("readwrite"), microBlock);
     }
 
-    private addFlow( flow : Flow ) : Promise<void> {
-        return this.addInStore(this.getFlowStore("readwrite"), flow);
-    }
 
-
-    private addApplication( application : Application ) : Promise<void> {
-        return this.addInStore(this.getApplicationStore("readwrite"), application);
-    }
-
-    private addInStore<T>(store : IDBObjectStore, item : T) : Promise<void> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const request = store.put(item);
-                request.onsuccess = function () {
-                    resolve()
-                }
-
-                request.onerror = function (error) {
-                    reject(error);
-                }
-            } catch (e) {
-                reject(e)
-            }
-        })
-    }
-
+    /**
+     * Checks if the {@link nonce}-th micro block exists in the flow having the provided identifier.
+     *
+     * @param flowId The identifier of the flow.
+     * @param nonce The position of the micro-block in the flow. (should be greater or equals than one).
+     */
     checkMicroBlockExists(flowId: string, nonce: number) {
+        if (nonce < 1) {
+            throw new Error(`The provided nonce is invalid: Got ${nonce} which is strictly lower than 1`);
+        }
+
         return new Promise(async (resolve, reject) => {
 
             const store = this.getMicroBlockStore("readonly");
@@ -350,6 +382,11 @@ export class IndexedStorage {
         })
     }
 
+    /**
+     * Returns the micro block having the provided identifier.
+     *
+     * @param microBlockId The micro block.
+     */
     getMicroBlockByMicroBlockId( microBlockId : string ) : Promise<Optional<MicroBlock>> {
         return new Promise(async (resolve, reject) => {
 
@@ -373,6 +410,14 @@ export class IndexedStorage {
         })
     }
 
+    /**
+     * Updates the master block location of an already existing micro block in the database.
+     *
+     * @param microBlockId The identifier of the micro block.
+     * @param masterBlockId The identifier of the master block.
+     *
+     * @throws IllegalStateError If the micro block does not exist.
+     */
     updateMasterMicroBlock(microBlockId : string, masterBlockId : number ) : Promise<void> {
         return new Promise(async (resolve, reject) => {
 
@@ -399,4 +444,89 @@ export class IndexedStorage {
 
         })
     }
+
+
+    /**
+     * Returns the application store.
+     *
+     * @param mode The access mode.
+     * @private
+     */
+    private getApplicationStore(  mode : "readonly" | "readwrite" ) : IDBObjectStore {
+        const transaction = this.db.transaction("Application", mode);
+        return transaction.objectStore('Application');
+    }
+
+
+    /**
+     * Returns the flow store.
+     *
+     * @param mode The access mode.
+     * @private
+     */
+    private getFlowStore( mode : "readonly" | "readwrite" ) : IDBObjectStore {
+        const transaction = this.db.transaction("Flow", mode);
+        return transaction.objectStore('Flow');
+    }
+
+    /**
+     * Returns the micro block store.
+     *
+     * @param mode The access mode.
+     * @private
+     */
+    private getMicroBlockStore( mode : "readonly" | "readwrite" ) : IDBObjectStore {
+        const transaction = this.db.transaction("MicroBlock", mode);
+        return transaction.objectStore('MicroBlock');
+    }
+
+
+    /**
+     * Add a flow in the database.
+     *
+     * @param flow The flow to add in database.
+     *
+     * @private
+     */
+    private addFlow( flow : Flow ) : Promise<void> {
+        return this.addInStore(this.getFlowStore("readwrite"), flow);
+    }
+
+
+    /**
+     * Add an application in the database.
+     *
+     * @param application The application to add in database.
+     * @private
+     */
+    private addApplication( application : Application ) : Promise<void> {
+        return this.addInStore(this.getApplicationStore("readwrite"), application);
+    }
+
+    /**
+     * Adds an object in the provided store.
+     *
+     * @param store The store in which the object is stored.
+     * @param item The item to add in the provided store.
+     *
+     * @private
+     */
+    private addInStore<T>(store : IDBObjectStore, item : T) : Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const request = store.put(item);
+                request.onsuccess = function () {
+                    resolve()
+                }
+
+                request.onerror = function (error) {
+                    reject(error);
+                }
+            } catch (e) {
+                reject(e)
+            }
+        })
+    }
+
+
 }

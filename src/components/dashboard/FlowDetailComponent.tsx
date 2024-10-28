@@ -49,7 +49,7 @@ export function FlowDetailComponent(input: { chosenFlow: { applicationId: string
         setChosenBlock(undefined)
         setTransition(() => {
             console.log("[flow details]", input, wallet.getActiveAccount().unwrap());
-            IndexedStorage.CreateDatabase(activeAccount).then((db : IndexedStorage) => {
+            IndexedStorage.ConnectDatabase(activeAccount).then((db : IndexedStorage) => {
                 db.getAllBlocksByFlowId(input.chosenFlow.flowId).then((blocks : MicroBlock[]) => {
                     blocks.sort( (b1, b2) => b1.nonce < b2.nonce ? -1 : 1 )
                     setBlocks(blocks);

@@ -157,7 +157,7 @@ export function DashboardMainContent() {
 
 
     function putDataInStates() {
-        IndexedStorage.CreateDatabase(activeAccount).then(async (db : IndexedStorage ) => {
+        IndexedStorage.ConnectDatabase(activeAccount).then(async (db : IndexedStorage ) => {
             db.getNumberOfApplications().then(setNumberOfApplications);
             db.getFlowsNumberOfAccount().then(setNumberOfFlows);
             db.getSpentGaz().then(setSpentGaz)
@@ -184,7 +184,7 @@ export function DashboardMainContent() {
 
     function synchronizeWithBlockchain() {
 
-        IndexedStorage.CreateDatabase(activeAccount).then(async (db : IndexedStorage ) => {
+        IndexedStorage.ConnectDatabase(activeAccount).then(async (db : IndexedStorage ) => {
             try {
 
                 const flows = await db.getAllFlowsOfAccount();

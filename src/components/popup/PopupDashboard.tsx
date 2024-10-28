@@ -539,7 +539,7 @@ export function PopupDashboard() {
         confirmRecordDetails.current.nonce = request.data.nonce;
 
         // insert the block in indexeddb
-        IndexedStorage.CreateDatabase(activeAccount).then((db : IndexedStorage) => {
+        IndexedStorage.ConnectDatabase(activeAccount).then((db : IndexedStorage) => {
             return db.addApprovedBlockInActiveAccountHistory( confirmRecordDetails.current )
         }).then(() => {
             CloseOnSuccess()
