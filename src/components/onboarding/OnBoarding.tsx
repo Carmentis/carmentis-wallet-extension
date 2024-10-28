@@ -17,7 +17,7 @@
  */
 
 import {Route, Routes} from "react-router";
-import {PasswordCreation} from "@/src/components/onboarding/PasswordCreation.tsx";
+import {PseudoPasswordCreation} from "@/src/components/onboarding/PseudoPasswordCreation.tsx";
 import {RecoveryPhrase} from "@/src/components/onboarding/RecoveryPhrase.tsx";
 import {SetupWallet} from "@/src/components/onboarding/SetupWallet.tsx";
 import {Landing} from "@/src/components/onboarding/Landing.tsx";
@@ -39,7 +39,7 @@ function OnBoarding() {
 
                             <Routes>
 
-                                <Route path="/create-password" element={< PasswordCreation />}></Route>
+                                <Route path="/create-password" element={< PseudoPasswordCreation />}></Route>
                                 <Route path="/recovery-phrase" element={< RecoveryPhrase />}></Route>
                                 <Route path="/setup-wallet" element={< SetupWallet />}></Route>
                                 <Route path="/import-wallet" element={<ImportWallet />}></Route>

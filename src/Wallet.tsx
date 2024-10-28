@@ -95,18 +95,19 @@ export class Wallet {
      *
      * The returned wallet is initialized with a default account.
      *
+     * @param pseudo The pseudo of the initial account in the wallet.
      * @param seed The seed used by the wallet.
      *
      * @constructor
      */
-    static CreateFromSeed(seed : Uint8Array) : Wallet {
+    static CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array) : Wallet {
 
         if ( !seed ) {
             throw new Error( "Cannot instantiate a wallet from undefined seed" );
         }
 
         console.log("[wallet] Creating wallet from seed:", seed)
-        const createdAccount = Account.Default();
+        const createdAccount = Account.DefaultWithPseudo(pseudo);
         return new Wallet({
             seed: seed,
             accounts: [createdAccount.data],

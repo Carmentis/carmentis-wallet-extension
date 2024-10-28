@@ -18,23 +18,30 @@
 import {useState} from "react";
 import {useLocation, useNavigate} from "react-router";
 
-interface FormCondition {
-    evaluate() : boolean;
-    onFailure() : void;
-}
 
-export function PasswordCreation() {
+export function PseudoPasswordCreation() {
     // the state of the component
+    const [pseudo, setPseudo] = useState("");
     const [password, setPassword] = useState('aaa');
     const [confirmPassword, setConfirmPassword] = useState('aaa');
     const [consent, setConsent] = useState(0);
 
     // errors
     const [activeForm, setActiveForm] = useState<boolean>(false);
+    const [pseudoIsEmpty, setPseudoIsEmpty] = useState<boolean>(false);
     const [isWeakPassword, setIsWeakPassword] = useState<boolean>(false);
 
     // create the list of conditions that the input should satisfy
     let conditions =  [
+        // the pseudo should not be empty
+        {
+            evaluate: () => {
+                return pseudo !== "";
+            },
+            onFailure: () => {
+                setPseudoIsEmpty(true)
+            }
+        },
         // passwords should match
         {
             evaluate: () => {
@@ -61,7 +68,7 @@ export function PasswordCreation() {
     ]
 
     // checks the conditions defined above.
-    function onSubmitPasswordCreation() {
+    function onSubmitPseudoPasswordCreation() {
         // checks conditions
         setActiveForm(true)
         let containsError = false;
@@ -73,7 +80,7 @@ export function PasswordCreation() {
         }
 
         if (!containsError) {
-            onCorrectPasswordCreation()
+            onCorrectPseudoPasswordForm()
         }
     }
 
@@ -82,9 +89,10 @@ export function PasswordCreation() {
     const location = useLocation();
     const nextStep = location.state.nextStep;
     const target = nextStep ? nextStep : "/recovery-phrase";
-    function onCorrectPasswordCreation() {
+    function onCorrectPseudoPasswordForm() {
         navigate(target, {
             state: {
+                pseudo: pseudo,
                 password: password,
             }
         });
@@ -99,6 +107,23 @@ export function PasswordCreation() {
                 recover this password.</p>
 
             <div className="flex items-center justify-between align-items-center justify-content-center flex-col">
+                <div className="mb-4">
+                    <label htmlFor="pseudo"
+                           className="block text-sm font-medium leading-6 text-gray-900">Pseudo</label>
+                    <div className="relative mt-2 rounded-md shadow-sm">
+                        <input type="text" name="pseudo" id="pseudo"
+                               placeholder="Pseudo"
+                               value={pseudo}
+                               onChange={(e) => setPseudo(e.target.value)}
+                               className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset  sm:text-sm sm:leading-6"/>
+                        {activeForm && pseudoIsEmpty &&
+                            <p className="mt-2 text-pink-600">
+                                The pseudo is required.
+                            </p>
+                        }
+                    </div>
+                </div>
+
                 <div className="mb-4">
                     <label htmlFor="password"
                            className="block text-sm font-medium leading-6 text-gray-900">Password</label>
@@ -142,7 +167,7 @@ export function PasswordCreation() {
                     </label>
 
                 </div>
-                { activeForm && !consent &&
+                {activeForm && !consent &&
                     <p className="mt-2 text-pink-600">
                         Accept that Carmentis cannot help yout to recover your password.
                     </p>
@@ -150,7 +175,9 @@ export function PasswordCreation() {
             </div>
 
 
-            <button className="btn-primary btn-highlight w-full" onClick={onSubmitPasswordCreation}>Next</button>
+            <button className="btn-primary btn-highlight w-full" onClick={onSubmitPseudoPasswordCreation}>
+                Next
+            </button>
         </>
     );
 }

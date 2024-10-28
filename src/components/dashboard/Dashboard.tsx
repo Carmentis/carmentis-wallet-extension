@@ -278,7 +278,7 @@ export function DashboardMainContent() {
                 <button type="button" className="brand-bar bg-green-100 p-4 rounded-md w-full text-left hover:underline mb-4" onClick={() => {
                     navigate("/parameters")
                 }}>
-                    Configure your email with your email
+                    Configure your email
                 </button>
             }
 

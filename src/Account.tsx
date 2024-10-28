@@ -131,6 +131,24 @@ export class Account {
         })
     }
 
+    /**
+     * This function creates a default account initialized with the provided pseudo.
+     *
+     * @constructor
+     *
+     * @return Account The created account.
+     */
+    static DefaultWithPseudo( pseudo : string ) : Account {
+        return new Account({
+            id: this.GenerateAccountId(),
+            pseudo: pseudo,
+            email: undefined,
+            emailValidationProof: undefined,
+            nonce: DEFAULT_NONCE,
+        })
+    }
+
+
     static CreateFromDict(account : AccountData) : Account {
         return new Account(account);
     }

@@ -36,19 +36,20 @@ export function SetupWallet() {
     // recover the password and seed from given parameters, or back to home if at least one is not provided
     const location = useLocation();
     const navigate = useNavigate();
-    if (!location.state || !location.state.password  || !location.state.seed ) {
+    if (!location.state || !location.state.password  || !location.state.seed || !location.state.pseudo ) {
         useEffect(() => {
            navigate("/");
         });
     }
 
 
-    // recover the password and seed
-    const seed = location.state.seed;
+    // recover the pseudo, password and seed
+    const pseudo = location.state.pseudo;
     const password = location.state.password;
+    const seed = location.state.seed;
 
     // create the wallet
-    const walletContext = Wallet.CreateFromSeed(seed);
+    const walletContext = Wallet.CreateFromPseudoAndSeed(pseudo, seed);
 
 
     function redirectToMainPage() {
