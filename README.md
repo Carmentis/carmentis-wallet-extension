@@ -24,7 +24,7 @@ make docs
 ```
 
 ## Publish latest version
-A Github action has been developed to automatically update a new release.
+A Github action has been developed to automatically publish a new release.
 If the current repository is clean, execute the following script:
 ```shell
 ./scripts/publish.sh
