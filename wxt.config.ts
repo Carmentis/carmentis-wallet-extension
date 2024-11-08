@@ -10,7 +10,6 @@ export default defineConfig({
     browser_action: {},
     permissions: [
       'storage',
-      'tabs',
     ],
     web_accessible_resources: [{
       resources: ['vendor/carmentis-wallet-init.js'],
