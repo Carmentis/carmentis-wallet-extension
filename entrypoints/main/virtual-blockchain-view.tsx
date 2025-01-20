@@ -15,25 +15,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React from "react"
-import ReactDOM from 'react-dom/client';
-import PopupAppEntrypoint from './page.tsx';
-import './style.css'
-import './global.css';
-import {HashRouter} from "react-router-dom";
-
-
-
-
-
-
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-            <HashRouter>
-                <PopupAppEntrypoint/>
-            </HashRouter>
-    </React.StrictMode>,
-);
-
-
+export interface VirtualBlockchainView {
+    lastUpdate: number;
+    virtualBlockchainId: string;
+    applicationId: string;
+    applicationName: string;
+    flowLength: number
+    applicationDomain: string;
+}
