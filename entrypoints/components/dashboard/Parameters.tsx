@@ -19,9 +19,14 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { Encoders } from '@/entrypoints/main/Encoders.tsx';
 import { Optional } from '@/entrypoints/main/Optional.tsx';
 import { useNavigate } from 'react-router';
-import { EmailValidation } from '@/entrypoints/main/components/dashboard/EmailValidation.tsx';
-import { useAuthenticationContext, useWallet } from '@/entrypoints/main/contexts/authentication.context.tsx';
-import { Card, CardContent } from '@mui/material';
+import { EmailValidation } from '@/entrypoints/components/dashboard/EmailValidation.tsx';
+import {
+	activeAccountState,
+	walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import {Card, CardContent, Typography} from '@mui/material';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { getUserKeyPair, Wallet } from '@/entrypoints/main/wallet.tsx';
 
 function InputWithDynamicConfirmSaveComponent(input: {
 	value: string,
@@ -64,7 +69,7 @@ function InputWithDynamicConfirmSaveComponent(input: {
 }
 
 function InputNumberWithDynamicConfirmSaveComponent(input: {
-	value: number,
+	value: number | undefined,
 	onChange: (value: number) => void,
 	onSave: () => void,
 }): ReactElement {
@@ -94,18 +99,18 @@ function InputNumberWithDynamicConfirmSaveComponent(input: {
 	</>;
 }
 
+
 export default function Parameters() {
 
-	const { setWallet } = useAuthenticationContext();
-	const wallet = useWallet();
-	const activeAccount = wallet.getActiveAccount().unwrap();
+	const [wallet, setWallet] = useRecoilState(walletState);
+	const activeAccount = useRecoilValue(activeAccountState);
 
 
 	// state for the pseudo, email and nonce edition
-	const [pseudo, setPseudo] = useState<string>(wallet.getActiveAccount().unwrap().getPseudo());
-	const [email, setEmail] = useState<string>(activeAccount.getEmail().unwrapOr(''));
-	const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount.hasVerifiedEmail());
-	const [nonce, setNonce] = useState<number>(activeAccount.getNonce());
+	const [pseudo, setPseudo] = useState(activeAccount?.pseudo);
+	const [email, setEmail] = useState(activeAccount?.email);
+	const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount?.emailValidationProof !== undefined);
+	const [nonce, setNonce] = useState(activeAccount?.nonce);
 	const [showPrivateKeys, setShowPrivateKeys] = useState<boolean>(false);
 
 	// state for account deletion
@@ -113,9 +118,7 @@ export default function Parameters() {
 
 
 	// states for the endpoints
-	const [dataEndpoint, setDataEndpoint] = useState(wallet.getDataEndpoint());
-	const [nodeEndpoint, setNodeEndpoint] = useState(wallet.getNodeEndpoint());
-	const [webSocketNodeEndpoint, setWebSocketNodeEndpoint] = useState(wallet.getWebSocketNodeEndpoint());
+	const [nodeEndpoint, setNodeEndpoint] = useState(wallet?.nodeEndpoint);
 
 
 	// states for the user keys
@@ -123,17 +126,10 @@ export default function Parameters() {
 	const [userPublicKey, setUserPublicKey] = useState('');
 
 	useEffect(() => {
-		const activeAccount = wallet.getActiveAccount().unwrap();
-
-		// change the pseudo
-		console.log('Account:', activeAccount);
-		setPseudo(activeAccount.getPseudo());
-		setEmail(activeAccount.getEmail().unwrapOr(''));
-		setVerifiedEmail(activeAccount.hasVerifiedEmail());
-		setNonce(activeAccount.getNonce());
-
 		// load the authentication key pair
-		wallet.getAccountAuthenticationKeyPair(activeAccount)
+		if (!wallet || !activeAccount) return
+		console.log("exposing signature keys:", wallet, activeAccount);
+		getUserKeyPair(wallet, activeAccount)
 			.then(keyPair => {
 				setUserPrivateKey(Encoders.ToHexa(keyPair.privateKey));
 				setUserPublicKey(Encoders.ToHexa(keyPair.publicKey));
@@ -162,20 +158,24 @@ export default function Parameters() {
 
 
 		// update the wallet
-		setWallet(walletOption => {
-			const wallet = walletOption.unwrap();
-			const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
+		setWallet(wallet => {
+			if (!wallet) return undefined;
 
 			// update pseudo, nonce and endpoints
-			wallet.updatePseudo(activeAccountIndex, pseudo);
-			wallet.updateNonce(activeAccountIndex, nonce);
-			wallet.setEndpoints(
-				nodeEndpoint,
-				dataEndpoint,
-				webSocketNodeEndpoint,
-			);
+			const accounts = wallet.accounts.map(a => {
+				if (a.id !== wallet.activeAccountId) return a;
+				return {
+					...a,
+					pseudo,
+					nonce,
+				}
+			});
 
-			return Optional.From(wallet);
+			return {
+				...wallet,
+				accounts,
+				nodeEndpoint
+			} as Wallet
 		});
 	}
 
@@ -183,12 +183,13 @@ export default function Parameters() {
 	 * This function is fired when the user wants to delete the current active account.
 	 */
 	function deleteActiveAccount() {
-		if (activeAccount.getPseudo() === accountDeletionPseudo) {
-			console.log(`[g] deleting ${activeAccount.getPseudo()}`);
-			setWallet(walletOption => {
-				const wallet = walletOption.unwrap();
-				wallet.deleteActiveAccount();
-				return Optional.From(wallet);
+		if (activeAccount && activeAccount.pseudo === accountDeletionPseudo) {
+			console.log(`[g] deleting ${activeAccount.pseudo}`);
+			setWallet(wallet => {
+				if (!wallet) return undefined;
+				const accounts = wallet.accounts
+					.filter(a => a.pseudo !== accountDeletionPseudo);
+				return {...wallet, accounts}
 			});
 		}
 	}
@@ -196,11 +197,8 @@ export default function Parameters() {
 	return <>
 		<div className="md:container md:mx-auto flex flex-col space-y-8">
 
-			<div className="flex justify-between mb-2">
-				<h1>Parameters</h1>
-				<button onClick={goToMain} className="btn-primary btn-highlight">
-					Menu
-				</button>
+			<div className="flex justify-start mb-2">
+				<Typography variant={"h4"}>Parameters</Typography>
 			</div>
 
 
@@ -296,21 +294,11 @@ export default function Parameters() {
 						<div className="parameter-description">
 							The email linked with account. {verifiedEmail &&
 							<span
-								className="text-green-600">(Verified with the Carmentis email verification oracle)</span>}
+								className="text-green-600">(Verified with the Carmentis email verification oracle at {wallet?.emailOracleEndpoint})</span>}
 						</div>
 						<input type="text"
 							   className="parameter-input" readOnly={true} value={email} />
 					</div>
-					<div className="parameter-group">
-						<div className="parameter-title">Oracle Data Endpoint</div>
-						<div className="parameter-description">The endpoint of the oracle data server.</div>
-						<InputWithDynamicConfirmSaveComponent
-							protect={false}
-							value={dataEndpoint}
-							onChange={setDataEndpoint}
-							onSave={saveParameters} />
-					</div>
-
 				</CardContent>
 			</Card>
 
@@ -332,24 +320,10 @@ export default function Parameters() {
 							onChange={setNodeEndpoint}
 							onSave={saveParameters} />
 					</div>
-
-					<div className="parameter-group">
-						<div className="parameter-title">Node Web Socket Endpoint</div>
-						<div className="parameter-description">
-							The endpoint of the web socket node server.
-							Make sure that the node belongs to Carmentis network.
-						</div>
-
-						<InputWithDynamicConfirmSaveComponent
-							protect={false}
-							value={webSocketNodeEndpoint}
-							onChange={setWebSocketNodeEndpoint}
-							onSave={saveParameters} />
-					</div>
 				</CardContent>
 			</Card>
 
-			{wallet.getAllAccounts().length !== 1 &&
+			{wallet?.accounts.length !== 1 &&
 				<Card className="parameter-section">
 					<CardContent>
 						<h2>Dangerous Zone</h2>
@@ -357,7 +331,7 @@ export default function Parameters() {
 						<div className="parameter-group text-red-500">
 							<div className="parameter-title">Account Deletion</div>
 							<div className="parameter-description">
-								Delete the current account named <b>{activeAccount.getPseudo()}</b>.
+								Delete the current account named <b>{activeAccount?.pseudo}</b>.
 								Write your account name below to confirm the deletion.
 							</div>
 							<input type="text" className="parameter-input" value={accountDeletionPseudo}

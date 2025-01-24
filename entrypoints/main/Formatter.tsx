@@ -19,4 +19,8 @@ export class Formatter {
     static formatDate( ts : number ) : string {
         return new Date(ts * 1000).toLocaleString()
     }
+
+	static cropPublicKey(publicKey: string) {
+		return publicKey.slice(0, 5) + '...' + publicKey.slice(publicKey.length-4, publicKey.length);
+	}
 }

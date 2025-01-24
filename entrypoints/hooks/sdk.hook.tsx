@@ -1,22 +1,109 @@
-import { blockchain, blockchainQuery } from '@cmts-dev/carmentis-sdk';
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
+import {useState} from "react";
+import {useRecoilValue} from "recoil";
+import {activeAccountPublicKeyState} from "@/entrypoints/contexts/authentication.context.tsx";
+import useSWR from "swr";
 
 
-/**
- * Retrieves the account balance for a given account hash.
- *
- * @param {string} accountVbHash - The hash identifier of the account whose balance is being requested.
- * @return {Promise<number>} A promise that resolves to the balance of the account as a number.
- */
-export async function useAccountBalance(accountVbHash: string): Promise<number> {
-	const accountState = await blockchain.blockchainQuery.getAccountState(accountVbHash);
-	return accountState.balance;
+
+export async function useAccountBalance(accountPublicKey: string): Promise<number> {
+	try {
+		console.log("Load account by public key: ", accountPublicKey)
+		const accountVbHash = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(accountPublicKey);
+		console.log("Get account state: ", accountVbHash)
+		const accountState = await sdk.blockchain.blockchainQuery.getAccountState(accountVbHash);
+		console.log("obtained account state: ", accountState)
+		return accountState.balance / sdk.constants.ECO.TOKEN;
+	} catch (e) {
+		console.log(e)
+		throw new Error(`${e}`)
+	}
+}
+
+
+
+
+export function useAccountBalanceHook() {
+	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
+	return useSWR(
+		accountPublicKey ? ['balanceAccount', accountPublicKey] : null,
+		([, pk]) => useAccountBalance(pk as string)
+	);
+}
+
+
+export async function useAccountHistory(
+	accountPublicKey: string,
+	offset = 0,
+	maxRecords = 50,
+): Promise<AccountTransactionHistoryEntry[]> {
+	try {
+		// load the current account state
+		const accountVbHash = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(accountPublicKey);
+		const accountState = await sdk.blockchain.blockchainQuery.getAccountState(accountVbHash);
+		const history = await sdk.blockchain.blockchainQuery.getAccountHistory(
+			accountVbHash,
+			accountState.lastHistoryHash,
+			maxRecords
+		);
+
+		return history.map(h => {
+			return {...h, amount: h.amount / sdk.constants.ECO.TOKEN}
+		})
+	} catch (e) {
+		console.log(e)
+		throw new Error(`${e}`)
+	}
+}
+
+export function useAccountTransactionHistoryHook(
+	offset = 0,
+	maxRecords = 50,
+) {
+	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
+	return useSWR(
+		accountPublicKey ? ['accountTransactionHistory', accountPublicKey, offset, maxRecords] : null,
+		([, pk, o, m]) => useAccountHistory(pk as string, o, m)
+	);
 }
 
 export async function searchAccountHashByPublicKey(publicKey: string) {
-	console.log("blockchain.blockchainQuery:", blockchain.blockchainQuery)
-	const accountHash = await blockchain.blockchainQuery.getAccountByPublicKey(publicKey);
-    return accountHash;
+	return new Promise<string>(async (resolve, reject) => {
+		try {
+			sdk.blockchain.blockchainQuery.getAccountByPublicKey(publicKey)
+				.then(hash => resolve(hash))
+				.catch(error => reject(error));
+		} catch (e) {
+			reject(e)
+		}
+	})
 }
+
+export async function transferTokensToPublicKey(senderPrivateKey: string, senderPublicKey: string, receiverPublicKey: string, tokenAmount: number) {
+	const senderAccountHash  = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(senderPublicKey);
+	const receiverAccountHash = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(receiverPublicKey);
+
+	const vb = new sdk.blockchain.accountVb();
+	await vb.load(senderAccountHash);
+	sdk.blockchain.blockchainCore.setUser(
+		sdk.blockchain.ROLES.USER,
+		senderPrivateKey
+	);
+
+	const transfer = vb.createTransfer(receiverAccountHash, tokenAmount * sdk.constants.ECO.TOKEN);
+	transfer.addPublicReference("public ref");
+	transfer.addPrivateReference("private ref");
+	await transfer.commit();
+
+	await vb.sign();
+	vb.setGasPrice(sdk.constants.ECO.TOKEN);
+	await vb.publish();
+
+}
+
+
+
+
 
 /**
  * Represents an entry in the account transaction history.
@@ -28,6 +115,7 @@ export type AccountTransactionHistoryEntry = {
 	height: number,
 	previousHistoryHash: string,
 	type: number,
+	name: string,
 	timestamp: number,
 	linkedAccount: string,
 	amount: number,
@@ -45,7 +133,7 @@ export async function useTransactionHistory(
 	accountVbHash: string,
 	lastHistoryHash: string,
 ) : Promise<AccountTransactionHistoryEntry[]> {
-	return await blockchain.blockchainQuery.getAccountHistory(
+	return await sdk.blockchain.blockchainQuery.getAccountHistory(
 		accountVbHash,
 		lastHistoryHash,
 	);

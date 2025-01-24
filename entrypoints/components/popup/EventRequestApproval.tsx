@@ -17,7 +17,7 @@
 
 import React from "react";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
-import {RecordDisplayer} from "@/entrypoints/main/components/popup/RecordDisplayer.tsx";
+import {RecordDisplayer} from "@/entrypoints/components/popup/RecordDisplayer.tsx";
 import Skeleton from "react-loading-skeleton";
 
 export function EventRequestApproval(input: {

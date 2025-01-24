@@ -16,8 +16,12 @@
  */
 
 
-import { Account, Application, Flow } from '@/entrypoints/main/Account.tsx';
+import { Account, Application, Flow, MicroBlock } from '@/entrypoints/main/Account.tsx';
 import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-view.tsx';
+import { RecordConfirmationData } from '@/entrypoints/components/popup/PopupDashboard.tsx';
+import Guard from '@/entrypoints/main/Guard.tsx';
+import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
+import { Optional } from '@/entrypoints/main/Optional.tsx';
 
 /**
  * Interface to query the indexed database.
@@ -44,7 +48,7 @@ export class IndexedStorage {
 	 * @constructor
 	 */
 	static ConnectDatabase(account: Account): Promise<IndexedStorage> {
-		const dbName = 'account-' + account.getId();
+		const dbName = 'account-' + account.id;
 		return new Promise((resolve, reject) => {
 
 			var open = indexedDB.open(dbName, 1);
@@ -306,19 +310,19 @@ export class IndexedStorage {
 	addApprovedBlockInActiveAccountHistory(record: RecordConfirmationData): Promise<[void, void, void]> {
 		const application: Application = {
 			rootDomain: Guard.PreventUndefined(record.rootDomain),
-			accountId: this.account.getId(),
+			accountId: this.account.id,
 			applicationId: Guard.PreventUndefined(record.applicationId),
 			applicationName: Guard.PreventUndefined(record.applicationName),
 		};
 
 		const flow: Flow = {
-			accountId: this.account.getId(),
+			accountId: this.account.id,
 			applicationId: Guard.PreventUndefined(record.applicationId),
 			flowId: Guard.PreventUndefined(record.flowId),
 		};
 
 		const microBlock: MicroBlock = {
-			accountId: this.account.getId(),
+			accountId: this.account.id,
 			applicationId: Guard.PreventUndefined(record.applicationId),
 			data: Guard.PreventUndefined(record.data),
 			flowId: Guard.PreventUndefined(record.flowId),

@@ -16,22 +16,26 @@
  */
 
 import React, { ReactElement, useContext, useEffect, useRef, useState } from 'react';
-import {Wallet} from "@/entrypoints/main/Wallet.tsx";
-import '../../global.css'
+import { getUserKeyPair, Wallet } from '@/entrypoints/main/wallet.tsx';
+import '../../main/global.css'
 import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
+import {
+    activeAccountState,
+    useAuthenticationContext,
+    walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
 import { Card, CardContent } from '@mui/material';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 let otpToken : string = ""
 
 export function EmailValidation() {
 
     const authentication = useAuthenticationContext();
-    const wallet : Wallet = authentication.wallet.unwrap();
-    const setWallet = authentication.setWallet;
-    const activeAccount : Account = wallet.getActiveAccount().unwrap();
+    const [wallet, setWallet] = useRecoilState(walletState);
+    const activeAccount = useRecoilValue(activeAccountState);
 
 
 
@@ -40,8 +44,8 @@ export function EmailValidation() {
     const [emailValidationInProgress, setEmailValidationInProgress] = useState<boolean>(false);
     const [_, setIsEmailVerificationSucceeded] = useState<boolean>(false);
     const [emailVerifiactionError, setEmailVerifiactionError] = useState<string>("");
-    const [emailValidated, setEmailValidated] = useState(activeAccount.hasVerifiedEmail());
-    const [email, setEmail] = useState(activeAccount.getEmail().unwrapOr(""))
+    const [emailValidated, setEmailValidated] = useState(activeAccount && activeAccount.emailValidationProof !== undefined);
+    const [email, setEmail] = useState(activeAccount?.email || "");
 
 
     /**
@@ -51,25 +55,33 @@ export function EmailValidation() {
     function saveEmail() {
         // update the active account
         console.log("[main] proceed to the update of the wallet")
-        const setWallet = authentication.setWallet;
-        const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
         setEmail("") // clearing the email is done after the end of the function
-        setWallet(walletOption => {
-            const wallet = walletOption.unwrap();
-            const updatedWallet = wallet.updateAccountEmail( activeAccountIndex, email );
-            return Optional.From(updatedWallet)
+        setWallet(wallet => {
+            if (!wallet) return undefined;
+            return {
+                ...wallet,
+                accounts: wallet.accounts.map(a => {
+                    if (a.id != wallet.activeAccountId) return a;
+                    return {
+                        ...a,
+                        email
+                    }
+                })
+            }
         })
     }
 
     function verifyEmail() {
         setEmailValidationInProgress(true);
-        const activeAccount = wallet.getActiveAccount().unwrap();
-        wallet.getAccountAuthenticationKeyPair(activeAccount)
+        const wallet = useRecoilValue(walletState);
+        const activeAccount = useRecoilValue(activeAccountState);
+        if (!wallet || !activeAccount) return;
+        getUserKeyPair(wallet, activeAccount)
             .then(keyPair => {
                 Carmentis.dataServerQuery(
                     "email-validator/initialize",
                     {
-                        email    : activeAccount.getEmail().unwrap(),
+                        email    : activeAccount.email,
                         publicKey: Encoders.ToHexa(keyPair.publicKey),
                     }
                 ).then(answer => {
@@ -105,12 +117,19 @@ export function EmailValidation() {
 
             // populate the account with the provided proof
             const emailValidationProof : EmailValidationProofData = answer.data.proof;
-            const activeAccountIndex = wallet.getActiveAccountIndex().unwrap();
 
-            setWallet(walletOption => {
-                const wallet = walletOption.unwrap();
-                const updatedWallet = wallet.updateValidationProof(activeAccountIndex, emailValidationProof)
-                return Optional.From(updatedWallet)
+            setWallet(wallet => {
+                if (!wallet) return undefined;
+                return {
+                    ...wallet,
+                    accounts: wallet.accounts.map(a => {
+                        if (a.id != wallet.activeAccountId) return a;
+                        return {
+                            ...a,
+                            emailValidationProof
+                        }
+                    })
+                }
             });
             setIsEmailVerificationSucceeded(true)
             setEmailValidated(true);
@@ -129,7 +148,7 @@ export function EmailValidation() {
         </CardContent>
     </Card>
 
-    if (activeAccount.getEmail().isEmpty()) {
+    if (!activeAccount?.email) {
         return wrapper(<div>
             <h2>Enter your email</h2>
             <p>Your email has not been provided yet. Enter your email to access more applications.</p>
@@ -145,10 +164,10 @@ export function EmailValidation() {
         </div>);
     }
 
-    if (!activeAccount.getEmail().isSome() && !emailValidated) {
+    if (activeAccount.email && !activeAccount.emailValidationProof) {
         return wrapper(<div>
             <h2>Validate your email with oracle</h2>
-            <p>To validate your email (<b>{activeAccount.getEmail().unwrap()}</b>), we will send a code that should
+            <p>To validate your email (<b>{activeAccount.email}</b>), we will send a code that should
                 be pasted.</p>
             {emailValidationInProgress &&
                 <div className="mb-5">

@@ -17,11 +17,11 @@
 
 import {
 	createContext, Dispatch, PropsWithChildren, ReactElement,
-	SetStateAction,
+	SetStateAction, Suspense,
 	useContext, useEffect,
 	useState,
 } from 'react';
-import { Wallet } from '@/entrypoints/main/Wallet.tsx';
+import { Wallet } from '@/entrypoints/main/wallet.tsx';
 import { SecureWalletStorage } from '@/entrypoints/main/WalletStorage.tsx';
 import { Optional } from '@/entrypoints/main/Optional.tsx';
 import pino from 'pino';
@@ -37,9 +37,17 @@ import detector from 'i18next-browser-languagedetector';
 
 import translationFR from '@/src/locales/fr/translation.json';
 import translationEN from '@/src/locales/en/translation.json';
-import { AuthenticationContextProvider, useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
-import { ApplicationStatusContextProvider, useApplicationStatus } from '@/entrypoints/main/contexts/application-status.context.tsx';
-import { TokenAccountContextProvider } from '@/entrypoints/main/contexts/token-account.context.tsx';
+import {
+	AuthenticationContextProvider, passwordState,
+	useAuthenticationContext, walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import {
+	ApplicationStatusContextProvider,
+	useApplicationStatus,
+} from '@/entrypoints/contexts/application-status.context.tsx';
+import { RecoilRoot, useRecoilState, useRecoilValue } from 'recoil';
+import { SpinningWheel } from '@/entrypoints/components/SpinningWheel.tsx';
+import {toast, ToastContainer} from "react-toastify";
 
 const resources = {
 	fr: {
@@ -68,23 +76,24 @@ const logger = pino({
 // create the different contexts
 export const LoggerContext = createContext(logger);
 
-function configureEndpointsFromWallet(wallet: Optional<Wallet>) {
-	if (wallet.isEmpty()) {
+function configureEndpointsFromWallet(wallet: Wallet | undefined) {
+	if (!wallet) {
 		console.warn('Endpoints not set since the provided wallet is not defined.');
 	} else {
 		// configure the SDK based on the wallet preferences
-		Carmentis.registerDataEndpoint(wallet.unwrap().getDataEndpoint());
-		Carmentis.registerNodeEndpoint(wallet.unwrap().getNodeEndpoint());
+		Carmentis.registerNodeEndpoint(wallet.nodeEndpoint);
+		Carmentis.registerDataEndpoint(wallet.emailOracleEndpoint);
 	}
 }
 
 function AuthenticationDataAccess({ children }: PropsWithChildren) {
-	const { wallet, setWallet, password, setPassword } = useAuthenticationContext();
+	const [wallet, setWallet] = useRecoilState(walletState);
+	const [password, setPassword] = useRecoilState(passwordState);
+
 	const {
 		setApplicationInitialised,
 		setAccountCreated,
 		setAccountNotCreated,
-		setApplicationNotInitialised,
 	} = useApplicationStatus();
 
 	let logger = useContext(LoggerContext);
@@ -93,20 +102,17 @@ function AuthenticationDataAccess({ children }: PropsWithChildren) {
 	// store the wallet locally when the wallet has changed
 	useEffect(() => {
 		// prevent local storage clearing when the wallet is updated to an empty one
-		if (wallet.isSome()) {
+		if (wallet && password) {
 			console.log('[context page] an update of the wallet has been detected: store the wallet in local and session');
-
-
-			const w = wallet.unwrap();
 			const provider = new CarmentisProvider();
-			SecureWalletStorage.CreateSecureWalletStorage(provider, password.unwrap()).then(storage => {
-				storage.writeWalletContextToLocalStorage(w).then(() => {
+			SecureWalletStorage.CreateSecureWalletStorage(provider, password).then(storage => {
+				storage.writeWalletContextToLocalStorage(wallet).then(() => {
 
 					// store the wallet in session
 					SessionStorage.WriteSessionState({
 						state: {
-							wallet: w,
-							password: password.unwrap(),
+							wallet: wallet,
+							password: password,
 						},
 					}).then(_ => {
 						// update the wallet
@@ -139,7 +145,7 @@ function AuthenticationDataAccess({ children }: PropsWithChildren) {
 		setAccountCreated();
 
 		// if there is a wallet, good!
-		if (!wallet.isEmpty()) {
+		if (wallet) {
 			logger.info('Wallet is in session:', wallet);
 			setApplicationInitialised();
 			return;
@@ -154,23 +160,22 @@ function AuthenticationDataAccess({ children }: PropsWithChildren) {
 					const sessionPassword = result.state.password;
 
 					logger.info('Wallet open but not active: use the wallet found in session: ', sessionWallet);
-					setWallet(Optional.From(sessionWallet));
-					configureEndpointsFromWallet(Optional.From(sessionWallet));
-					setPassword(Optional.From(sessionPassword));
+					setWallet(sessionWallet);
+					configureEndpointsFromWallet(sessionWallet);
+					setPassword(sessionPassword);
 					setApplicationInitialised();
 				});
 
 			} else {
 				// otherwise, try with the wallet returned by the login page
-				if (!wallet.isEmpty()) {
-					const walletObject: Wallet = wallet.unwrap();
-					logger.info('Wallet open but no active account chosen:', walletObject);
+				if (wallet && password) {
+					logger.info('Wallet open but no active account chosen:', wallet);
 
 					// store the account in session
 					SessionStorage.WriteSessionState({
 						state: {
-							wallet: walletObject,
-							password: password.unwrap(),
+							wallet: wallet,
+							password: password,
 						},
 					}).then(_ => {
 						// and update the application state
@@ -195,15 +200,25 @@ function AuthenticationDataAccess({ children }: PropsWithChildren) {
 	</>;
 }
 
+export function useToast() {
+	return {
+		success: (msg: string) => toast(msg),
+		error: (msg: string) => toast(msg)
+	}
+}
+
 export function AuthenticationManager({ children }: PropsWithChildren) {
-	return <AuthenticationContextProvider>
-		<ApplicationStatusContextProvider>
-			<AuthenticationDataAccess>
-				<TokenAccountContextProvider>
-					{children}
-				</TokenAccountContextProvider>
-			</AuthenticationDataAccess>
-		</ApplicationStatusContextProvider>
-	</AuthenticationContextProvider>;
+	return <RecoilRoot>
+		<Suspense fallback={<SpinningWheel/>}>
+			<ToastContainer/>
+			<AuthenticationContextProvider>
+				<ApplicationStatusContextProvider>
+					<AuthenticationDataAccess>
+						{children}
+					</AuthenticationDataAccess>
+				</ApplicationStatusContextProvider>
+			</AuthenticationContextProvider>
+		</Suspense>
+	</RecoilRoot>;
 
 }

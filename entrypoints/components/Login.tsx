@@ -20,17 +20,18 @@ import {SecureWalletStorage} from "@/entrypoints/main/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
 import {
+    passwordState,
     useAuthenticationContext,
-} from '@/entrypoints/main/contexts/authentication.context.tsx';
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import { useSetRecoilState } from 'recoil';
 
 
 
 function Login() {
 
     // recover the wallet update from the context
-    const authenticationContext = useAuthenticationContext();
-    const setPasswordInContext = authenticationContext.setPassword;
-    const setWallet = authenticationContext.setWallet;
+    const {connect} = useAuthenticationContext();
+
 
     // states to handle the login
     const [password, setPassword] = useState("");
@@ -46,10 +47,7 @@ function Login() {
         let provider = new CarmentisProvider();
         let secureStorage = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
         secureStorage.readContextFromLocalStorage().then(wallet => {
-            setPasswordInContext(Optional.From(password))
-            setWallet(_ => {
-                return Optional.From(wallet)
-            })
+            connect(wallet, password)
         }).catch(error => {
             console.log("An error occured during the wallet reading: ", error)
             setInvalidPassword(true);

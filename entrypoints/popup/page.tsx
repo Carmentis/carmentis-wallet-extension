@@ -17,15 +17,15 @@
 
 
 
-import { AuthenticationManager } from '@/entrypoints/main/components/commons/authentication-manager.tsx';
-import { ActionMessageHandler } from '@/entrypoints/main/components/commons/ActionMessage.tsx';
-import { useApplicationStatus } from '@/entrypoints/main/contexts/application-status.context.tsx';
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
-import { Splashscreen } from '@/entrypoints/main/components/commons/Splashscreen.tsx';
-import { NoWalletDetected } from '@/entrypoints/main/components/popup/NoWalletDetected.tsx';
-import Login from '@/entrypoints/main/components/commons/Login.tsx';
-import AccountSelection from '@/entrypoints/main/components/commons/AccountSelection.tsx';
-import { PopupDashboard } from '@/entrypoints/main/components/popup/PopupDashboard.tsx';
+import { AuthenticationManager } from '@/entrypoints/components/authentication-manager.tsx';
+import { ActionMessageHandler } from '@/entrypoints/components/ActionMessage.tsx';
+import { useApplicationStatus } from '@/entrypoints/contexts/application-status.context.tsx';
+import { useAuthenticationContext } from '@/entrypoints/contexts/authentication.context.tsx';
+import { Splashscreen } from '@/entrypoints/components/Splashscreen.tsx';
+import { NoWalletDetected } from '@/entrypoints/components/popup/NoWalletDetected.tsx';
+import Login from '@/entrypoints/components/Login.tsx';
+import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
+import { PopupDashboard } from '@/entrypoints/components/popup/PopupDashboard.tsx';
 
 /**
  *

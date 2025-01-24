@@ -17,25 +17,25 @@
 
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {ActionMessage} from "@/entrypoints/main/ActionMessage.tsx";
-import {ActionMessageContext} from "@/entrypoints/main/components/commons/ActionMessage.tsx";
+import {ActionMessageContext} from "@/entrypoints/components/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import * as sdk from '@cmts-dev/carmentis-sdk';
-import {Wallet} from "@/entrypoints/main/Wallet.tsx";
+import {Wallet} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
-import {QRCodeProcessRequestApproval} from "@/entrypoints/main/components/popup/QRCodeProcessRequestApproval.tsx";
-import {PopupNavbar} from "@/entrypoints/main/components/popup/PopupNavbar.tsx";
+import {QRCodeProcessRequestApproval} from "@/entrypoints/components/popup/QRCodeProcessRequestApproval.tsx";
+import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
-import {SpinningWheel} from "@/entrypoints/main/components/commons/SpinningWheel.tsx";
-import {SignInRequestApproval} from "@/entrypoints/main/components/popup/SignInRequestApproval.tsx";
-import {EventRequestApproval} from "@/entrypoints/main/components/popup/EventRequestApproval.tsx";
-import {AuthenticationRequest} from "@/entrypoints/main/components/popup/AuthenticationRequest.tsx";
+import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
+import {SignInRequestApproval} from "@/entrypoints/components/popup/SignInRequestApproval.tsx";
+import {EventRequestApproval} from "@/entrypoints/components/popup/EventRequestApproval.tsx";
+import {AuthenticationRequest} from "@/entrypoints/components/popup/AuthenticationRequest.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {
     LoggerContext
-} from "@/entrypoints/main/components/commons/authentication-manager.tsx";
+} from "@/entrypoints/components/authentication-manager.tsx";
 import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
+import { useAuthenticationContext } from '@/entrypoints/contexts/authentication.context.tsx';
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {

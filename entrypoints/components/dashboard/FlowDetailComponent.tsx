@@ -21,9 +21,9 @@ import {MicroBlock} from "@/entrypoints/main/Account.tsx";
 import Skeleton from "react-loading-skeleton";
 import {Formatter} from "@/entrypoints/main/Formatter.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {DataTreeViewer} from "@/entrypoints/main/components/dashboard/DataTreeViewer.tsx";
+import {DataTreeViewer} from "@/entrypoints/components/dashboard/DataTreeViewer.tsx";
 import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
-import { useWallet } from '@/entrypoints/main/contexts/authentication.context.tsx';
+import { useWallet } from '@/entrypoints/contexts/authentication.context.tsx';
 
 export function FlowDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
     // load history

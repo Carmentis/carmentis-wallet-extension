@@ -17,14 +17,14 @@
 
 import React from "react";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
+import { useAuthenticationContext, walletState } from '@/entrypoints/contexts/authentication.context.tsx';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import onBrowserUpdateAvailable = chrome.runtime.onBrowserUpdateAvailable;
+import { Wallet } from '@/entrypoints/main/wallet.tsx';
 
 export default function AccountSelection() {
 
-    const authentication = useAuthenticationContext();
-    const setWallet = authentication.setWallet;
-    const wallet = authentication.wallet.unwrap();
-    const allAccounts = wallet.getAllAccounts();
+    const [wallet, setWallet] = useRecoilState(walletState);
 
     /**
      * This function is fired when the user selects an account.
@@ -33,10 +33,11 @@ export default function AccountSelection() {
      */
     function selectAccount( accountId : string ) {
         console.log(`[popup] chosen account's identifier: ${accountId}`)
-        setWallet(walletOption => {
-            const wallet = walletOption.unwrap();
-            const updatedWallet = wallet.setActiveAccountById(accountId);
-            return Optional.From(updatedWallet)
+        setWallet(wallet => {
+            return {
+                ...wallet,
+                activeAccountId: accountId
+            } as Wallet
         })
     }
 
@@ -53,18 +54,18 @@ export default function AccountSelection() {
 
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
                 <div className="mb-3 border-2  border-gray-200 rounded-lg">
-                    { allAccounts.map(account => {
+                    { wallet?.accounts.map(account => {
                         return <div
-                            key={account.getId()}
+                            key={account.id}
                             className="flex items-center space-x-3 rtl:space-x-reverse h-10 hover:bg-gray-100 border-b-2 border-gray-200 last:border-none px-4 py-6 hover:cursor-pointer"
-                            onClick={() => selectAccount(account.getId())}>
+                            onClick={() => selectAccount(account.id)}>
                             <img
                                 src="https://t4.ftcdn.net/jpg/05/49/98/39/360_F_549983970_bRCkYfk0P6PP5fKbMhZMIb07mCJ6esXL.jpg"
                                 className="h-6"
                             />
                             <span
                                 className="self-center text-xl font-semibold whitespace-nowrap text-black">
-                        {account.getPseudo()}
+                        {account.pseudo}
                     </span>
                         </div>
                     })

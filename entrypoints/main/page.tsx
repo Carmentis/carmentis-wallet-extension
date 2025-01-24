@@ -17,14 +17,18 @@
 
 
 import { ReactElement } from 'react';
-import { AuthenticationManager } from '@/entrypoints/main/components/commons/authentication-manager.tsx';
-import { useApplicationStatus } from '@/entrypoints/main/contexts/application-status.context.tsx';
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
-import { Splashscreen } from '@/entrypoints/main/components/commons/Splashscreen.tsx';
-import OnBoarding from '@/entrypoints/main/components/onboarding/OnBoarding.tsx';
-import Login from '@/entrypoints/main/components/commons/Login.tsx';
-import AccountSelection from '@/entrypoints/main/components/commons/AccountSelection.tsx';
-import Dashboard from '@/entrypoints/main/components/dashboard/Dashboard.tsx';
+import { AuthenticationManager } from '@/entrypoints/components/authentication-manager.tsx';
+import { useApplicationStatus } from '@/entrypoints/contexts/application-status.context.tsx';
+import {
+    activeAccountState,
+    walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import { Splashscreen } from '@/entrypoints/components/Splashscreen.tsx';
+import OnBoarding from '@/entrypoints/components/onboarding/OnBoarding.tsx';
+import Login from '@/entrypoints/components/Login.tsx';
+import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
+import Dashboard from '@/entrypoints/components/dashboard/Dashboard.tsx';
+import { useRecoilValue } from 'recoil';
 
 /**
  * This function returns the full page entrypoint called by the main application.
@@ -51,19 +55,14 @@ export function FullPageEntrypoint() : ReactElement {
 function FullPageApp() : ReactElement {
 
     let {applicationInitialised, accountCreated} = useApplicationStatus();
-    let authentication = useAuthenticationContext();
+    const wallet = useRecoilValue(walletState);
+    const activeAccount = useRecoilValue(activeAccountState);
 
     if (!applicationInitialised) return <Splashscreen/>
     if(!accountCreated) return  <OnBoarding></OnBoarding>
-
-    const wallet = authentication.wallet;
-    if(wallet.isEmpty()) return <Login/>
-
-    const activeAccount = wallet.unwrap().getActiveAccount();
-    if(activeAccount.isEmpty()) return <AccountSelection/>
-    return <Dashboard key={activeAccount.unwrap().getId()} />
-
-
+    if(!wallet) return <Login/>
+    if(!activeAccount) return <AccountSelection/>
+    return <Dashboard key={activeAccount.id} />
 }
 
 export default FullPageEntrypoint;

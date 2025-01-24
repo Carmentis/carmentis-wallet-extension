@@ -16,12 +16,18 @@
  */
 
 import React, {useContext, useEffect, useState} from "react";
-import {Wallet} from "@/entrypoints/main/Wallet.tsx";
-import {Account} from "@/entrypoints/main/Account.tsx";
+import {Wallet} from "@/entrypoints/main/wallet.tsx";
+import { Account, CreateFromPseudoAndNonce } from '@/entrypoints/main/Account.tsx';
 import {Optional} from "@/entrypoints/main/Optional.tsx";
 import {IllegalStateError} from "@/entrypoints/main/errors.tsx";
-import {AccountCreationModal} from "@/entrypoints/main/components/dashboard/AccountCreationModal.tsx";
-import { useAuthenticationContext } from '@/entrypoints/main/contexts/authentication.context.tsx';
+import {AccountCreationModal} from "@/entrypoints/components/dashboard/AccountCreationModal.tsx";
+import {
+    activeAccountState,
+    useAuthenticationContext,
+    useWallet,
+    walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 
 export function DropdownAccountSelection( input : {allowAccountCreation : boolean, large : boolean } ) {
 
@@ -29,17 +35,18 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
     const allowAccountCreation = typeof input.allowAccountCreation === "boolean" ?
         input.allowAccountCreation : true;
 
-    const authentication = useAuthenticationContext();
-    const wallet: Wallet = authentication.wallet.unwrap();
-    const activeAccount: Account = wallet.getActiveAccount().unwrap();
+    const wallet: Wallet = useWallet();
+    const activeAccount = useRecoilValue(activeAccountState);
+
+
+    const setWallet = useSetRecoilState(walletState);
 
     // load inactive accounts
-    const allAccounts : Account[] = wallet.getAllAccounts()
-    const inactiveAccounts : Account[] = allAccounts.filter(account => account.getId() != activeAccount.getId());
+    const allAccounts : Account[] = wallet.accounts;
+    const inactiveAccounts : Account[] = allAccounts.filter(account => account.id != activeAccount?.id);
 
     const [showAccountSelectionMenu, setShowAccountSelectionMenu] = useState<boolean>(false);
     const [showAccountCreation, setShowAccountCreation] = useState<boolean>(false);
-    const [newAccountPseudo, setNewAccountPseudo] = useState<string>("");
 
     const dropdownClass = showAccountSelectionMenu ? "rounded-t-lg" : "rounded-lg";
 
@@ -47,7 +54,6 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
     useEffect(() => {
         if ( !showAccountSelectionMenu ) {
             setShowAccountCreation(false);
-            setNewAccountPseudo("");
         }
     }, [showAccountSelectionMenu]);
 
@@ -63,20 +69,21 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
      * This function is fired by the account creation modal to notify that the user has inputted a pseudo and wants
      * to create a new account based on this modal.
      */
-    function createAndActiveNewAccount() {
-        console.log(`[popup] create a new account for ${newAccountPseudo}`)
+    function createAndActiveNewAccount(pseudo: string) {
+        console.log(`[popup] create a new account for ${pseudo}`)
 
-        // create the account and update the active account index
-        const setWallet = authentication.setWallet;
-        setWallet(walletOption => {
-            const wallet = walletOption.unwrap();
-            const nonce = wallet.getNonce();
-            const createdAccount = Account.CreateFromPseudoAndNonce(newAccountPseudo, nonce);
-            const updatedWallet = wallet
-                .createAccount(createdAccount)
-                .setActiveAccountById(createdAccount.getId())
-                .incrementNonce();
-            return Optional.From(updatedWallet)
+
+        setWallet(wallet => {
+            if (!wallet) return undefined;
+            const nonce = wallet.counter + 1;
+            const createdAccount = CreateFromPseudoAndNonce(pseudo, nonce);
+
+            return {
+                ...wallet,
+                counter: nonce,
+                accounts: [...wallet.accounts, createdAccount],
+                activeAccountId: createdAccount.id
+            }
         })
     }
 
@@ -90,46 +97,47 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
         console.log(`[popup] select the account having the id  ${accountId}`)
 
         // search the account based on its id and fails if the account do not exist
-        const selectedAccountIndexOption = wallet.getAccountIndexById( accountId )
-        if ( selectedAccountIndexOption.isEmpty() ) {
+        const selectedAccount = wallet.accounts.find(a => a.id === accountId);
+        if ( !selectedAccount ) {
             throw new IllegalStateError(`The account with id ${accountId} cannot be found in the wallet`)
         } else {
-            const setWallet = authentication.setWallet;
-            setWallet(walletOption => {
-                const wallet = walletOption.unwrap();
-                const updatedWallet = wallet.setActiveAccountByIndex(selectedAccountIndexOption.unwrap());
-                return Optional.From(updatedWallet);
+            setWallet(wallet => {
+                return {
+                    ...wallet,
+                    activeAccountId: accountId
+                } as Wallet
             })
             setShowAccountSelectionMenu(false)
         }
     }
 
+
     return <>
         <div id="dropdownUsers" onMouseLeave={onLeavePopup}
              className={
-            `bg-white dark:bg-gray-700 border-2 border-gray-100 ` + dropdownClass +
+            `bg-white dark:bg-gray-700 border-2 border-gray-100 z-20` + dropdownClass +
                  (input.large ? " account-selection-large" : " account-selection-small")
             }>
             <div onClick={() => setShowAccountSelectionMenu(true)}
                  className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                 <img className="w-6 h-6 me-2 rounded-full"
-                     src="/assets/img/user-icon.jpg" alt="Jese image"/>
+					 src="/assets/img/user-icon.jpg" alt="Jese image"/>
                 <span
                     className="self-center text-md font-semibold  text-black">
-                                {activeAccount.getPseudo()}
+                                {activeAccount?.pseudo}
                             </span>
             </div>
             {showAccountSelectionMenu &&
-                <div className={`border-t-2 border-gray-100 absolute bg-white rounded-b-lg ` +  (input.large ? "account-selection-large" : "account-selection-small")} hidden={!showAccountSelectionMenu}>
+                <div className={`border-t-2  z-40 border-gray-100 absolute bg-white rounded-b-lg ` +  (input.large ? "account-selection-large" : "account-selection-small")} hidden={!showAccountSelectionMenu}>
                     <ul className="overflow-y-auto text-gray-700 dark:text-gray-200"
                         aria-labelledby="dropdownUsersButton">
                         { inactiveAccounts.map( account => {
-                            return <li key={account.getId()} onClick={() => selectInactiveAccount(account.getId())}>
+                            return <li key={account.id} onClick={() => selectInactiveAccount(account.id)}>
                                 <div
                                     className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     <img className="w-6 h-6 me-2 rounded-full"
-                                         src="/assets/img/user-icon.jpg" alt="Jese image"/>
-                                    {account.getPseudo()}
+										 src="/assets/img/user-icon.jpg" alt="Jese image"/>
+                                    {account.pseudo}
 
                                 </div>
                             </li>
@@ -155,16 +163,14 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
         </div>
 
         {showAccountCreation && <AccountCreationModal
-            inputValue={newAccountPseudo}
-            onChange={setNewAccountPseudo}
             onClose={() => {
                 setShowAccountCreation(false);
                 setShowAccountSelectionMenu(false);
             }}
-            onCreate={() => {
+            onCreate={(pseudo: string) => {
                 setShowAccountCreation(false);
                 setShowAccountSelectionMenu(false);
-                createAndActiveNewAccount()
+                createAndActiveNewAccount(pseudo)
             }}
         />}
     </>;

@@ -17,11 +17,11 @@
  */
 
 import {Route, Routes} from "react-router";
-import {PseudoPasswordCreation} from "@/entrypoints/main/components/onboarding/PseudoPasswordCreation.tsx";
-import {RecoveryPhrase} from "@/entrypoints/main/components/onboarding/RecoveryPhrase.tsx";
-import {SetupWallet} from "@/entrypoints/main/components/onboarding/SetupWallet.tsx";
-import {Landing} from "@/entrypoints/main/components/onboarding/Landing.tsx";
-import {ImportWallet} from "@/entrypoints/main/components/onboarding/ImportWallet.tsx";
+import {PseudoPasswordCreation} from "@/entrypoints/components/onboarding/PseudoPasswordCreation.tsx";
+import {RecoveryPhrase} from "@/entrypoints/components/onboarding/RecoveryPhrase.tsx";
+import {SetupWallet} from "@/entrypoints/components/onboarding/SetupWallet.tsx";
+import {Landing} from "@/entrypoints/components/onboarding/Landing.tsx";
+import {ImportWallet} from "@/entrypoints/components/onboarding/ImportWallet.tsx";
 function OnBoarding() {
 
     return (

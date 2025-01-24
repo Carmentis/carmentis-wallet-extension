@@ -17,7 +17,7 @@
 
 
 import browser from 'webextension-polyfill'
-import { Wallet } from '@/entrypoints/main/Wallet.tsx';
+import { Wallet } from '@/entrypoints/main/wallet.tsx';
 import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
 import { ActionMessage } from '@/entrypoints/main/ActionMessage.tsx';
 
@@ -46,7 +46,7 @@ export class SessionStorage {
                 resolve({
                     "state": {
                         password: result.state.password,
-                        wallet: Wallet.CreateFromDict( result.state.wallet ),
+                        wallet: result.state.wallet,
                     }
                 });
             })
@@ -56,7 +56,7 @@ export class SessionStorage {
     static WriteSessionState(session : SessionState) : Promise<void> {
         return browser.storage.session.set({
             state: {
-                wallet: session.state.wallet.data,
+                wallet: session.state.wallet,
                 password: session.state.password,
             }
         });

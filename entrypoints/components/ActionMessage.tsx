@@ -20,7 +20,7 @@ import React, {createContext, Dispatch, ReactElement, SetStateAction, useContext
 import {SessionStorage} from "@/entrypoints/main/session-storage.tsx";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
 import {Dispatcher} from "undici-types";
-import {LoggerContext} from "@/entrypoints/main/components/commons/authentication-manager.tsx";
+import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
 
 
 // from https://stackoverflow.com/questions/58325771/how-to-generate-random-hex-string-in-javascript

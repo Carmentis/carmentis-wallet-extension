@@ -16,35 +16,44 @@
  */
 
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
-import '../../global.css';
+import '../../main/global.css';
 
 import { Route, Routes, useNavigate } from 'react-router';
-import Parameters from '@/entrypoints/main/components/dashboard/Parameters.tsx';
-import { DropdownAccountSelection } from '@/entrypoints/main/components/dashboard/DropdownAccountSelection.tsx';
+import Parameters from '@/entrypoints/components/dashboard/Parameters.tsx';
+import { DropdownAccountSelection } from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
 import Skeleton from 'react-loading-skeleton';
 import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
 
 
 import 'react-loading-skeleton/dist/skeleton.css';
 import { Formatter } from '@/entrypoints/main/Formatter.tsx';
-import { FlowDetailComponent } from '@/entrypoints/main/components/dashboard/FlowDetailComponent.tsx';
+import { FlowDetailComponent } from '@/entrypoints/components/dashboard/FlowDetailComponent.tsx';
 import { IndexedStorage } from '@/entrypoints/main/IndexedStorage.tsx';
 import { Encoders } from '@/entrypoints/main/Encoders.tsx';
 import { MicroBlock } from '@/entrypoints/main/Account.tsx';
 import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-view.tsx';
 import {
+	activeAccountPublicKeyState,
+	activeAccountState, nodeEndpointState,
 	useAuthenticatedAccount,
 	useAuthenticationContext,
-	useWallet,
-} from '@/entrypoints/main/contexts/authentication.context.tsx';
-import { NavbarSidebarLayout } from '@/entrypoints/main/components/layout/navbar-sidebar.layout.tsx';
-import { SidebarItem } from '@/entrypoints/main/components/layout/sidebar-components.tsx';
+	useWallet, walletState,
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import { NavbarSidebarLayout } from '@/entrypoints/components/layout/navbar-sidebar.layout.tsx';
+import { SidebarItem } from '@/entrypoints/components/layout/sidebar-components.tsx';
 import Exchange from '@/entrypoints/main/exchange/page.tsx';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
-import { searchAccountHashByPublicKey, useAccountBalance } from '@/entrypoints/hooks/sdk.hook.tsx';
+import {searchAccountHashByPublicKey, useAccountBalance, useAccountBalanceHook} from '@/entrypoints/hooks/sdk.hook.tsx';
 import { Badge, Card, CardContent, Tooltip, Typography } from '@mui/material';
-import { SpinningWheel } from '@/entrypoints/main/components/commons/SpinningWheel.tsx';
+import { SpinningWheel } from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
+import { selector, useRecoilState, useRecoilValue } from 'recoil';
+import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
+import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
+import useSWR from "swr";
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
+
+const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
 /**
  * Renders a span element containing the provided text or a loading skeleton if the text is undefined.
@@ -68,8 +77,7 @@ function SpanWithLoader({ text }: { text: string | number | undefined }) {
 export function Dashboard(): ReactElement {
 
 	// load the authentication context
-	const authentication = useAuthenticationContext();
-	const wallet = authentication.wallet.unwrap();
+	const wallet = useWallet();
 
 	return (
 		<NavbarSidebarLayout
@@ -80,12 +88,12 @@ export function Dashboard(): ReactElement {
 				<Route
 					path="/"
 					element={
-						<DashboardHome key={wallet.data.activeAccountId} />
+						<DashboardHome key={wallet.activeAccountId} />
 					}
 				/>
 				<Route
-					path="/exchange"
-					element={<Exchange />}
+					path="/transfer"
+					element={<TokenTransferPage />}
 				/>
 				<Route
 					path="/history"
@@ -102,21 +110,23 @@ export function Dashboard(): ReactElement {
 
 function DashboardSidebar() {
 	return <>
-		<SidebarItem icon={'bi-house'} text={'Home'} activeRegex={/parameters/} link={'/'} />
-		<SidebarItem icon={'bi-currency-dollar'} text={'Exchange'} activeRegex={/exchange/} link={'/exchange'} />
-		<SidebarItem icon={'bi-clock'} text={'History'} activeRegex={/history/} link={'/history'} />
-		<SidebarItem icon={'bi-gear'} text={'Parameters'} activeRegex={/parameters/} link={'/parameters'} />
+		<SidebarItem icon={'bi-house'} text={'Home'} activeRegex={/\/$/} link={'/'} />
+		<SidebarItem icon={'bi-arrows'} text={'Token transfer'} activeRegex={/transfer$/} link={'/transfer'} />
+		<SidebarItem icon={'bi-clock'} text={'History'} activeRegex={/history$/} link={'/history'} />
+		<SidebarItem icon={'bi-gear'} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
 		<NodeConnectionStatusSidebarItem/>
 	</>;
 }
 
+
+
 function NodeConnectionStatusSidebarItem() {
 	const [loaded, setLoaded] = useState(true);
 	const [success, setSuccess] = useState(false);
-	const wallet = useWallet();
-	const [node, setNode] = useState(wallet.getNodeEndpoint());
+	const node = useRecoilValue(nodeEndpointState);
 
 	async function sendPing() {
+		if (!node) return
 		setLoaded(true);
 		console.log(`Contacting ${node}`)
 		axios.get(node)
@@ -128,8 +138,10 @@ function NodeConnectionStatusSidebarItem() {
 			.finally(() => setLoaded(false))
 	}
 	useEffect(() => {
-		setInterval(sendPing, 10000)
-	}, []);
+		sendPing()
+	}, [node]);
+
+
 
 	if (loaded) return <Tooltip title={`Connecting to ${node}...`} placement={"right"}>
 		<div className={"flex w-full justify-center items-center h-11"}>
@@ -141,9 +153,9 @@ function NodeConnectionStatusSidebarItem() {
 
 	const tooltipMessage = success ?
 		`Connected to node ${node}` :
-		`Connection failure on ${node}`;
+		`Connection failure at ${node}`;
 	return <Tooltip title={tooltipMessage} placement={"right"}>
-		<div className={"flex w-full justify-center items-center h-11"}>
+		<div className={"flex w-full justify-center items-center h-11"} onClick={sendPing}>
 			<Badge color={success ? "success" : "error"} variant="dot" invisible={false}>
 				<i className={"bi bi-hdd-network text-lg"}></i>
 			</Badge>
@@ -186,7 +198,7 @@ function DashboardNavbar() {
 	return <>
 		<div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 h-full">
 			<div
-				className="flex items-center rtl:space-x-reverse h-4 border-gray-100  py-4 px-1">
+				className="flex items-center rtl:space-x-reverse h-4 border-gray-100">
 
 				<DropdownAccountSelection allowAccountCreation={true} large={true}></DropdownAccountSelection>
 			</div>
@@ -266,46 +278,11 @@ function DashboardHome() {
 	</>;
 }
 
-function AccountBalance() {
-	const [balance, setBalance] = useState<string | undefined>(undefined);
-	const wallet = useWallet();
-	const activeAccount = wallet.getActiveAccount().unwrap();
-
-
-
-	useEffect(() => {
-		// if the current active account do not have any account registered
-		// in the blockchain, then no balance can be computed.
-		if (activeAccount.hasAccountVirtualBlockchain()) {
-			const fetchAccountBalance = async () => {
-				const balance = await useAccountBalance(''); // TODO set the account balance
-				setBalance(balance.toString());
-			};
-
-			fetchAccountBalance();
-		}
-
-
-	}, []);
-
-	return <SpanWithLoader text={balance}></SpanWithLoader>;
-}
-
 
 function AccountBalanceCard() {
-	const wallet = useWallet();
-	const activeAccount = wallet.getActiveAccount().unwrap();
+	const {data, isLoading, error} = useAccountBalanceHook();
 
-	useEffect(() => {
-		console.log("Accessing active account key pair")
-		wallet.getUserKeyPair(activeAccount)
-			.then((sk, pk) => {
-				console.log(`obtained key pair:`, pk)
-				searchAccountHashByPublicKey(pk).then(console.log)
-			})
-	}, []);
-
-	if (!activeAccount.hasAccountVirtualBlockchain()) return <Card className={'flex-1'}>
+	if (error) return <Card className={'flex-1'}>
 		<CardContent className={'flex flex-col justify-center'}>
 			<div className="h-full w-full">
 				<i className={'bi bi-info-circle-fill text-lg'}></i>
@@ -317,7 +294,7 @@ function AccountBalanceCard() {
 	return <Card className={'flex-1'}>
 		<CardContent>
 			<h3>Balance</h3>
-			<AccountBalance />
+			<SpanWithLoader text={data}></SpanWithLoader>
 		</CardContent>
 	</Card>;
 }
@@ -387,7 +364,7 @@ function DashboardWelcomeCards() {
 function EmailConfigurationNotificationCard() {
 	const activeAccount = useAuthenticatedAccount();
 	const navigate = useNavigate();
-	if (activeAccount.hasVerifiedEmail()) return <></>;
+	if (activeAccount.emailValidationProof !== undefined) return <></>;
 
 	return <button type="button"
 				   className="brand-bar bg-green-100 p-4 rounded-md w-full text-left hover:underline mb-4"
@@ -456,7 +433,7 @@ function DashboardVirtualBlockchainsList() {
 						} else {
 
 							const importMicroBlock: MicroBlock = {
-								accountId: activeAccount.getId(),
+								accountId: activeAccount.id,
 								applicationId: flow.applicationId,
 								flowId: flowId,
 								data: undefined,
@@ -527,7 +504,7 @@ function DashboardVirtualBlockchainsList() {
 								<td>{flow.flowLength}</td>
 								<td onClick={() => window.open('https://' + flow.applicationDomain, '_blank')}
 									className="hover:cursor-pointer">{flow.applicationDomain}</td>
-								<td onClick={() => window.open(wallet.getDataEndpoint() + '/explorer/microchain/0x' + flow.virtualBlockchainId)}>
+								<td onClick={() => window.open(EXPLORER_DOMAIN + '/explorer/microchain/0x' + flow.virtualBlockchainId)}>
 									<button className="btn-primary">Explore flow</button>
 								</td>
 							</tr>)

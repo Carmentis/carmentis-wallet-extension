@@ -1,4 +1,4 @@
-import { FlexCenter } from '@/entrypoints/main/components/layout/flex-center.tsx';
+import { FlexCenter } from '@/entrypoints/components/layout/flex-center.tsx';
 import { Button, Card, CardContent, Checkbox, Input, TextField, Typography } from '@mui/material';
 
 /**

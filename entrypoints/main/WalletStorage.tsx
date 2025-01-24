@@ -19,7 +19,7 @@
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
 import {StorageItem} from "webext-storage";
 import { SecretEncryptionKey } from '@/entrypoints/main/SecretEncryptionKey.tsx';
-import { Wallet, WalletData } from '@/entrypoints/main/Wallet.tsx';
+import { Wallet } from '@/entrypoints/main/wallet.tsx';
 
 const ENCRYPTED_WALLET = "encryptedWallet"
 export class SecureWalletStorage {
@@ -71,9 +71,7 @@ export class SecureWalletStorage {
                 const ciphertext = result.ENCRYPTED_WALLET;
                 const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
                 const textDecoder = new TextDecoder();
-                const walletData : WalletData = JSON.parse(textDecoder.decode(plaintext));
-
-                const wallet : Wallet = Wallet.CreateFromDict(walletData);
+                const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
                 resolve(wallet);
             } catch (e) {
                 reject(e)
@@ -86,7 +84,7 @@ export class SecureWalletStorage {
             try {
                 const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_WALLET);
                 const textEncoder = new TextEncoder();
-                const stringifiedWallet : string = JSON.stringify(wallet.data);
+                const stringifiedWallet : string = JSON.stringify(wallet);
                 const plaintext = textEncoder.encode(stringifiedWallet);
                 const ciphertext = await this.secretKey.encrypt(plaintext).catch(reject);
                 await options.set({
