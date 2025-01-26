@@ -15,16 +15,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {Dispatch, SetStateAction, useContext, useState} from "react";
+import {useState} from "react";
 import {SecureWalletStorage} from "@/entrypoints/main/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
-import {
-    passwordState,
-    useAuthenticationContext,
-} from '@/entrypoints/contexts/authentication.context.tsx';
-import { useSetRecoilState } from 'recoil';
-
+import {useAuthenticationContext,} from '@/entrypoints/contexts/authentication.context.tsx';
 
 
 function Login() {
@@ -46,8 +40,8 @@ function Login() {
     async function onLogin() {
         let provider = new CarmentisProvider();
         let secureStorage = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
-        secureStorage.readContextFromLocalStorage().then(wallet => {
-            connect(wallet, password)
+        secureStorage.readWalletFromStorage().then(wallet => {
+            connect(wallet)
         }).catch(error => {
             console.log("An error occured during the wallet reading: ", error)
             setInvalidPassword(true);

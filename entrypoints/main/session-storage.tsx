@@ -17,15 +17,12 @@
 
 
 import browser from 'webextension-polyfill'
-import { Wallet } from '@/entrypoints/main/wallet.tsx';
-import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
-import { ActionMessage } from '@/entrypoints/main/ActionMessage.tsx';
+import {Wallet} from '@/entrypoints/main/wallet.tsx';
+import {IllegalStateError} from '@/entrypoints/main/errors.tsx';
+import {ActionMessage} from '@/entrypoints/main/ActionMessage.tsx';
 
 export interface SessionState {
-    state: {
-        password: string;
-        wallet: Wallet;
-    }
+    wallet: Wallet;
 }
 
 export class SessionStorage {
@@ -40,14 +37,11 @@ export class SessionStorage {
     static GetSessionState() : Promise<SessionState> {
         return new Promise((resolve, reject) => {
             browser.storage.session.get(["state"]).then((result) => {
-                if (result.state === undefined) {
+                if (result.wallet === undefined) {
                     throw new IllegalStateError("Attempt to read session state but not initialized yet")
                 }
                 resolve({
-                    "state": {
-                        password: result.state.password,
-                        wallet: result.state.wallet,
-                    }
+                    wallet: result.wallet,
                 });
             })
         });
@@ -55,10 +49,7 @@ export class SessionStorage {
 
     static WriteSessionState(session : SessionState) : Promise<void> {
         return browser.storage.session.set({
-            state: {
-                wallet: session.state.wallet,
-                password: session.state.password,
-            }
+            wallet: session.wallet,
         });
     }
 

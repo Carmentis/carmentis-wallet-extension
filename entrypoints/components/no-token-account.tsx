@@ -1,4 +1,4 @@
-import { FlexCenter } from '@/entrypoints/components/layout/flex-center.tsx';
+import {FlexCenter} from '@/entrypoints/components/layout/flex-center.tsx';
 import React from 'react';
 
 export default function NoTokenAccount() {

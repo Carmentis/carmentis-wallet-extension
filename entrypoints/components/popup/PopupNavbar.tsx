@@ -15,9 +15,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {useContext, useState} from "react";
+import React, {useState} from "react";
 import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/DropdownAccountSelection.tsx";
-import { useAuthenticationContext } from '@/entrypoints/contexts/authentication.context.tsx';
+import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
 
 export function PopupNavbar() {
 

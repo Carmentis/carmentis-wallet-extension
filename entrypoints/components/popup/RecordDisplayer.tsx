@@ -15,11 +15,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {Dispatch, ReactElement, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
+import React, {Dispatch, ReactElement, SetStateAction, useEffect, useRef, useState} from "react";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import Skeleton from "react-loading-skeleton";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-
 
 
 interface TextualMessagePart {

@@ -1,11 +1,15 @@
-import { Button, Card, CardContent, TextField, Typography } from '@mui/material';
+import {Button, Card, CardContent, TextField, Typography} from '@mui/material';
 import Avatar from 'boring-avatars';
-import { activeAccountState, useAuthenticatedAccount, walletState } from '@/entrypoints/contexts/authentication.context.tsx';
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
-import { Formatter } from '@/entrypoints/main/Formatter.tsx';
-import { transferTokensToPublicKey } from '@/entrypoints/hooks/sdk.hook.tsx';
-import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
-import { Encoders } from '@/entrypoints/main/Encoders.tsx';
+import {
+    activeAccountState,
+    useAuthenticatedAccount,
+    walletState
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import {atom, useRecoilState, useRecoilValue} from 'recoil';
+import {Formatter} from '@/entrypoints/main/Formatter.tsx';
+import {transferTokensToPublicKey} from '@/entrypoints/hooks/sdk.hook.tsx';
+import {getUserKeyPair} from '@/entrypoints/main/wallet.tsx';
+import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 import {useToast} from "@/entrypoints/components/authentication-manager.tsx";
 
 const tokenTransferState = atom({

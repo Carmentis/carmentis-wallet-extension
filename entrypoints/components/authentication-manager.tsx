@@ -15,210 +15,173 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {
-	createContext, Dispatch, PropsWithChildren, ReactElement,
-	SetStateAction, Suspense,
-	useContext, useEffect,
-	useState,
-} from 'react';
-import { Wallet } from '@/entrypoints/main/wallet.tsx';
-import { SecureWalletStorage } from '@/entrypoints/main/WalletStorage.tsx';
-import { Optional } from '@/entrypoints/main/Optional.tsx';
+import {createContext, PropsWithChildren, Suspense, useContext, useEffect, useState,} from 'react';
+import {Wallet} from '@/entrypoints/main/wallet.tsx';
+import {SecureWalletStorage} from '@/entrypoints/main/WalletStorage.tsx';
 import pino from 'pino';
-import { SessionStorage } from '@/entrypoints/main/session-storage.tsx';
-import { CarmentisProvider } from '@/src/providers/carmentisProvider.tsx';
+import {CarmentisProvider} from '@/src/providers/carmentisProvider.tsx';
 import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
 
 
 // setup the internationalisation
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import {initReactI18next} from 'react-i18next';
 import detector from 'i18next-browser-languagedetector';
 
 import translationFR from '@/src/locales/fr/translation.json';
 import translationEN from '@/src/locales/en/translation.json';
 import {
-	AuthenticationContextProvider, passwordState,
-	useAuthenticationContext, walletState,
+	AuthenticationContextProvider,
+	passwordState,
+	walletState,
 } from '@/entrypoints/contexts/authentication.context.tsx';
 import {
 	ApplicationStatusContextProvider,
 	useApplicationStatus,
 } from '@/entrypoints/contexts/application-status.context.tsx';
-import { RecoilRoot, useRecoilState, useRecoilValue } from 'recoil';
-import { SpinningWheel } from '@/entrypoints/components/SpinningWheel.tsx';
+import {RecoilRoot, useRecoilState, useRecoilValue} from 'recoil';
 import {toast, ToastContainer} from "react-toastify";
+import {useSessionStorage} from "react-use";
+import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
+import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 
 const resources = {
-	fr: {
-		translation: translationFR,
-	},
-	en: {
-		translation: translationEN,
-	},
+    fr: {
+        translation: translationFR,
+    },
+    en: {
+        translation: translationEN,
+    },
 };
 i18n
-	.use(detector)
-	.use(initReactI18next) // passes i18n down to react-i18next
-	.init({
-		resources,
-		fallbackLng: 'en', // use en if detected lng is not available
-		interpolation: {
-			escapeValue: false, // react already safes from xss
-		},
-	});
+    .use(detector)
+    .use(initReactI18next) // passes i18n down to react-i18next
+    .init({
+        resources,
+        fallbackLng: 'en', // use en if detected lng is not available
+        interpolation: {
+            escapeValue: false, // react already safes from xss
+        },
+    });
 
 
 const logger = pino({
-	level: 'debug',
+    level: 'debug',
 });
 
 // create the different contexts
 export const LoggerContext = createContext(logger);
 
 function configureEndpointsFromWallet(wallet: Wallet | undefined) {
-	if (!wallet) {
-		console.warn('Endpoints not set since the provided wallet is not defined.');
-	} else {
-		// configure the SDK based on the wallet preferences
-		Carmentis.registerNodeEndpoint(wallet.nodeEndpoint);
-		Carmentis.registerDataEndpoint(wallet.emailOracleEndpoint);
-	}
+    if (!wallet) {
+        console.warn('Endpoints not set since the provided wallet is not defined.');
+    } else {
+        // configure the SDK based on the wallet preferences
+        sdk.blockchain.blockchainCore.setNode(
+            wallet.nodeEndpoint
+        )
+        Carmentis.registerNodeEndpoint(wallet.nodeEndpoint);
+        Carmentis.registerDataEndpoint(wallet.emailOracleEndpoint);
+    }
 }
 
-function AuthenticationDataAccess({ children }: PropsWithChildren) {
-	const [wallet, setWallet] = useRecoilState(walletState);
-	const [password, setPassword] = useRecoilState(passwordState);
-
-	const {
-		setApplicationInitialised,
-		setAccountCreated,
-		setAccountNotCreated,
-	} = useApplicationStatus();
-
-	let logger = useContext(LoggerContext);
+function AuthenticationDataAccess({children}: PropsWithChildren) {
+    const [wallet, setWallet] = useRecoilState(walletState);
+    const [walletInSession, setWalletInSession] = useSessionStorage<Wallet | undefined>('walletSession', undefined)
+    const password = useRecoilValue(passwordState);
+    const [isLoading, setLoading] = useState(true);
 
 
-	// store the wallet locally when the wallet has changed
-	useEffect(() => {
-		// prevent local storage clearing when the wallet is updated to an empty one
-		if (wallet && password) {
-			console.log('[context page] an update of the wallet has been detected: store the wallet in local and session');
-			const provider = new CarmentisProvider();
-			SecureWalletStorage.CreateSecureWalletStorage(provider, password).then(storage => {
-				storage.writeWalletContextToLocalStorage(wallet).then(() => {
-
-					// store the wallet in session
-					SessionStorage.WriteSessionState({
-						state: {
-							wallet: wallet,
-							password: password,
-						},
-					}).then(_ => {
-						// update the wallet
-						configureEndpointsFromWallet(wallet);
-						setAccountCreated();
-					}).catch(error => {
-						console.error(error);
-					});
-				}).catch(error => {
-					console.error(error);
-				});
-			});
-		}
-
-	}, [wallet]);
 
 
-	// search for installed wallet, if not redirect to onboarding page
-	SecureWalletStorage.IsEmpty().then(isEmpty => {
-		// if the storage do not contain any wallet, then the user do not have created an account and should be
-		// redirected to the wallet creation page
-
-		if (isEmpty) {
-			logger.info('Wallet not found on local storage.');
-			setAccountNotCreated();
-			setApplicationInitialised();
-			return;
-		}
-
-		setAccountCreated();
-
-		// if there is a wallet, good!
-		if (wallet) {
-			logger.info('Wallet is in session:', wallet);
-			setApplicationInitialised();
-			return;
-		}
-
-		// search in session if a wallet exists
-		SessionStorage.ContainsWallet().then((isWalletInSession) => {
-			// if the wallet exist in session, load the application state from session
-			if (isWalletInSession) {
-				SessionStorage.GetSessionState().then(result => {
-					const sessionWallet = result.state.wallet;
-					const sessionPassword = result.state.password;
-
-					logger.info('Wallet open but not active: use the wallet found in session: ', sessionWallet);
-					setWallet(sessionWallet);
-					configureEndpointsFromWallet(sessionWallet);
-					setPassword(sessionPassword);
-					setApplicationInitialised();
-				});
-
-			} else {
-				// otherwise, try with the wallet returned by the login page
-				if (wallet && password) {
-					logger.info('Wallet open but no active account chosen:', wallet);
-
-					// store the account in session
-					SessionStorage.WriteSessionState({
-						state: {
-							wallet: wallet,
-							password: password,
-						},
-					}).then(_ => {
-						// and update the application state
-						setApplicationInitialised();
-					});
-				} else {
-					setApplicationInitialised();
-				}
-			}
-		});
+    const {
+        setAccountCreated,
+    } = useApplicationStatus();
 
 
-	}).catch(error => {
-		console.error('An error occured while initializing the application: ', error);
-	});
+    // store the wallet locally when the wallet has changed
+    useEffect(() => {
+        // prevent local storage clearing when the wallet is updated to an empty one
+        setLoading(true);
+        if (wallet) {
+            configureEndpointsFromWallet(wallet);
+            setWalletInSession(wallet)
+            console.log('[context page] an update of the wallet has been detected: store the wallet in local and session');
+            const provider = new CarmentisProvider();
+            SecureWalletStorage.CreateSecureWalletStorage(provider, password).then(storage => {
+                storage.writeWalletToStorage(wallet).then(() => {
+                    setAccountCreated();
+                }).catch(error => {
+                    console.error(error);
+                });
+            });
+        }
+
+    }, [wallet]);
+
+    const applicationStartup = async () => {
+        // no locally stored wallet => need to setup
+        const walletIsInStorage = !(await SecureWalletStorage.IsEmpty());
+        const walletIsStoredInSession = walletInSession !== undefined;
+        console.log("Wallet in storage?", walletIsInStorage)
+        console.log("Wallet in session?", walletInSession !== undefined)
+
+        if (!wallet && !walletIsStoredInSession && !walletIsInStorage) {
+            console.log("No wallet found in storage and nowhere else: Onboarding required")
+            setLoading(false);
+            return;
+        } else if (!wallet && !walletIsStoredInSession && walletIsInStorage) {
+            console.log("Wallet found in storage but not found in session or state: Login required");
+            setAccountCreated()
+            setLoading(false)
+        } else if (wallet && walletIsInStorage) {
+            console.log("wallet found in state and in session: Running")
+            setLoading(false);
+        } else if (!wallet && walletIsStoredInSession) {
+            console.log("wallet found in session and but not in state: Loading from session")
+            setWallet(walletInSession)
+            setLoading(false);
+        } else {
+            console.log(`Strange state detected:, ${wallet !== undefined}, ${walletIsStoredInSession}, ${walletIsInStorage}`)
+        }
 
 
-	return <>
-		<LoggerContext.Provider value={logger}>
-			{children}
-		</LoggerContext.Provider>
-	</>;
+    }
+
+    applicationStartup();
+
+    if (wallet && !walletInSession || isLoading) return <Splashscreen/>
+    return <>
+
+        {children}
+    </>;
 }
 
 export function useToast() {
-	return {
-		success: (msg: string) => toast(msg),
-		error: (msg: string) => toast(msg)
-	}
+    return {
+        success: (msg: string) => toast(msg),
+        error: (msg: string) => toast(msg)
+    }
 }
 
-export function AuthenticationManager({ children }: PropsWithChildren) {
-	return <RecoilRoot>
-		<Suspense fallback={<SpinningWheel/>}>
-			<ToastContainer/>
-			<AuthenticationContextProvider>
-				<ApplicationStatusContextProvider>
-					<AuthenticationDataAccess>
-						{children}
-					</AuthenticationDataAccess>
-				</ApplicationStatusContextProvider>
-			</AuthenticationContextProvider>
-		</Suspense>
-	</RecoilRoot>;
+
+export function AuthenticationManager({children}: PropsWithChildren) {
+    let logger = useContext(LoggerContext);
+
+    return <RecoilRoot>
+        <Suspense fallback={<Splashscreen/>}>
+            <LoggerContext.Provider value={logger}>
+                <ToastContainer/>
+                <AuthenticationContextProvider>
+                    <ApplicationStatusContextProvider>
+                        <AuthenticationDataAccess>
+                            {children}
+                        </AuthenticationDataAccess>
+                    </ApplicationStatusContextProvider>
+                </AuthenticationContextProvider>
+            </LoggerContext.Provider>
+        </Suspense>
+    </RecoilRoot>;
 
 }

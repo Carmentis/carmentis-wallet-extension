@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) Carmentis. All rights reserved.
  * Licensed under the Apache 2.0 licence.
@@ -22,6 +21,7 @@ import {RecoveryPhrase} from "@/entrypoints/components/onboarding/RecoveryPhrase
 import {SetupWallet} from "@/entrypoints/components/onboarding/SetupWallet.tsx";
 import {Landing} from "@/entrypoints/components/onboarding/Landing.tsx";
 import {ImportWallet} from "@/entrypoints/components/onboarding/ImportWallet.tsx";
+
 function OnBoarding() {
 
     return (

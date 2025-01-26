@@ -15,43 +15,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import React, {ReactElement, useEffect, useState} from 'react';
 import '../../main/global.css';
 
-import { Route, Routes, useNavigate } from 'react-router';
+import {Route, Routes, useNavigate} from 'react-router';
 import Parameters from '@/entrypoints/components/dashboard/Parameters.tsx';
-import { DropdownAccountSelection } from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
+import {DropdownAccountSelection} from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
 import Skeleton from 'react-loading-skeleton';
-import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
 
 
 import 'react-loading-skeleton/dist/skeleton.css';
-import { Formatter } from '@/entrypoints/main/Formatter.tsx';
-import { FlowDetailComponent } from '@/entrypoints/components/dashboard/FlowDetailComponent.tsx';
-import { IndexedStorage } from '@/entrypoints/main/IndexedStorage.tsx';
-import { Encoders } from '@/entrypoints/main/Encoders.tsx';
-import { MicroBlock } from '@/entrypoints/main/Account.tsx';
-import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-view.tsx';
+import {Formatter} from '@/entrypoints/main/Formatter.tsx';
+import {FlowDetailComponent} from '@/entrypoints/components/dashboard/FlowDetailComponent.tsx';
+import {IndexedStorage} from '@/entrypoints/main/IndexedStorage.tsx';
+import {VirtualBlockchainView} from '@/entrypoints/main/virtual-blockchain-view.tsx';
 import {
-	activeAccountPublicKeyState,
-	activeAccountState, nodeEndpointState,
+	nodeEndpointState,
 	useAuthenticatedAccount,
 	useAuthenticationContext,
-	useWallet, walletState,
+	useWallet,
 } from '@/entrypoints/contexts/authentication.context.tsx';
-import { NavbarSidebarLayout } from '@/entrypoints/components/layout/navbar-sidebar.layout.tsx';
-import { SidebarItem } from '@/entrypoints/components/layout/sidebar-components.tsx';
-import Exchange from '@/entrypoints/main/exchange/page.tsx';
+import {NavbarSidebarLayout} from '@/entrypoints/components/layout/navbar-sidebar.layout.tsx';
+import {SidebarItem} from '@/entrypoints/components/layout/sidebar-components.tsx';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
-import {searchAccountHashByPublicKey, useAccountBalance, useAccountBalanceHook} from '@/entrypoints/hooks/sdk.hook.tsx';
-import { Badge, Card, CardContent, Tooltip, Typography } from '@mui/material';
-import { SpinningWheel } from '@/entrypoints/components/SpinningWheel.tsx';
+import {useAccountBalanceHook} from '@/entrypoints/hooks/sdk.hook.tsx';
+import {Badge, Card, CardContent, Tooltip, Typography} from '@mui/material';
+import {SpinningWheel} from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
-import { selector, useRecoilState, useRecoilValue } from 'recoil';
-import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
+import {useRecoilValue} from 'recoil';
 import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
-import useSWR from "swr";
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -78,6 +70,7 @@ export function Dashboard(): ReactElement {
 
 	// load the authentication context
 	const wallet = useWallet();
+	console.log("dashboard wallet?", wallet)
 
 	return (
 		<NavbarSidebarLayout
@@ -280,7 +273,13 @@ function DashboardHome() {
 
 
 function AccountBalanceCard() {
+
+	console.log("Attempting to read the balance account hook")
 	const {data, isLoading, error} = useAccountBalanceHook();
+	console.log("account balance card:", data, isLoading, error)
+
+
+	if (isLoading) return <Skeleton/>
 
 	if (error) return <Card className={'flex-1'}>
 		<CardContent className={'flex flex-col justify-center'}>
@@ -296,7 +295,7 @@ function AccountBalanceCard() {
 			<h3>Balance</h3>
 			<SpanWithLoader text={data}></SpanWithLoader>
 		</CardContent>
-	</Card>;
+	</Card>
 }
 
 /**
@@ -404,7 +403,8 @@ function DashboardVirtualBlockchainsList() {
 
 
 	function synchronizeWithBlockchain() {
-
+		// TODO
+		/*
 		IndexedStorage.ConnectDatabase(activeAccount).then(async (db: IndexedStorage) => {
 			try {
 
@@ -458,7 +458,9 @@ function DashboardVirtualBlockchainsList() {
 			} catch (e: any) {
 				throw new Error(e);
 			}
+
 		});
+		 */
 
 	}
 

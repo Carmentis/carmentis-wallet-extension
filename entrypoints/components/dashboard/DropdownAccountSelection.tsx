@@ -15,19 +15,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {useContext, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Wallet} from "@/entrypoints/main/wallet.tsx";
-import { Account, CreateFromPseudoAndNonce } from '@/entrypoints/main/Account.tsx';
-import {Optional} from "@/entrypoints/main/Optional.tsx";
+import {Account, CreateFromPseudoAndNonce} from '@/entrypoints/main/Account.tsx';
 import {IllegalStateError} from "@/entrypoints/main/errors.tsx";
 import {AccountCreationModal} from "@/entrypoints/components/dashboard/AccountCreationModal.tsx";
-import {
-    activeAccountState,
-    useAuthenticationContext,
-    useWallet,
-    walletState,
-} from '@/entrypoints/contexts/authentication.context.tsx';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import {activeAccountState, useWallet, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useRecoilValue, useSetRecoilState} from 'recoil';
 
 export function DropdownAccountSelection( input : {allowAccountCreation : boolean, large : boolean } ) {
 

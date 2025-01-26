@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useContext, useState } from 'react';
+import {createContext, PropsWithChildren, useContext, useState} from 'react';
 
 export interface ApplicationInitialisationStatus {
 	applicationInitialised: boolean,
@@ -11,7 +11,7 @@ export interface ApplicationInitialisationStatus {
 export const ApplicationStatusContext = createContext<ApplicationInitialisationStatus|undefined>(undefined);
 
 export function ApplicationStatusContextProvider({children}: PropsWithChildren) {
-	const [applicationInitialised, setApplicationInitialised] = useState(false);
+	const [applicationInitialised, setApplicationInitialised] = useState(true);
 	const [accountCreated, setAccountCreated] = useState(false);
 
 	const state = {

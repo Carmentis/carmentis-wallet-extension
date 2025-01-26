@@ -17,16 +17,43 @@
 
 
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
-import {StorageItem} from "webext-storage";
-import { SecretEncryptionKey } from '@/entrypoints/main/SecretEncryptionKey.tsx';
-import { Wallet } from '@/entrypoints/main/wallet.tsx';
+import {SecretEncryptionKey} from '@/entrypoints/main/SecretEncryptionKey.tsx';
+import {Wallet} from '@/entrypoints/main/wallet.tsx';
 
 const ENCRYPTED_WALLET = "encryptedWallet"
+const ENCRYPTED_WALLET_DB_VERSION = 1;
 export class SecureWalletStorage {
 
 
-    constructor( private readonly secretKey : SecretEncryptionKey) {
+    constructor( private readonly secretKey: SecretEncryptionKey) {
 
+    }
+
+    private  static  OpenDatabase() : Promise<IDBObjectStore> {
+        return new Promise(async (resolve, reject) => {
+            const request = indexedDB.open(ENCRYPTED_WALLET, ENCRYPTED_WALLET_DB_VERSION);
+
+            request.onerror = () => {
+                reject(new Error("Failed to open the encryptedWallet database."));
+            };
+
+            request.onsuccess = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+
+                // Open a transaction on the "encryptedWallet" table
+                const transaction = db.transaction("encryptedWallet", "readwrite");
+                const store = transaction.objectStore("encryptedWallet");
+
+                resolve(store);
+            };
+
+            request.onupgradeneeded = () => {
+                var db = request.result;
+
+                // create the encrypted wallet table
+                db.createObjectStore(ENCRYPTED_WALLET);
+            };
+        })
     }
 
     /**
@@ -36,15 +63,25 @@ export class SecureWalletStorage {
      *
      */
     static async IsEmpty() : Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_WALLET);
-            options.get().then(bytes => {
-                resolve(bytes === undefined || bytes.ENCRYPTED_WALLET === undefined)
-            }).catch(err => {
-                reject(err)
-            });
-        })
+        return new Promise<boolean>(async (resolve, reject) => {
+            // Open a connection to the "encryptedWallet" database
+            try {
+                // Check if the "wallet" key exists
+                const store = await SecureWalletStorage.OpenDatabase();
+                const getRequest = store.get("wallet");
 
+                getRequest.onsuccess = () => {
+                    resolve(getRequest.result === undefined);
+                };
+
+                getRequest.onerror = () => {
+                    reject(new Error("Failed to retrieve the key from the encryptedWallet table."));
+                };
+            } catch (e) {
+                console.error(e)
+                reject(e)
+            }
+        })
     }
 
     /**
@@ -57,31 +94,62 @@ export class SecureWalletStorage {
      * @param password
      * @constructor
      */
-    static async CreateSecureWalletStorage(provider: ProviderInterface, password: string): Promise<SecureWalletStorage> {
+    static async CreateSecureWalletStorage(provider: ProviderInterface, password: string | undefined): Promise<SecureWalletStorage> {
+        if (!password) throw new Error('Cannot access to the wallet using an undefined password')
         const secretKey = await provider.deriveSecretKeyFromPassword(password);
         return new SecureWalletStorage(secretKey);
     }
 
-    async readContextFromLocalStorage() : Promise<Wallet> {
+    async readWalletFromStorage() : Promise<Wallet> {
         return new Promise(async (resolve, reject) => {
             try {
-
+                // read the encrypted wallet
+                const store = await SecureWalletStorage.OpenDatabase();
+                const getResult = store.get('wallet')
+                getResult.onerror = (error) => {
+                    console.error('Error while reading wallet:', error)
+                    reject()
+                }
+                getResult.onsuccess = async () => {
+                    // decrypt the wallet
+                    const ciphertext = getResult.result;
+                    const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
+                    const textDecoder = new TextDecoder();
+                    const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
+                    console.log("Wallet obtained from storage:", wallet)
+                    resolve(wallet)
+                }
+                /*
                 const storageItemSeed = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_WALLET);
                 let result = await storageItemSeed.get();
                 const ciphertext = result.ENCRYPTED_WALLET;
                 const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
                 const textDecoder = new TextDecoder();
                 const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
-                resolve(wallet);
+                 */
             } catch (e) {
+                console.error(e)
                 reject(e)
             }
         });
     }
 
-    async writeWalletContextToLocalStorage(wallet : Wallet) : Promise<void> {
+    async writeWalletToStorage(wallet : Wallet) : Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
+                // encrypt the wallet
+                const textEncoder = new TextEncoder();
+                const plaintext = textEncoder.encode(JSON.stringify(wallet));
+                const ciphertext = await this.secretKey.encrypt(plaintext).catch(reject);
+
+                // store the encrypted wallet
+                const store = await SecureWalletStorage.OpenDatabase();
+                const putResult = store.put(ciphertext, 'wallet')
+
+                putResult.onsuccess = () => resolve()
+                putResult.onerror = () => reject()
+
+                /*
                 const options = new StorageItem<Record<string, Array<number>>>(ENCRYPTED_WALLET);
                 const textEncoder = new TextEncoder();
                 const stringifiedWallet : string = JSON.stringify(wallet);
@@ -90,9 +158,11 @@ export class SecureWalletStorage {
                 await options.set({
                     ENCRYPTED_WALLET: Array.from(ciphertext),
                 });
+                 */
 
                 resolve()
             } catch (e) {
+                console.error(e)
                 reject(e)
             }
         });

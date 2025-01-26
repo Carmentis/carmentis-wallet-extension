@@ -1,14 +1,13 @@
-import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useEffect, useState} from 'react';
-import { Optional } from '@/entrypoints/main/Optional.tsx';
+import {createContext, PropsWithChildren, useContext, useEffect} from 'react';
 import {getUserKeyPair, SignatureKeyPair, Wallet} from '@/entrypoints/main/wallet.tsx';
-import { Account } from '@/entrypoints/main/Account.tsx';
-import { atom, selector, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {Account} from '@/entrypoints/main/Account.tsx';
+import {atom, selector, useRecoilState, useRecoilValue} from 'recoil';
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import * as sdk from "@cmts-dev/carmentis-sdk/client";
 
 
 export interface AuthenticationContainer {
-	connect: (wallet: Wallet, password: string) => void,
+	connect: (wallet: Wallet) => void,
 	disconnect: () => void,
 }
 
@@ -31,6 +30,14 @@ export const AuthenticationContext = createContext<AuthenticationContainer|undef
 export const walletState = atom<Wallet|undefined>({
 	key: "wallet",
 	default: undefined,
+})
+
+export const passwordState = selector<string|undefined>({
+	key: "password",
+	get: ({get}) => {
+        const wallet = get(walletState);
+        return wallet?.password;
+    }
 })
 
 export const activeAccountState = selector<Account | undefined>({
@@ -83,11 +90,6 @@ export const nodeEndpointState = selector({
 	}
 })
 
-export const passwordState = atom<string|undefined>({
-	key: "password",
-	default: '',
-})
-
 /**
  * AuthenticationContextProvider is a component that supplies an authentication context to its child components.
  * It manages and provides access to wallet and password state, along with methods to connect and disconnect.
@@ -99,16 +101,13 @@ export function AuthenticationContextProvider(
 	{children}: PropsWithChildren
 ) {
 	const [wallet, setWallet] = useRecoilState(walletState);
-	const setPassword = useSetRecoilState(passwordState);
 
 	const authenticationContainer: AuthenticationContainer = {
         disconnect: () => {
 			setWallet(undefined);
-			setPassword(undefined)
 		},
-		connect: (wallet, password) =>  {
+		connect: (wallet) =>  {
 			setWallet(wallet);
-			setPassword(password)
 		}
     };
 

@@ -19,7 +19,7 @@ import {useLocation, useNavigate} from "react-router";
 import {useEffect, useState} from "react";
 import {SecureWalletStorage} from "@/entrypoints/main/WalletStorage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
-import { CreateFromPseudoAndSeed, Wallet } from '@/entrypoints/main/wallet.tsx';
+import {CreateFromPseudoAndSeed} from '@/entrypoints/main/wallet.tsx';
 
 
 /**
@@ -52,7 +52,7 @@ export function SetupWallet() {
     const seed = location.state.seed;
 
     // create the wallet
-    const walletContext = CreateFromPseudoAndSeed(pseudo, seed);
+    const walletContext = CreateFromPseudoAndSeed(pseudo, seed, password);
 
 
     function redirectToMainPage() {
@@ -74,11 +74,11 @@ export function SetupWallet() {
     const provider = new CarmentisProvider();
     SecureWalletStorage.CreateSecureWalletStorage(provider, password)
         .then(storage => {
-            storage.writeWalletContextToLocalStorage(walletContext)
+            storage.writeWalletToStorage(walletContext)
                 .then(() => {
 
                     // attempt to read the wallet to ensure that it is correctly installed
-                    storage.readContextFromLocalStorage()
+                    storage.readWalletFromStorage()
                         .then(_ => {
                             setInstalled(true);
                             redirectToMainPage()

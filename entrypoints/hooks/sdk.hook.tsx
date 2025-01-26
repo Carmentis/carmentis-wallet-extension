@@ -1,9 +1,7 @@
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
-import {useState} from "react";
 import {useRecoilValue} from "recoil";
 import {activeAccountPublicKeyState} from "@/entrypoints/contexts/authentication.context.tsx";
 import useSWR from "swr";
-
 
 
 export async function useAccountBalance(accountPublicKey: string): Promise<number> {

@@ -16,9 +16,9 @@
  */
 
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import { Account, DefaultAccount, DefaultAccountWithPseudo } from '@/entrypoints/main/Account.tsx';
+import {Account, DefaultAccountWithPseudo} from '@/entrypoints/main/Account.tsx';
 
-import { Encoders } from '@/entrypoints/main/Encoders.tsx';
+import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 
 /**
  * The default endpoint URL for the node server used in the application.
@@ -33,8 +33,8 @@ const DEFAULT_EMAIL_ORACLE_ENDPOINT = "https://data.testapps.carmentis.io"
 
 
 export interface Wallet {
-
     seed?: Uint8Array;
+    password?: string,
     counter : number;
     accounts : Account[];
     activeAccountId?: string;
@@ -43,30 +43,7 @@ export interface Wallet {
 }
 
 
-function EmptyWallet() : Wallet {
-    const createdAccount = DefaultAccount();
-    return {
-        accounts: [createdAccount],
-        counter: 1,
-        activeAccountId : createdAccount.id,
-        nodeEndpoint : DEFAULT_NODE_ENDPOINT,
-        emailOracleEndpoint: DEFAULT_EMAIL_ORACLE_ENDPOINT
-    };
-}
-
-
-
-/**
- * Creates and returns a new wallet from the given seed.
- *
- * The returned wallet is initialized with a default account.
- *
- * @param pseudo The pseudo of the initial account in the wallet.
- * @param seed The seed used by the wallet.
- *
- * @constructor
- */
-export function CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array) : Wallet {
+export function CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array, password: string) : Wallet {
 
     if ( !seed ) {
         throw new Error( "Cannot instantiate a wallet from undefined seed" );
@@ -76,6 +53,7 @@ export function CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array) : Wa
     const createdAccount = DefaultAccountWithPseudo(pseudo);
     return {
         seed: seed,
+        password: password,
         accounts: [createdAccount],
         counter: 1,
         activeAccountId : createdAccount.id,

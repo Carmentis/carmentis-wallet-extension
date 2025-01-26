@@ -15,8 +15,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {Optional} from "@/entrypoints/main/Optional.tsx";
 import {randomHex} from "@/entrypoints/main/Random.tsx";
+
 const DEFAULT_ACCOUNT_NAME = "Account"
 const DEFAULT_NONCE = 0;
 

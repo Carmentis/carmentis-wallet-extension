@@ -19,7 +19,6 @@ import React, {useContext, useEffect, useRef, useState} from "react";
 import {ActionMessage} from "@/entrypoints/main/ActionMessage.tsx";
 import {ActionMessageContext} from "@/entrypoints/components/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import * as sdk from '@cmts-dev/carmentis-sdk';
 import {Wallet} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
@@ -31,11 +30,9 @@ import {SignInRequestApproval} from "@/entrypoints/components/popup/SignInReques
 import {EventRequestApproval} from "@/entrypoints/components/popup/EventRequestApproval.tsx";
 import {AuthenticationRequest} from "@/entrypoints/components/popup/AuthenticationRequest.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
-import {
-    LoggerContext
-} from "@/entrypoints/components/authentication-manager.tsx";
+import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
 import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
-import { useAuthenticationContext } from '@/entrypoints/contexts/authentication.context.tsx';
+import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {

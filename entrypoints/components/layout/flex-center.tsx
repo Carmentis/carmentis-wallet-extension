@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react';
+import {PropsWithChildren} from 'react';
 
 /**
  * Interface representing properties for the FlexCenter component.

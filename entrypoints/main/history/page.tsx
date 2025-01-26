@@ -1,25 +1,24 @@
 import {
-	Button,
-	Card,
-	CardContent, Container,
-	Paper,
-	Table, TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	Typography,
+    Button,
+    Card,
+    CardContent,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
 } from '@mui/material';
-import { useAuthenticatedAccount, useWallet } from '@/entrypoints/contexts/authentication.context.tsx';
-import { FlexCenter } from '@/entrypoints/components/layout/flex-center.tsx';
+import {useAuthenticatedAccount, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
 import {
-	AccountTransactionHistoryEntry,
-	searchAccountHashByPublicKey, useAccountBalanceHook, useAccountTransactionHistoryHook,
-	useTransactionHistory,
+    AccountTransactionHistoryEntry,
+    useAccountBalanceHook,
+    useAccountTransactionHistoryHook,
 } from '@/entrypoints/hooks/sdk.hook.tsx';
-import React, { useEffect, useState } from 'react';
+import React, {useState} from 'react';
 import NoTokenAccount from '@/entrypoints/components/no-token-account.tsx';
-import {LineChart, SparkLineChart} from "@mui/x-charts";
+import {SparkLineChart} from "@mui/x-charts";
 import Skeleton from "react-loading-skeleton";
 
 export default function HistoryPage() {

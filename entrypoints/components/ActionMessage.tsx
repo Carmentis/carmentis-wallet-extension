@@ -19,7 +19,6 @@ import {ActionMessage, ActionRequest} from "@/entrypoints/main/ActionMessage.tsx
 import React, {createContext, Dispatch, ReactElement, SetStateAction, useContext, useEffect, useState} from "react";
 import {SessionStorage} from "@/entrypoints/main/session-storage.tsx";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
-import {Dispatcher} from "undici-types";
 import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
 
 

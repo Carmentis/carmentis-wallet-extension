@@ -1,4 +1,4 @@
-import { Tooltip } from '@mui/material';
+import {Tooltip} from '@mui/material';
 import {useLocation, useNavigate} from 'react-router';
 
 export interface SidebarLinkProps {

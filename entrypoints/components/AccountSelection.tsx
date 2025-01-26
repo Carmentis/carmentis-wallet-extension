@@ -16,11 +16,9 @@
  */
 
 import React from "react";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
-import { useAuthenticationContext, walletState } from '@/entrypoints/contexts/authentication.context.tsx';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import onBrowserUpdateAvailable = chrome.runtime.onBrowserUpdateAvailable;
-import { Wallet } from '@/entrypoints/main/wallet.tsx';
+import {walletState} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useRecoilState} from 'recoil';
+import {Wallet} from '@/entrypoints/main/wallet.tsx';
 
 export default function AccountSelection() {
 

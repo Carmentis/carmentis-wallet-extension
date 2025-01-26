@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) Carmentis. All rights reserved.
  * Licensed under the Apache 2.0 licence.
@@ -16,14 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {useContext, useEffect, useState, useTransition} from "react";
+import React, {useEffect, useState, useTransition} from "react";
 import {MicroBlock} from "@/entrypoints/main/Account.tsx";
 import Skeleton from "react-loading-skeleton";
 import {Formatter} from "@/entrypoints/main/Formatter.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
 import {DataTreeViewer} from "@/entrypoints/components/dashboard/DataTreeViewer.tsx";
 import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
-import { useWallet } from '@/entrypoints/contexts/authentication.context.tsx';
+import {useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
 
 export function FlowDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
     // load history

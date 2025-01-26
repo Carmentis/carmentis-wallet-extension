@@ -19,9 +19,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import "./global.css"
 import {HashRouter} from "react-router-dom";
-import  FullPageEntrypoint from "@/entrypoints/main/page.tsx";
+import FullPageEntrypoint from "@/entrypoints/main/page.tsx";
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
-
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

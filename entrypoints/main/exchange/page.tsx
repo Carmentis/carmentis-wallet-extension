@@ -1,5 +1,5 @@
-import { FlexCenter } from '@/entrypoints/components/layout/flex-center.tsx';
-import { Button, Card, CardContent, Checkbox, Input, TextField, Typography } from '@mui/material';
+import {FlexCenter} from '@/entrypoints/components/layout/flex-center.tsx';
+import {Button, Card, CardContent, Checkbox, TextField, Typography} from '@mui/material';
 
 /**
  * Represents the Exchange component which renders a centered layout containing a PayToken component.

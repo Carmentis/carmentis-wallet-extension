@@ -15,18 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, { ReactElement, useEffect, useState } from 'react';
-import { Encoders } from '@/entrypoints/main/Encoders.tsx';
-import { Optional } from '@/entrypoints/main/Optional.tsx';
-import { useNavigate } from 'react-router';
-import { EmailValidation } from '@/entrypoints/components/dashboard/EmailValidation.tsx';
-import {
-	activeAccountState,
-	walletState,
-} from '@/entrypoints/contexts/authentication.context.tsx';
+import React, {ReactElement, useEffect, useState} from 'react';
+import {Encoders} from '@/entrypoints/main/Encoders.tsx';
+import {useNavigate} from 'react-router';
+import {EmailValidation} from '@/entrypoints/components/dashboard/EmailValidation.tsx';
+import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
 import {Card, CardContent, Typography} from '@mui/material';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { getUserKeyPair, Wallet } from '@/entrypoints/main/wallet.tsx';
+import {useRecoilState, useRecoilValue} from 'recoil';
+import {getUserKeyPair, Wallet} from '@/entrypoints/main/wallet.tsx';
 
 function InputWithDynamicConfirmSaveComponent(input: {
 	value: string,

@@ -15,20 +15,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, { ReactElement, useContext, useEffect, useRef, useState } from 'react';
-import { getUserKeyPair, Wallet } from '@/entrypoints/main/wallet.tsx';
+import React, {ReactElement, useState} from 'react';
+import {getUserKeyPair} from '@/entrypoints/main/wallet.tsx';
 import '../../main/global.css'
-import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
+import {EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
 import {
     activeAccountState,
     useAuthenticationContext,
     walletState,
 } from '@/entrypoints/contexts/authentication.context.tsx';
-import { Card, CardContent } from '@mui/material';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {Card, CardContent} from '@mui/material';
+import {useRecoilState, useRecoilValue} from 'recoil';
+
 let otpToken : string = ""
 
 export function EmailValidation() {
