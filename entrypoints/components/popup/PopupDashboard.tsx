@@ -31,8 +31,8 @@ import {EventRequestApproval} from "@/entrypoints/components/popup/EventRequestA
 import {AuthenticationRequest} from "@/entrypoints/components/popup/AuthenticationRequest.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
-import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
 import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
+import {DataStorage} from "@/entrypoints/main/data-storage.tsx";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -534,7 +534,7 @@ export function PopupDashboard() {
         confirmRecordDetails.current.nonce = request.data.nonce;
 
         // insert the block in indexeddb
-        IndexedStorage.ConnectDatabase(activeAccount).then((db : IndexedStorage) => {
+        DataStorage.connectDatabase(activeAccount).then((db) => {
             return db.addApprovedBlockInActiveAccountHistory( confirmRecordDetails.current )
         }).then(() => {
             CloseOnSuccess()
@@ -593,7 +593,7 @@ export function PopupDashboard() {
 
                             { localActionMessageOption.unwrap().type === "authentication"&&
                                 <AuthenticationRequest
-                                    email={activeAccount.getEmail()}
+                                    email={activeAccount.email}
                                     onAccept={handleRequestAuthentication}
                                     onReject={RejectRequest}></AuthenticationRequest>
                             }

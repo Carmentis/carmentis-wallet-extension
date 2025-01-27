@@ -19,7 +19,7 @@ import React from "react";
 import {Optional} from "@/entrypoints/main/Optional.tsx";
 
 export function AuthenticationRequest(input: {
-    email: Optional<string>;
+    email: string | undefined;
     onAccept: () => void,
     onReject: () => void
 }) {
@@ -29,14 +29,14 @@ export function AuthenticationRequest(input: {
                 Authentication Request
             </h2>
             <div className="h-1/4 mb-3">
-                {input.email.isEmpty() &&
+                {!input.email &&
                     <p>
                         Do you agree to authenticate?
                     </p>
                 }
-                {!input.email.isEmpty() &&
+                {input.email &&
                     <p>
-                        Do you agree to authenticate as {input.email.unwrap()}?
+                        Do you agree to authenticate as {input.email}?
                     </p>
                 }
 

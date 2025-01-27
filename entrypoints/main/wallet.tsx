@@ -28,11 +28,12 @@ import {Encoders} from '@/entrypoints/main/Encoders.tsx';
  * @constant {string}
  */
 const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
-
 const DEFAULT_EMAIL_ORACLE_ENDPOINT = "https://data.testapps.carmentis.io"
+const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.themis.carmentis.io"
 
 
 export interface Wallet {
+    explorerEndpoint: string;
     seed?: Uint8Array;
     password?: string,
     counter : number;
@@ -59,6 +60,7 @@ export function CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array, pass
         activeAccountId : createdAccount.id,
         nodeEndpoint : DEFAULT_NODE_ENDPOINT,
         emailOracleEndpoint: DEFAULT_EMAIL_ORACLE_ENDPOINT,
+        explorerEndpoint: DEFAULT_EXPLORER_ENDPOINT,
     }
 
 }

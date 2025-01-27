@@ -23,7 +23,7 @@ import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentic
 import OnBoarding from '@/entrypoints/components/onboarding/OnBoarding.tsx';
 import Login from '@/entrypoints/components/Login.tsx';
 import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
-import Dashboard from '@/entrypoints/components/dashboard/Dashboard.tsx';
+import Dashboard from '@/entrypoints/components/dashboard/dashboard.component.tsx';
 import {useRecoilValue} from 'recoil';
 
 /**

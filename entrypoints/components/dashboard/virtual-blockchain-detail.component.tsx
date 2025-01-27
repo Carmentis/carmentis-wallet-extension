@@ -20,14 +20,15 @@ import {MicroBlock} from "@/entrypoints/main/Account.tsx";
 import Skeleton from "react-loading-skeleton";
 import {Formatter} from "@/entrypoints/main/Formatter.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {DataTreeViewer} from "@/entrypoints/components/dashboard/DataTreeViewer.tsx";
-import {IndexedStorage} from "@/entrypoints/main/IndexedStorage.tsx";
-import {useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
+import {DataTreeViewer} from "@/entrypoints/components/dashboard/data-tree-viewer.component.tsx";
+import {activeAccountState, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useRecoilValue} from "recoil";
+import {DataStorage} from "@/entrypoints/main/data-storage.tsx";
 
-export function FlowDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
+export function VirtualBlockchainDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
     // load history
     const wallet = useWallet();
-    const activeAccount = wallet.getActiveAccount().unwrap();
+    const activeAccount = useRecoilValue(activeAccountState);
 
     const [isLoading, setTransition] = useTransition();
 
@@ -45,15 +46,13 @@ export function FlowDetailComponent(input: { chosenFlow: { applicationId: string
 
     useEffect(() => {
         setChosenBlock(undefined)
-        setTransition(() => {
-            console.log("[flow details]", input, wallet.getActiveAccount().unwrap());
-            IndexedStorage.ConnectDatabase(activeAccount).then((db : IndexedStorage) => {
-                db.getAllBlocksByFlowId(input.chosenFlow.flowId).then((blocks : MicroBlock[]) => {
-                    blocks.sort( (b1, b2) => b1.nonce < b2.nonce ? -1 : 1 )
-                    setBlocks(blocks);
-                });
-            })
-
+        if (!activeAccount) return;
+        console.log("[flow details]", input);
+        DataStorage.connectDatabase(activeAccount).then((db) => {
+            db.getAllBlocksByFlowId(input.chosenFlow.flowId).then((blocks : MicroBlock[]) => {
+                blocks.sort( (b1, b2) => b1.nonce < b2.nonce ? -1 : 1 )
+                setBlocks(blocks);
+            });
         })
     }, [input, wallet]);
 
@@ -102,7 +101,7 @@ export function FlowDetailComponent(input: { chosenFlow: { applicationId: string
                                             onClick={() => {
                                                 if (block.masterBlock) {
                                                     window.open(
-                                                        wallet.getDataEndpoint() + "/explorer/masterblock/" +
+                                                        wallet.explorerEndpoint + "/explorer/masterblock/" +
                                                         block.masterBlock.toString().padStart(9, "0")
                                                     )
                                                 }
@@ -110,7 +109,7 @@ export function FlowDetailComponent(input: { chosenFlow: { applicationId: string
                                         Explore master block
                                     </button>
                                     <button className="btn-primary"
-                                            onClick={() => window.open(wallet.getDataEndpoint() + "/explorer/microblock/0x" + block.microBlockId)}>
+                                            onClick={() => window.open(wallet.explorerEndpoint + "/explorer/microblock/0x" + block.microBlockId)}>
                                         Explore micro block
                                     </button>
                                 </td>

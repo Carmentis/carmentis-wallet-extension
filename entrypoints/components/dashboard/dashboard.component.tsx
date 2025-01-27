@@ -19,15 +19,14 @@ import React, {ReactElement, useEffect, useState} from 'react';
 import '../../main/global.css';
 
 import {Route, Routes, useNavigate} from 'react-router';
-import Parameters from '@/entrypoints/components/dashboard/Parameters.tsx';
-import {DropdownAccountSelection} from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
+import Parameters from '@/entrypoints/components/dashboard/parameters.component.tsx';
+import {DropdownAccountSelection} from '@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx';
 import Skeleton from 'react-loading-skeleton';
 
 
 import 'react-loading-skeleton/dist/skeleton.css';
 import {Formatter} from '@/entrypoints/main/Formatter.tsx';
-import {FlowDetailComponent} from '@/entrypoints/components/dashboard/FlowDetailComponent.tsx';
-import {IndexedStorage} from '@/entrypoints/main/IndexedStorage.tsx';
+import {VirtualBlockchainDetailComponent} from '@/entrypoints/components/dashboard/virtual-blockchain-detail.component.tsx';
 import {VirtualBlockchainView} from '@/entrypoints/main/virtual-blockchain-view.tsx';
 import {
 	nodeEndpointState,
@@ -44,6 +43,7 @@ import {SpinningWheel} from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
 import {useRecoilValue} from 'recoil';
 import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
+import {DataStorage} from "@/entrypoints/main/data-storage.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -313,8 +313,8 @@ function DashboardWelcomeCards() {
 	const [spentGaz, setSpentGaz] = useState<number | undefined>();
 
 	useEffect(() => {
-		IndexedStorage.ConnectDatabase(activeAccount)
-			.then(async (db: IndexedStorage) => {
+		DataStorage.connectDatabase(activeAccount)
+			.then(async (db: DataStorage) => {
 				db.getNumberOfApplications().then(setNumberOfApplications);
 				db.getFlowsNumberOfAccount().then(setNumberOfFlows);
 				db.getSpentGaz().then(setSpentGaz);
@@ -391,8 +391,8 @@ function DashboardVirtualBlockchainsList() {
 
 
 	function putDataInStates() {
-		IndexedStorage.ConnectDatabase(activeAccount)
-			.then(async (db: IndexedStorage) => {
+		DataStorage.connectDatabase(activeAccount)
+			.then(async (db) => {
 				db.getAllFlowsOfAccount().then(setFlows);
 			});
 	}
@@ -519,7 +519,7 @@ function DashboardVirtualBlockchainsList() {
 
 		{chosenVirtualBlockchainId !== undefined &&
 			<div className="dashboard-section">
-				<FlowDetailComponent key={chosenVirtualBlockchainId.flowId} chosenFlow={chosenVirtualBlockchainId} />
+				<VirtualBlockchainDetailComponent key={chosenVirtualBlockchainId.flowId} chosenFlow={chosenVirtualBlockchainId} />
 			</div>
 		}
 	</>;

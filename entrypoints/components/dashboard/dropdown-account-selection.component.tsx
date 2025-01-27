@@ -19,7 +19,7 @@ import React, {useEffect, useState} from "react";
 import {Wallet} from "@/entrypoints/main/wallet.tsx";
 import {Account, CreateFromPseudoAndNonce} from '@/entrypoints/main/Account.tsx';
 import {IllegalStateError} from "@/entrypoints/main/errors.tsx";
-import {AccountCreationModal} from "@/entrypoints/components/dashboard/AccountCreationModal.tsx";
+import {AccountCreationModal} from "@/entrypoints/components/dashboard/account-creation-modal.component.tsx";
 import {activeAccountState, useWallet, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilValue, useSetRecoilState} from 'recoil';
 

@@ -16,7 +16,7 @@
  */
 
 import React, {useState} from "react";
-import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/DropdownAccountSelection.tsx";
+import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
 import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
 
 export function PopupNavbar() {

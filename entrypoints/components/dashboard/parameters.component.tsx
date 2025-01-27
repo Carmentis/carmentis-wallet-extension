@@ -18,7 +18,7 @@
 import React, {ReactElement, useEffect, useState} from 'react';
 import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 import {useNavigate} from 'react-router';
-import {EmailValidation} from '@/entrypoints/components/dashboard/EmailValidation.tsx';
+import {EmailValidation} from '@/entrypoints/components/dashboard/email-validation.component..tsx';
 import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
 import {Card, CardContent, Typography} from '@mui/material';
 import {useRecoilState, useRecoilValue} from 'recoil';
@@ -198,7 +198,7 @@ export default function Parameters() {
 			</div>
 
 
-			<EmailValidation />
+			<EmailValidation/>
 
 			<Card>
 				<CardContent>
@@ -210,7 +210,7 @@ export default function Parameters() {
 							protect={false}
 							value={pseudo}
 							onChange={setPseudo}
-							onSave={saveParameters} />
+							onSave={saveParameters}/>
 
 					</div>
 
@@ -223,7 +223,7 @@ export default function Parameters() {
 						<InputNumberWithDynamicConfirmSaveComponent
 							value={nonce}
 							onChange={setNonce}
-							onSave={saveParameters} />
+							onSave={saveParameters}/>
 
 					</div>
 
@@ -245,15 +245,15 @@ export default function Parameters() {
 								 className="pr-2 mr-2 w-6 h-6 border-r-2 border-gray-300 hover:cursor-pointer"
 								 viewBox="0 0 16 16">
 								<path
-									d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+									d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
 								<path
-									d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+									d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
 							</svg>
 
 							<input className="block w-full bg-gray-200"
 								   type={showPrivateKeys ? 'text' : 'password'} onClick={() => {
 								navigator.clipboard.writeText(userPrivateKey);
-							}} readOnly={true} value={userPrivateKey} />
+							}} readOnly={true} value={userPrivateKey}/>
 						</div>
 
 
@@ -264,7 +264,7 @@ export default function Parameters() {
 						<input type="text" onClick={() => {
 							navigator.clipboard.writeText(userPublicKey);
 						}}
-							   className="parameter-input mb-2" readOnly={true} value={userPublicKey} />
+							   className="parameter-input mb-2" readOnly={true} value={userPublicKey}/>
 						{userPublicKey &&
 							<div className="flex items-end">
 								<button
@@ -293,7 +293,7 @@ export default function Parameters() {
 								className="text-green-600">(Verified with the Carmentis email verification oracle at {wallet?.emailOracleEndpoint})</span>}
 						</div>
 						<input type="text"
-							   className="parameter-input" readOnly={true} value={email} />
+							   className="parameter-input" readOnly={true} value={email}/>
 					</div>
 				</CardContent>
 			</Card>
@@ -314,10 +314,20 @@ export default function Parameters() {
 							protect={false}
 							value={nodeEndpoint}
 							onChange={setNodeEndpoint}
-							onSave={saveParameters} />
+							onSave={saveParameters}/>
+					</div>
+
+					<div className="parameter-group">
+						<div className="parameter-title">Carmentis Explorer Endpoint</div>
+						<div className="parameter-description">
+							The endpoint of the explorer.
+						</div>
+						<input type="text"
+							   className="parameter-input mb-2" readOnly={true} value={wallet?.explorerEndpoint || ''}/>
 					</div>
 				</CardContent>
 			</Card>
+
 
 			{wallet?.accounts.length !== 1 &&
 				<Card className="parameter-section">
@@ -331,7 +341,7 @@ export default function Parameters() {
 								Write your account name below to confirm the deletion.
 							</div>
 							<input type="text" className="parameter-input" value={accountDeletionPseudo}
-								   onChange={e => setAccountDeletionPseudo(e.target.value)} />
+								   onChange={e => setAccountDeletionPseudo(e.target.value)}/>
 							<div className="flex justify-end items-end space-x-1 mt-1">
 								<button className="btn-primary bg-red-500" onClick={deleteActiveAccount}>Delete</button>
 							</div>
