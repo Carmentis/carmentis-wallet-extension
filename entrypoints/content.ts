@@ -18,7 +18,6 @@
 export default defineContentScript({
   matches: ['*://*/*'],
   main(ctx) {
-
     const port = browser.runtime.connect({name: 'carmentis-wallet'});
     console.log("[content] port created:", port)
 

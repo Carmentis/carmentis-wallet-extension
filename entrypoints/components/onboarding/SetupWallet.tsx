@@ -17,9 +17,10 @@
 
 import {useLocation, useNavigate} from "react-router";
 import {useEffect, useState} from "react";
-import {SecureWalletStorage} from "@/entrypoints/main/WalletStorage.tsx";
+import {SecureWalletStorage} from "@/entrypoints/main/wallet-storage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {CreateFromPseudoAndSeed} from '@/entrypoints/main/wallet.tsx';
+import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
 
 
 /**
@@ -35,6 +36,7 @@ import {CreateFromPseudoAndSeed} from '@/entrypoints/main/wallet.tsx';
 export function SetupWallet() {
 
     const [installed, setInstalled] = useState<boolean>(false);
+    const notificationSystem = useAppNotification();
 
     // recover the password and seed from given parameters, or back to home if at least one is not provided
     const location = useLocation();
@@ -85,6 +87,13 @@ export function SetupWallet() {
                         }).catch(_ => {
                     });
 
+                    // insert initial notifications
+                    notificationSystem.notifyWithButtonLink(
+                        "Configure your email",
+                        "You account is currently not associated with an email.",
+                        "Configure",
+                        "/parameters"
+                    );
 
                 }).catch(error => {
                 console.log("Wallet error in local storage", error);

@@ -16,23 +16,29 @@
  */
 
 import React, {useContext, useEffect, useRef, useState} from "react";
-import {ActionMessage} from "@/entrypoints/main/ActionMessage.tsx";
-import {ActionMessageContext} from "@/entrypoints/components/ActionMessage.tsx";
+import {ActionMessage} from "@/entrypoints/main/client-request.ts";
+import {ActionMessageContext, useActionMessageContext} from "@/entrypoints/components/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import {Wallet} from "@/entrypoints/main/wallet.tsx";
+import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
 import {QRCodeProcessRequestApproval} from "@/entrypoints/components/popup/QRCodeProcessRequestApproval.tsx";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
+import {Optional} from "@/entrypoints/main/optional.ts";
 import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
 import {SignInRequestApproval} from "@/entrypoints/components/popup/SignInRequestApproval.tsx";
 import {EventRequestApproval} from "@/entrypoints/components/popup/EventRequestApproval.tsx";
 import {AuthenticationRequest} from "@/entrypoints/components/popup/AuthenticationRequest.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
-import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
-import {DataStorage} from "@/entrypoints/main/data-storage.tsx";
+import {
+    activeAccountState,
+    useAuthenticationContext,
+    walletState
+} from '@/entrypoints/contexts/authentication.context.tsx';
+import {ApplicationDataStorageHelper} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {useRecoilState, useRecoilValue} from "recoil";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -102,18 +108,19 @@ export interface Flow {
 }
 
 
+
+
 export function PopupDashboard() {
 
 
     // load the different contexts
     const authenticationContext = useAuthenticationContext();
-    const { actionMessages, setActionMessages } = useContext(ActionMessageContext);
+    const { actionMessages, setActionMessages } = useActionMessageContext();
     let logger = useContext(LoggerContext);
 
     // load the authentication data
-    const wallet: Wallet = authenticationContext.wallet.unwrap();
-    const setWallet = authenticationContext.setWallet;
-    let activeAccount: Account = wallet.getActiveAccount().unwrap();
+    const [wallet, setWallet] = useRecoilState(walletState);
+    const activeAccount = useRecoilValue(activeAccountState);
 
     // create a reference on the action messages
     const [localActionMessageOption, setLocalActionMessageOption] = useState<Optional<ActionMessage>>(
@@ -317,7 +324,6 @@ export function PopupDashboard() {
     function onAcceptSignInRequest() {
 
         // generate the private signature key and derive the public signature key from it
-        const wallet: Wallet = authenticationContext.wallet.unwrap();
         const currentActionMessageOption = localActionMessageOption;
         if ( currentActionMessageOption.isEmpty()  ) {
             throw new Error("container Empty container")
@@ -329,27 +335,27 @@ export function PopupDashboard() {
 
 
 
-        executeBackgroundTask(new Promise<void>((resolve, reject) => {
-            const activeAccount = wallet.getActiveAccount().unwrap();
-            wallet.getAccountAuthenticationKeyPair(activeAccount).then(keyPair => {
-                Carmentis.sign(keyPair.privateKey, Encoders.FromHexa(request.data.sessionPublicKey))
-                    .then(signature => {
-                        resolve();
-                        CloseOnSuccess()
-                        request.answer({
-                            success: true,
-                            data: {
-                                pubKey: Encoders.ToHexa(keyPair.publicKey),
-                                sessionPubKeySignature: Encoders.ToHexa(signature)
-                            }
-                        });
-                })
-            })
+        executeBackgroundTask(new Promise<void>(async (resolve, reject) => {
+            if (!wallet || !activeAccount) return;
+            const keyPair = await getUserKeyPair(wallet, activeAccount);
+            const message = Encoders.FromHexa(request.data.sessionPublicKey)
+            const signature = sdk.crypto.secp256k1.sign(keyPair.privateKey, message);
+            resolve();
+            CloseOnSuccess()
+            request.answer({
+                success: true,
+                data: {
+                    pubKey: Encoders.ToHexa(keyPair.publicKey),
+                    sessionPubKeySignature: Encoders.ToHexa(signature)
+                }
+            });
         }));
     }
 
 
     function prepareRequestEventApproval( request ) {
+        // TODO redo the function
+        /*
         const [applicationId, recordId] = request.data.id.split("-");
 
         executeBackgroundTask(new Promise<void>((resolve,reject) => {
@@ -374,6 +380,7 @@ export function PopupDashboard() {
         }), {
             closeWaitingScreenOnSuccess: false
         });
+         */
     }
 
     /**
@@ -406,6 +413,8 @@ export function PopupDashboard() {
      *
      */
     function handleRequestAuthentication() {
+        // TODO do the handle request authentication
+        /*
         const actionMessage = localActionMessageOption.unwrap();
         if ( !actionMessage.clientRequest ) {
             throw new Error("Illegal state: the action message should embed a client request.")
@@ -423,7 +432,7 @@ export function PopupDashboard() {
         } else {
             AbortWithError("Your email has not been configured or is not verified.")
         }
-
+         */
     }
 
 
@@ -534,7 +543,7 @@ export function PopupDashboard() {
         confirmRecordDetails.current.nonce = request.data.nonce;
 
         // insert the block in indexeddb
-        DataStorage.connectDatabase(activeAccount).then((db) => {
+        ApplicationDataStorageHelper.connectDatabase(activeAccount).then((db) => {
             return db.addApprovedBlockInActiveAccountHistory( confirmRecordDetails.current )
         }).then(() => {
             CloseOnSuccess()

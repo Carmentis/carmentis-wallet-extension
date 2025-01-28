@@ -16,7 +16,7 @@
  */
 
 import React from "react";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
+import {Optional} from "@/entrypoints/main/optional.ts";
 
 export function AuthenticationRequest(input: {
     email: string | undefined;

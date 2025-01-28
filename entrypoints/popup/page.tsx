@@ -19,12 +19,13 @@
 import {AuthenticationManager} from '@/entrypoints/components/authentication-manager.tsx';
 import {ActionMessageHandler} from '@/entrypoints/components/ActionMessage.tsx';
 import {useApplicationStatus} from '@/entrypoints/contexts/application-status.context.tsx';
-import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useAuthenticationContext, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {Splashscreen} from '@/entrypoints/components/Splashscreen.tsx';
 import {NoWalletDetected} from '@/entrypoints/components/popup/NoWalletDetected.tsx';
 import Login from '@/entrypoints/components/Login.tsx';
 import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
 import {PopupDashboard} from '@/entrypoints/components/popup/PopupDashboard.tsx';
+import {useRecoilValue} from "recoil";
 
 /**
  *
@@ -42,17 +43,16 @@ export function PopupAppEntrypoint() {
 
 
 function PopupApp() {
+    const wallet = useRecoilValue(walletState);
     let {applicationInitialised, accountCreated} = useApplicationStatus();
-    let authentication = useAuthenticationContext();
 
 
     if (!applicationInitialised) return <Splashscreen/>
     if (!accountCreated) return  <NoWalletDetected/>
-    const wallet = authentication.wallet;
-    if (wallet.isEmpty()) return <Login/>
-    if (wallet.unwrap().getActiveAccount().isEmpty()) return  <AccountSelection/>
+    if (!wallet) return <Login/>
+    if (!wallet.activeAccountId) return  <AccountSelection/>
     return  <PopupDashboard
-        key={wallet.unwrap().getActiveAccount().unwrap().getId()}
+        key={wallet.activeAccountId}
     />
 }
 

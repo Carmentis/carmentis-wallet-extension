@@ -17,7 +17,7 @@
 
 
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
-import {SecretEncryptionKey} from '@/entrypoints/main/SecretEncryptionKey.tsx';
+import {SecretEncryptionKey} from '@/entrypoints/main/secret-encryption-key.ts';
 import {Wallet} from '@/entrypoints/main/wallet.tsx';
 
 const ENCRYPTED_WALLET = "encryptedWallet"

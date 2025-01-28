@@ -15,10 +15,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ActionMessage, ActionRequest} from "@/entrypoints/main/ActionMessage.tsx";
+import {ActionMessage, ActionRequest} from "@/entrypoints/main/client-request.ts";
 import React, {createContext, Dispatch, ReactElement, SetStateAction, useContext, useEffect, useState} from "react";
 import {SessionStorage} from "@/entrypoints/main/session-storage.tsx";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
+import {Optional} from "@/entrypoints/main/optional.ts";
 import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
 
 
@@ -112,6 +112,12 @@ export function ActionMessageHandler(props: { children: ReactElement }) {
             {props.children}
         </ActionMessageContext.Provider>
     </>
+}
+
+export function useActionMessageContext() {
+    const context = useContext(ActionMessageContext);
+    if (!context) throw new Error("Cannot use action message context outside of ActionMessageHandler")
+    return context;
 }
 
 // this function is used to be set once and to import messages received from outside of the component.

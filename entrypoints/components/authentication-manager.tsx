@@ -17,7 +17,7 @@
 
 import {createContext, PropsWithChildren, Suspense, useContext, useEffect, useState,} from 'react';
 import {Wallet} from '@/entrypoints/main/wallet.tsx';
-import {SecureWalletStorage} from '@/entrypoints/main/WalletStorage.tsx';
+import {SecureWalletStorage} from '@/entrypoints/main/wallet-storage.tsx';
 import pino from 'pino';
 import {CarmentisProvider} from '@/src/providers/carmentisProvider.tsx';
 import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
@@ -45,6 +45,7 @@ import {toast, ToastContainer} from "react-toastify";
 import {useSessionStorage} from "react-use";
 import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
+import ApplicationNotificationContext from "@/entrypoints/contexts/application-notification.context.tsx";
 
 const resources = {
     fr: {
@@ -171,16 +172,18 @@ export function AuthenticationManager({children}: PropsWithChildren) {
 
     return <RecoilRoot>
         <Suspense fallback={<Splashscreen/>}>
-            <LoggerContext.Provider value={logger}>
-                <ToastContainer/>
-                <AuthenticationContextProvider>
-                    <ApplicationStatusContextProvider>
-                        <AuthenticationDataAccess>
-                            {children}
-                        </AuthenticationDataAccess>
-                    </ApplicationStatusContextProvider>
-                </AuthenticationContextProvider>
-            </LoggerContext.Provider>
+            <ApplicationNotificationContext>
+                <LoggerContext.Provider value={logger}>
+                    <ToastContainer/>
+                    <AuthenticationContextProvider>
+                        <ApplicationStatusContextProvider>
+                            <AuthenticationDataAccess>
+                                {children}
+                            </AuthenticationDataAccess>
+                        </ApplicationStatusContextProvider>
+                    </AuthenticationContextProvider>
+                </LoggerContext.Provider>
+            </ApplicationNotificationContext>
         </Suspense>
     </RecoilRoot>;
 

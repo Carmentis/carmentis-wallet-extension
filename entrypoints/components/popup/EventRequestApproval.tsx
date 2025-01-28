@@ -16,7 +16,7 @@
  */
 
 import React from "react";
-import {Optional} from "@/entrypoints/main/Optional.tsx";
+import {Optional} from "@/entrypoints/main/optional.ts";
 import {RecordDisplayer} from "@/entrypoints/components/popup/RecordDisplayer.tsx";
 import Skeleton from "react-loading-skeleton";
 

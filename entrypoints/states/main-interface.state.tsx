@@ -15,14 +15,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {SecretEncryptionKey} from "@/entrypoints/main/secret-encryption-key.ts";
+import {atom, useSetRecoilState} from "recoil";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+export interface MainInterfaceStatus {
+    showNotifications: boolean
 }
+
+export const mainInterfaceState = atom<MainInterfaceStatus>({
+    key: 'mainInterfaceStatus',
+    default: {
+        showNotifications: false,
+    }
+})
+
+export function useMainInterfaceActions() {
+    const setMainInterface = useSetRecoilState(mainInterfaceState);
+    return {
+        showNotifications: () => {
+            setMainInterface(status => {
+                return {...status, showNotifications: true}
+            })
+        },
+        hideNotifications: () => {
+            setMainInterface(status => {
+                return {...status, showNotifications: false}
+            })
+        }
+    }
+}
+
+
+

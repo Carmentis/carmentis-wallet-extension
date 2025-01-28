@@ -21,17 +21,19 @@ import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-vie
 import { RecordConfirmationData } from '@/entrypoints/components/popup/PopupDashboard.tsx';
 import Guard from '@/entrypoints/main/Guard.tsx';
 import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
-import { Optional } from '@/entrypoints/main/Optional.tsx';
+import { Optional } from '@/entrypoints/main/optional.ts';
+import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
 
 /**
  * Class representing an indexed storage database using Dexie for managing application data.
  * The database consists of tables for applications, flows, and microBlocks.
  * Extends the Dexie class to provide methods for interacting with the database.
  */
-class IndexedStorageDB extends Dexie {
+export class ApplicationDataStorageDB extends Dexie {
     applications!: Table<Application, string>;
     flows!: Table<Flow, string>;
     microBlocks!: Table<MicroBlock, string>;
+    notifications!: Table<AppNotification, string>;
 
     constructor(dbName: string) {
         super(dbName);
@@ -39,29 +41,37 @@ class IndexedStorageDB extends Dexie {
             applications: 'applicationId',
             flows: 'flowId, applicationId',
             microBlocks: 'microBlockId, flowId, [flowId+nonce]',
+            notifications: '++notificationId, ts'
         });
     }
+
+    static async connectDatabase(account: Account): Promise<ApplicationDataStorageDB> {
+        const dbName = `account-${account.id}`;
+        return new ApplicationDataStorageDB(dbName);
+    }
+
+
 }
 
 /**
  * Manages data storage for blockchain-related entities such as applications, flows, and micro-blocks.
  * Provides methods to interact with an IndexedDB database, allowing for storage, retrieval, and update operations.
  */
-export class DataStorage {
+export class ApplicationDataStorageHelper {
 
 
-    private constructor(private db: IndexedStorageDB, private account: Account) {}
+    private constructor(private db: ApplicationDataStorageDB, private account: Account) {}
 
     /**
      * Connects to the database for the specified account and initializes a DataStorage instance.
      *
      * @param {Account} account - The account object containing the details required to connect to the database.
-     * @return {Promise<DataStorage>} A promise that resolves to the initialized DataStorage instance.
+     * @return {Promise<ApplicationDataStorageHelper>} A promise that resolves to the initialized DataStorage instance.
      */
-    static async connectDatabase(account: Account): Promise<DataStorage> {
+    static async connectDatabase(account: Account): Promise<ApplicationDataStorageHelper> {
         const dbName = `account-${account.id}`;
-        const db = new IndexedStorageDB(dbName);
-        return new DataStorage(db, account);
+        const db = new ApplicationDataStorageDB(dbName);
+        return new ApplicationDataStorageHelper(db, account);
     }
 
     /**

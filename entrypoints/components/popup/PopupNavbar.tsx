@@ -17,14 +17,14 @@
 
 import React, {useState} from "react";
 import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
-import {useAuthenticationContext} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useAuthenticationContext, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
+import {useRecoilState, useRecoilValue} from "recoil";
 
 export function PopupNavbar() {
 
     // load the authentication context
-    const authentication = useAuthenticationContext();
-    const wallet = authentication.wallet.unwrap()
-    const activeAccount = wallet.getActiveAccount().unwrap();
+    const wallet = useRecoilValue(walletState);
+    const {disconnect} = useAuthenticationContext();
 
 
 
@@ -72,7 +72,7 @@ export function PopupNavbar() {
                         </div>
                         <div
                             className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-                            id="menu-item-1" onClick={authentication.disconnect}>Logout
+                            id="menu-item-1" onClick={disconnect}>Logout
                         </div>
                     </div>
                 </div>

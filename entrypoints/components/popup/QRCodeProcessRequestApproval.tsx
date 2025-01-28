@@ -16,7 +16,7 @@
  */
 
 import React from "react";
-import {ActionMessage} from "@/entrypoints/main/ActionMessage.tsx";
+import {ActionMessage} from "@/entrypoints/main/client-request.ts";
 
 export function QRCodeProcessRequestApproval(input: {
     message: ActionMessage,

@@ -19,7 +19,7 @@
 import browser from 'webextension-polyfill'
 import {Wallet} from '@/entrypoints/main/wallet.tsx';
 import {IllegalStateError} from '@/entrypoints/main/errors.tsx';
-import {ActionMessage} from '@/entrypoints/main/ActionMessage.tsx';
+import {ActionMessage} from '@/entrypoints/main/client-request.ts';
 
 export interface SessionState {
     wallet: Wallet;

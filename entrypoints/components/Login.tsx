@@ -16,7 +16,7 @@
  */
 
 import {useState} from "react";
-import {SecureWalletStorage} from "@/entrypoints/main/WalletStorage.tsx";
+import {SecureWalletStorage} from "@/entrypoints/main/wallet-storage.tsx";
 import {CarmentisProvider} from "@/src/providers/carmentisProvider.tsx";
 import {useAuthenticationContext,} from '@/entrypoints/contexts/authentication.context.tsx';
 

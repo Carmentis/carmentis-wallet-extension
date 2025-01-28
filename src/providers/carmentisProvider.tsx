@@ -17,7 +17,7 @@
 
 import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
-import { SecretEncryptionKey } from '@/entrypoints/main/SecretEncryptionKey.tsx';
+import { SecretEncryptionKey } from '@/entrypoints/main/secret-encryption-key.ts';
 
 export class CarmentisProvider implements ProviderInterface{
     generateWords(): string[] {

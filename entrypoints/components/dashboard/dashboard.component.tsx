@@ -43,7 +43,10 @@ import {SpinningWheel} from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
 import {useRecoilValue} from 'recoil';
 import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
-import {DataStorage} from "@/entrypoints/main/data-storage.tsx";
+import {ApplicationDataStorageHelper} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import NotificationRightBar from "@/entrypoints/components/notification-rightbar.component.tsx";
+import {showNotifications, useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
+import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -97,6 +100,7 @@ export function Dashboard(): ReactElement {
 					element={<Parameters />}
 				/>
 			</Routes>
+			<NotificationRightBar/>
 		</NavbarSidebarLayout>
 	);
 }
@@ -198,17 +202,9 @@ function DashboardNavbar() {
 
 
 			<div className="relative inline-block text-left">
-				<div>
-					<button onClick={() => setShowMenu(!showMenu)}
-							className="inline-flex w-full justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-							id="menu-button" aria-expanded="true" aria-haspopup="true">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-							 strokeWidth="1.5"
-							 stroke="currentColor" className="size-6">
-							<path strokeLinecap="round" strokeLinejoin="round"
-								  d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-						</svg>
-					</button>
+				<div className={"flex flex-row justify-center items-center"}>
+					<ClickableAppNotifications/>
+					<ClickableThreeDots onClick={() => setShowMenu(!showMenu)}/>
 				</div>
 
 
@@ -234,6 +230,29 @@ function DashboardNavbar() {
 			</div>
 		</div>
 	</>;
+}
+
+function ClickableAppNotifications() {
+	const actions = useMainInterfaceActions();
+	const {notifications, isLoading} = useApplicationNotificationHook();
+
+	const badgeContent = isLoading ? undefined : notifications.length;
+	return <Badge onClick={() => actions.showNotifications()} badgeContent={badgeContent} color={"primary"}>
+		<i className={"bi bi-envelope text-xl"}></i>
+	</Badge>
+}
+
+function ClickableThreeDots(input: {onClick: () => void}) {
+	return <button onClick={input.onClick}
+				   className="inline-flex w-full justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+				   id="menu-button" aria-expanded="true" aria-haspopup="true">
+		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+			 strokeWidth="1.5"
+			 stroke="currentColor" className="size-6">
+			<path strokeLinecap="round" strokeLinejoin="round"
+				  d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
+		</svg>
+	</button>
 }
 
 /**
@@ -313,8 +332,8 @@ function DashboardWelcomeCards() {
 	const [spentGaz, setSpentGaz] = useState<number | undefined>();
 
 	useEffect(() => {
-		DataStorage.connectDatabase(activeAccount)
-			.then(async (db: DataStorage) => {
+		ApplicationDataStorageHelper.connectDatabase(activeAccount)
+			.then(async (db: ApplicationDataStorageHelper) => {
 				db.getNumberOfApplications().then(setNumberOfApplications);
 				db.getFlowsNumberOfAccount().then(setNumberOfFlows);
 				db.getSpentGaz().then(setSpentGaz);
@@ -391,7 +410,7 @@ function DashboardVirtualBlockchainsList() {
 
 
 	function putDataInStates() {
-		DataStorage.connectDatabase(activeAccount)
+		ApplicationDataStorageHelper.connectDatabase(activeAccount)
 			.then(async (db) => {
 				db.getAllFlowsOfAccount().then(setFlows);
 			});
