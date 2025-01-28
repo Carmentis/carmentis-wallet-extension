@@ -120,6 +120,7 @@ export function useActionMessageContext() {
     return context;
 }
 
+/*
 // this function is used to be set once and to import messages received from outside of the component.
 browser.runtime.onMessage.addListener((message : IncomingQR) => {
     console.info("[popup] Add message:", message)
@@ -132,3 +133,4 @@ browser.runtime.onMessage.addListener((message : IncomingQR) => {
         type: "unknown"
     })
 });
+ */

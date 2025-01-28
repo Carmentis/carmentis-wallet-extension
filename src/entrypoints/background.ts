@@ -18,6 +18,8 @@
 import {Runtime} from "webextension-polyfill";
 import Port = Runtime.Port;
 
+
+
 function processQRCode(origin: string, data: string) {
     browser.action.openPopup().then(() => {
         console.log("[background] open popup", data);

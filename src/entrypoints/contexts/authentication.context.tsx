@@ -4,7 +4,7 @@ import {Account} from '@/entrypoints/main/Account.tsx';
 import {atom, selector, useRecoilState, useRecoilValue} from 'recoil';
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import * as sdk from "../../../../carmentis-core/dist/client";
-
+import {AtomEffect} from "recoil";
 
 export interface AuthenticationContainer {
 	connect: (wallet: Wallet) => void,
@@ -27,9 +27,33 @@ export interface AuthenticationContainer {
  */
 export const AuthenticationContext = createContext<AuthenticationContainer|undefined>(undefined);
 
+function walletSessionStorageEffect<T>(key: string): AtomEffect<T> {
+	return ({ setSelf, onSet }) => {
+		// Initialize atom from chrome.storage.session
+		chrome.storage.session.get([key], (result) => {
+			console.log("[walletSession] obtained result:", result)
+			if (result[key] !== undefined) {
+				setSelf(result[key] as T);
+			} else {
+				setSelf(undefined);
+			}
+		});
+
+		// Save atom updates to chrome.storage.session
+		onSet((newValue) => {
+			console.log("[walletSession] Updating wallet:", newValue)
+			if (newValue === undefined) {
+				chrome.storage.session.remove([key]);
+			} else {
+				chrome.storage.session.set({ [key]: newValue });
+			}
+		});
+	};
+}
+
 export const walletState = atom<Wallet|undefined>({
 	key: "wallet",
-	default: undefined,
+	effects: [walletSessionStorageEffect<Wallet|undefined>("walletSession")],
 })
 
 export const passwordState = selector<string|undefined>({
@@ -72,15 +96,6 @@ export const activeAccountPublicKeyState = selector<string|undefined>({
 	}
 })
 
-
-export const tokenAccountState = selector<string|undefined>({
-	key: 'tokenAccountState',
-	get: ({get}) => {
-		const activeAccount = get(activeAccountState);
-		if (!activeAccount) return undefined;
-		return activeAccount.accountVirtualBlockchainId
-	}
-})
 
 export const nodeEndpointState = selector({
 	key: 'nodeEndpointState',

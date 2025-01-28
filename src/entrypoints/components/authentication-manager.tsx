@@ -89,7 +89,7 @@ function configureEndpointsFromWallet(wallet: Wallet | undefined) {
 
 function AuthenticationDataAccess({children}: PropsWithChildren) {
     const [wallet, setWallet] = useRecoilState(walletState);
-    const [walletInSession, setWalletInSession] = useSessionStorage<Wallet | undefined>('walletSession', undefined)
+    //const [walletInSession, setWalletInSession] = useSessionStorage<Wallet | undefined>('walletSession', undefined)
     const password = useRecoilValue(passwordState);
     const [isLoading, setLoading] = useState(true);
 
@@ -107,7 +107,7 @@ function AuthenticationDataAccess({children}: PropsWithChildren) {
         setLoading(true);
         if (wallet) {
             configureEndpointsFromWallet(wallet);
-            setWalletInSession(wallet)
+            //setWalletInSession(wallet)
             console.log('[context page] an update of the wallet has been detected: store the wallet in local and session');
             const provider = new CarmentisProvider();
             SecureWalletStorage.CreateSecureWalletStorage(provider, password).then(storage => {
@@ -124,27 +124,22 @@ function AuthenticationDataAccess({children}: PropsWithChildren) {
     const applicationStartup = async () => {
         // no locally stored wallet => need to setup
         const walletIsInStorage = !(await SecureWalletStorage.IsEmpty());
-        const walletIsStoredInSession = walletInSession !== undefined;
         console.log("Wallet in storage?", walletIsInStorage)
-        console.log("Wallet in session?", walletInSession !== undefined)
+        console.log("Wallet in session?", wallet !== undefined)
 
-        if (!wallet && !walletIsStoredInSession && !walletIsInStorage) {
+        if (!wallet && !walletIsInStorage) {
             console.log("No wallet found in storage and nowhere else: Onboarding required")
             setLoading(false);
             return;
-        } else if (!wallet && !walletIsStoredInSession && walletIsInStorage) {
+        } else if (!wallet && walletIsInStorage) {
             console.log("Wallet found in storage but not found in session or state: Login required");
             setAccountCreated()
             setLoading(false)
         } else if (wallet && walletIsInStorage) {
             console.log("wallet found in state and in session: Running")
             setLoading(false);
-        } else if (!wallet && walletIsStoredInSession) {
-            console.log("wallet found in session and but not in state: Loading from session")
-            setWallet(walletInSession)
-            setLoading(false);
         } else {
-            console.log(`Strange state detected:, ${wallet !== undefined}, ${walletIsStoredInSession}, ${walletIsInStorage}`)
+            console.log(`Strange state detected:, ${wallet !== undefined}, ${walletIsInStorage}`)
         }
 
 
@@ -152,7 +147,7 @@ function AuthenticationDataAccess({children}: PropsWithChildren) {
 
     applicationStartup();
 
-    if (wallet && !walletInSession || isLoading) return <Splashscreen/>
+    if (isLoading) return <Splashscreen/>
     return <>
 
         {children}

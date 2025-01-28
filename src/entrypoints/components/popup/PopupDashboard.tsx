@@ -39,6 +39,8 @@ import {
 } from '@/entrypoints/contexts/authentication.context.tsx';
 import {AccountDataStorage} from "@/utils/db/account-data-storage.ts";
 import {useRecoilState, useRecoilValue} from "recoil";
+import {useRuntimeMessageListener} from "@/utils/client-request-listener.tsx";
+import {useSessionStorage} from "react-use";
 
 // the request state is only meaningful when a request is running.
 enum RequestTreatmentState {
@@ -112,11 +114,22 @@ export interface Flow {
 
 export function PopupDashboard() {
 
+    // the current client request stored in session (possibly undefined)
+    const [clientRequest, setClientRequest] = useSessionStorage<ClientRequest|undefined>('popup-client-request', undefined);
+    const deleteClientRequest = () => setClientRequest(undefined);
 
     // load the different contexts
     const authenticationContext = useAuthenticationContext();
-    const { actionMessages, setActionMessages } = useActionMessageContext();
     let logger = useContext(LoggerContext);
+
+
+    const handleNewMessage = (message: ClientRequest) => {
+        console.log("[popup] Received message in dashboard:", message)
+        setClientRequest(clientRequest);
+    };
+
+    useRuntimeMessageListener(handleNewMessage);
+
 
     // load the authentication data
     const [wallet, setWallet] = useRecoilState(walletState);
@@ -146,16 +159,17 @@ export function PopupDashboard() {
         authorPublicKey: undefined
     })
 
-
+    /*
     // update the page when the action messages is updated
     useEffect(() => {
         setActionRequestState(RequestTreatmentState.IN_PROGRESS)
-        if ( actionMessages.length === 0 ) {
+        if ( !clientRequest ) {
             setLocalActionMessageOption(Optional.Empty())
         } else {
-            setLocalActionMessageOption(Optional.From(actionMessages[0]))
+            setLocalActionMessageOption(Optional.From(clientRequest))
         }
-    }, [actionMessages]);
+    }, [clientRequest]);
+     */
 
     // states for the dashboard
     let [showWaitingScreen, setShowWaitingScreen] = useState<boolean>(false);
@@ -199,7 +213,7 @@ export function PopupDashboard() {
         setError("")
         setActionRequestState(RequestTreatmentState.SUCCESS)
         setShowWaitingScreen(false);
-        setActionMessages([])
+        deleteClientRequest()
         setTimeout(() => {
             //window.close()
         }, 1000)
@@ -224,7 +238,7 @@ export function PopupDashboard() {
      */
     function RejectRequest() {
         logger.info(`[popup] Reject approval`)
-        setActionMessages([])
+        deleteClientRequest()
         window.close()
     }
 
@@ -271,18 +285,13 @@ export function PopupDashboard() {
     async function handleClientRequest(request) {
         logger.info("[popup] receive client request from operator", request);
 
-        if ( actionMessages.length === 0 ) {
+        if ( !clientRequest ) {
             throw new Error("no action messages");
         } else {
-            console.log("[popup] there is an action message!", actionMessages);
+            console.log("[popup] there is an action message!", clientRequest);
         }
 
-        const actionMessage : ClientRequest = actionMessages[0];
-        setActionMessages(messages => {
-            messages[0].clientRequest = request;
-            return messages
-        });
-        console.log("[popup] action messages: ", actionMessages)
+        console.log("[popup] action messages: ", clientRequest)
 
 
         switch (request.type) {
@@ -308,10 +317,7 @@ export function PopupDashboard() {
         }
 
         function updateActionMessageType(type : "signIn" | "authentication" | "eventApproval") {
-            setActionMessages(messages => {
-                messages[0].type = type;
-                return messages
-            });
+
         }
     }
 
@@ -449,11 +455,6 @@ export function PopupDashboard() {
 
         switch (serverRequest.type) {
             case "blockData": {
-                // we update the serverRequest if and only a request is under processing which is not the case here
-                setActionMessages(messages => {
-                    messages[0].serverRequest = serverRequest;
-                    return messages
-                })
                 requestBlockData(serverRequest as ServerRequest);
                 break;
             }
@@ -508,12 +509,13 @@ export function PopupDashboard() {
                     confirmRecordDetails.current.flowId = serverRequest.data.flowId
                     confirmRecordDetails.current.nonce = flow.flowObject.chain.currentNonce;
 
-
+                    /*
                     // store the processRecord in the session
                     setActionMessages((messages : ClientRequest[]) => {
                         messages[0].eventApprovalData = res;
                         return messages
                     })
+                     */
 
                     resolve()
                 }).catch(reject)
