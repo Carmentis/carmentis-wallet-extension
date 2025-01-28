@@ -15,9 +15,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ProviderInterface} from "@/src/providers/providerInterface.tsx";
+import {ProviderInterface} from "@/providers/providerInterface.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
-import { SecretEncryptionKey } from '@/entrypoints/main/secret-encryption-key.ts';
+import { SecretEncryptionKey } from '@/utils/secret-encryption-key.ts';
 
 export class CarmentisProvider implements ProviderInterface{
     generateWords(): string[] {

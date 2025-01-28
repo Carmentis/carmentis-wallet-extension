@@ -2,8 +2,8 @@
 docs
 
 # ignore the generated file styles
-entrypoints/popup/global.css
-entrypoints/main/global.css
+src/entrypoints/popup/global.css
+src/entrypoints/main/global.css
 
 # Logs
 logs
@@ -33,4 +33,4 @@ web-ext.config.ts
 *.sw?
 
 # tailwind generated file
-entrypoints/style.css
+src/entrypoints/style.css

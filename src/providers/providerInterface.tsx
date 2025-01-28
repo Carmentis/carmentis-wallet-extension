@@ -16,7 +16,7 @@
  */
 
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
-import {SecretEncryptionKey} from "@/entrypoints/main/secret-encryption-key.ts";
+import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
 
 export interface ProviderInterface {
     generateWords() : string[];
