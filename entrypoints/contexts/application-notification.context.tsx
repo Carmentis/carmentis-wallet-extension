@@ -20,16 +20,11 @@ import {useLocalStorage} from "react-use";
 import {activeAccountState} from "@/entrypoints/contexts/authentication.context.tsx";
 import {PropsWithChildren, useEffect} from "react";
 import {AppNotification, appNotificationState} from "@/entrypoints/states/application-nofications.state.tsx";
-import {useLiveQuery} from "dexie-react-hooks";
-import {ApplicationDataStorageDB} from "@/entrypoints/main/application-data-storage-helper.tsx";
-import {Account} from "@/entrypoints/main/Account.tsx";
-import notify = chrome.fileSystemProvider.notify;
-
+import {NotificationStorageDB} from "@/entrypoints/main/notification-storage.ts";
 
 
 const INITIAL_APP_NOTIFICATION_LOCAL_STORAGE: AppNotification[] = []
 export default function ApplicationNotificationContext({children}: PropsWithChildren) {
-    const notifications = useRecoilValue(appNotificationState);
     return <>{children}</>
 }
 
@@ -37,28 +32,25 @@ export function useAppNotification() {
     const activeAccount = useRecoilValue(activeAccountState);
     return {
         notify: async (title: string, message: string) => {
-            if (activeAccount) {
-                const db = await ApplicationDataStorageDB.connectDatabase(activeAccount);
-                db.notifications.put({
-                    message: message,
-                    seen: false,
-                    title: title,
-                    ts: new Date().getTime()
-                })
-            }
+            const db = await NotificationStorageDB.connectDatabase();
+            db.notifications.put({
+                message: message,
+                seen: false,
+                title: title,
+                ts: new Date().getTime()
+            })
         },
         notifyWithButtonLink: async (title: string, message: string, buttonMessage: string, link: string) => {
-            if (activeAccount) {
-                const db = await ApplicationDataStorageDB.connectDatabase(activeAccount);
-                db.notifications.put({
-                    message: message,
-                    seen: false,
-                    title: title,
-                    ts: new Date().getTime(),
-                    link: link,
-                    buttonMessage: buttonMessage
-                })
-            }
+            const db = await NotificationStorageDB.connectDatabase();
+            db.notifications.put({
+                message: message,
+                seen: false,
+                title: title,
+                ts: new Date().getTime(),
+                link: link,
+                buttonMessage: buttonMessage
+            })
+
         }
     }
 }

@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ActionMessage, ActionRequest} from "@/entrypoints/main/client-request.ts";
+import {ClientRequest, IncomingQR} from "@/entrypoints/main/client-request.ts";
 import React, {createContext, Dispatch, ReactElement, SetStateAction, useContext, useEffect, useState} from "react";
 import {SessionStorage} from "@/entrypoints/main/session-storage.tsx";
 import {Optional} from "@/entrypoints/main/optional.ts";
@@ -35,10 +35,10 @@ const randomHex = (size: number) => {
 
 
 export class ActionMessageContainer {
-    private _actionMessageOption : Optional<ActionMessage[]>;
-    private _setActionMessageOption : Optional<Dispatch<SetStateAction<ActionMessage[]>>>
+    private _actionMessageOption : Optional<ClientRequest[]>;
+    private _setActionMessageOption : Optional<Dispatch<SetStateAction<ClientRequest[]>>>
 
-    constructor( actionMessage : Optional<ActionMessage[]>, setActionMessage : Optional<Dispatch<SetStateAction<ActionMessage[]>>> ) {
+    constructor(actionMessage : Optional<ClientRequest[]>, setActionMessage : Optional<Dispatch<SetStateAction<ClientRequest[]>>> ) {
         this._actionMessageOption = actionMessage;
         this._setActionMessageOption = setActionMessage;
     }
@@ -56,13 +56,13 @@ export class ActionMessageContainer {
 
 
 export const ActionMessageContext = createContext<{
-    actionMessages: ActionMessage[];
-    setActionMessages: React. Dispatch<React. SetStateAction<ActionMessage[]>>;
+    actionMessages: ClientRequest[];
+    setActionMessages: React. Dispatch<React. SetStateAction<ClientRequest[]>>;
 }|null>(null)
-let onNewActionMessage : (message: ActionMessage) => void = () => {};
+let onNewActionMessage : (message: ClientRequest) => void = () => {};
 
 export function ActionMessageHandler(props: { children: ReactElement }) {
-    const [actionMessages, setNotification] = useState<ActionMessage[]>([]);
+    const [actionMessages, setNotification] = useState<ClientRequest[]>([]);
     const [allowMessageWriting, setAllowMessageWriting] = useState<boolean>(false);
     const logger = useContext(LoggerContext);
 
@@ -71,7 +71,7 @@ export function ActionMessageHandler(props: { children: ReactElement }) {
      * .
      * @param message The received message (
      */
-    onNewActionMessage = (message: ActionMessage) => {
+    onNewActionMessage = (message: ClientRequest) => {
         console.log("[action message] update the new action message")
         setNotification([message])
     }
@@ -121,7 +121,7 @@ export function useActionMessageContext() {
 }
 
 // this function is used to be set once and to import messages received from outside of the component.
-browser.runtime.onMessage.addListener((message : ActionRequest) => {
+browser.runtime.onMessage.addListener((message : IncomingQR) => {
     console.info("[popup] Add message:", message)
     onNewActionMessage({
         id: randomHex(12),

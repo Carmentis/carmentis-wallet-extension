@@ -15,22 +15,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export interface ClientRequest {
-    id: string,
-    action: string,
-    data: any,
-    receivedAt: number,
-    origin: string,
-    type : "unknown" | "signIn" | "authentication" | "eventApproval"
+import Dexie, { Table } from 'dexie';
+import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
 
-    eventApprovalData?: object
-    serverRequest?: object,
-    clientRequest?: object,
+const NOTIFICATION_DATABASE_NAME = "notification-database"
+
+export class NotificationStorageDB extends Dexie {
+    notifications!: Table<AppNotification, string>;
+
+    constructor() {
+        super(NOTIFICATION_DATABASE_NAME);
+        this.version(1).stores({
+            notifications: '++notificationId, ts'
+        });
+    }
+
+    static async connectDatabase(): Promise<NotificationStorageDB> {
+        return new NotificationStorageDB();
+    }
 
 }
 
-export interface IncomingQR {
-    action: string,
-    data: any,
-    origin: string,
-}

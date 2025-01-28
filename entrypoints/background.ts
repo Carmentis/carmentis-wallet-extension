@@ -18,7 +18,7 @@
 import {Runtime} from "webextension-polyfill";
 import Port = Runtime.Port;
 
-function processQRCode( origin : string, data : string ) {
+function processQRCode(origin: string, data: string) {
     browser.action.openPopup().then(() => {
         console.log("[background] open popup", data);
         setTimeout(() => {
@@ -26,16 +26,16 @@ function processQRCode( origin : string, data : string ) {
             browser.runtime.sendMessage({
                 action: "popup/processQRCode",
                 data: data,
-                origin: origin ,
+                origin: origin,
             })
         }, 250);
         return true;
-    }).catch( error => {
+    }).catch(error => {
         console.log("[background] An error has been detected when opening the popup: ", error)
 
 
         // occurs when the popup is already opened
-        if ( error.message === "Failed to open popup." ) {
+        if (error.message === "Failed to open popup.") {
             console.log("[background] Retrying with a send message")
             browser.runtime.sendMessage({
                 action: "popup/processQRCode",
@@ -45,7 +45,7 @@ function processQRCode( origin : string, data : string ) {
         }
 
         // occurs when the navigator requires a user gesture
-        if ( error.message == "openPopup requires a user gesture" ) {
+        if (error.message == "openPopup requires a user gesture") {
             console.log("[background] Retrying with a floating window")
             browser.windows.create({
                 url: "popup.html",
@@ -70,7 +70,7 @@ function processQRCode( origin : string, data : string ) {
     });
 }
 
-function launchExtensionOnTab( url: string ) {
+function launchExtensionOnTab(url: string) {
     const extensionId = browser.runtime.id;
 
     browser.tabs.query({}).then(allTabs => {
@@ -104,61 +104,63 @@ function launchExtensionOnTab( url: string ) {
     })
 
 
-    }
+}
 
-    export default defineBackground({
-        persistent: true,
-        main: () => {
-            console.log('background executed');
+export default defineBackground({
+    persistent: true,
+    main: () => {
+        console.log('background executed');
 
-            browser.runtime.onInstalled.addListener(({reason}) => {
-                if ( reason === "install" ) {
+        browser.runtime.onInstalled.addListener(({reason}) => {
+            if (reason === "install") {
+                browser.tabs.create({url: "./main.html"});
+            }
+            return true;
+        });
+
+
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            console.log("[background] message received:", message, sender, sendResponse);
+
+            // we do not execute request coming from tab which are not active
+            if (sender.tab && !sender.tab.active) {
+                return
+            }
+
+
+            if (message.action == "open") {
+                if (message.location == "main") {
+                    //launchExtensionOnTab( "./main.html" );
+                    browser.tabs.create({url: "./main.html"});
+                    // browser.tabs.create({url: "./main.html"});
+                }
+
+                if (message.location == "onboarding") {
                     browser.tabs.create({url: "./main.html"});
                 }
-                return true;
-            });
+            }
+
+            return true;
+        });
 
 
-            browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-                console.log("[background] message received:", message, sender, sendResponse);
+        browser.runtime.onConnect.addListener((port: Port) => {
+            console.log("[background] connected to: ", port);
+            port.onMessage.addListener((rawRequest) => {
+                console.log("[background] message received from port:", rawRequest);
+                const request = JSON.parse(rawRequest);
+                console.log("[background] once decoded:", request);
+                const message = request.data
+                if (message.action === "processQRCode") {
+                    // get the data section
+                    let QRCodeData = message.data;
+                    processQRCode(request.origin, QRCodeData)
 
-                // we do not execute request coming from tab which are not active
-                if ( sender.tab && !sender.tab.active ) { return }
-
-
-                if (message.action == "open") {
-                    if (message.location == "main") {
-                        //launchExtensionOnTab( "./main.html" );
-                        browser.tabs.create({url: "./main.html"});
-                        // browser.tabs.create({url: "./main.html"});
-                    }
-
-                    if (message.location == "onboarding") {
-                        browser.tabs.create({url: "./main.html"});
-                    }
+                } else {
+                    console.warn("[background] undefined action: I don't known the desired action: received message: ", message);
                 }
-
                 return true;
-            });
-
-
-             browser.runtime.onConnect.addListener((port:Port) => {
-                 console.log("[background] connected to: ", port);
-                 port.onMessage.addListener((rawRequest) => {
-                     console.log("[background] message received from port:", rawRequest);
-                     const request = JSON.parse(rawRequest);
-                     console.log("[background] once decoded:", request);
-                     const message = request.data
-                     if (message.action === "processQRCode") {
-                         // get the data section
-                         let QRCodeData = message.data;
-                         processQRCode(request.origin, QRCodeData)
-
-                     } else {
-                         console.warn("[background] undefined action: I don't known the desired action: received message: ", message);
-                     }
-                     return true;
-                 })
-             });
-        }
-    });
+            })
+        });
+    }
+});

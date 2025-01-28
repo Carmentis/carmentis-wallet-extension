@@ -16,10 +16,10 @@
  */
 
 import React from "react";
-import {ActionMessage} from "@/entrypoints/main/client-request.ts";
+import {ClientRequest} from "@/entrypoints/main/client-request.ts";
 
 export function QRCodeProcessRequestApproval(input: {
-    message: ActionMessage,
+    message: ClientRequest,
     onAccept: (message : string) => void,
     onReject: () => void
 })

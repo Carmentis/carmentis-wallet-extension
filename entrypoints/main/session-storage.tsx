@@ -19,7 +19,7 @@
 import browser from 'webextension-polyfill'
 import {Wallet} from '@/entrypoints/main/wallet.tsx';
 import {IllegalStateError} from '@/entrypoints/main/errors.tsx';
-import {ActionMessage} from '@/entrypoints/main/client-request.ts';
+import {ClientRequest} from '@/entrypoints/main/client-request.ts';
 
 export interface SessionState {
     wallet: Wallet;
@@ -54,7 +54,7 @@ export class SessionStorage {
     }
 
 
-    static GetActionMessages() : Promise<ActionMessage[]> {
+    static GetActionMessages() : Promise<ClientRequest[]> {
         return new Promise((resolve, reject) => {
             browser.storage.session.get(["actionMessages"]).then((result) => {
                 if (result.actionMessages === undefined) {
@@ -66,7 +66,7 @@ export class SessionStorage {
         });
     }
 
-    static WriteActionsMessages(actionsMessages : ActionMessage[]) : Promise<void> {
+    static WriteActionsMessages(actionsMessages : ClientRequest[]) : Promise<void> {
         return browser.storage.session.set({
             actionMessages: actionsMessages
         })

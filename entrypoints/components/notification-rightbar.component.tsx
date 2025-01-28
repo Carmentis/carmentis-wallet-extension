@@ -26,9 +26,10 @@ import {
 import {mainInterfaceState, useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
 import {useNavigate} from "react-router";
 import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
-import {ApplicationDataStorageDB} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {AccountStorageDB} from "@/entrypoints/main/account-data-storage.ts";
 import {activeAccountState} from "@/entrypoints/contexts/authentication.context.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
+import {NotificationStorageDB} from "@/entrypoints/main/notification-storage.ts";
 
 
 
@@ -76,7 +77,7 @@ function NotificationBaseCard({children, title, message, notificationId}: PropsW
     async function deleteNotification() {
         if (activeAccount) {
             console.log("Deletion of notification:", notificationId)
-            const db = await ApplicationDataStorageDB.connectDatabase(activeAccount);
+            const db = await NotificationStorageDB.connectDatabase();
             const result = await db.notifications.delete(notificationId)
             console.log(`Notification deletion result:`, result)
         }

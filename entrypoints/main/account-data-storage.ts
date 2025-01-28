@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Carmentis. All rights reserved.
- * Licensed under the Apache 2.0 licence.
+ * Licensed under the Apache 2.0 licence. 
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -24,16 +24,11 @@ import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
 import { Optional } from '@/entrypoints/main/optional.ts';
 import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
 
-/**
- * Class representing an indexed storage database using Dexie for managing application data.
- * The database consists of tables for applications, flows, and microBlocks.
- * Extends the Dexie class to provide methods for interacting with the database.
- */
-export class ApplicationDataStorageDB extends Dexie {
+
+export class AccountStorageDB extends Dexie {
     applications!: Table<Application, string>;
     flows!: Table<Flow, string>;
     microBlocks!: Table<MicroBlock, string>;
-    notifications!: Table<AppNotification, string>;
 
     constructor(dbName: string) {
         super(dbName);
@@ -41,13 +36,12 @@ export class ApplicationDataStorageDB extends Dexie {
             applications: 'applicationId',
             flows: 'flowId, applicationId',
             microBlocks: 'microBlockId, flowId, [flowId+nonce]',
-            notifications: '++notificationId, ts'
         });
     }
 
-    static async connectDatabase(account: Account): Promise<ApplicationDataStorageDB> {
+    static async connectDatabase(account: Account): Promise<AccountStorageDB> {
         const dbName = `account-${account.id}`;
-        return new ApplicationDataStorageDB(dbName);
+        return new AccountStorageDB(dbName);
     }
 
 
@@ -57,21 +51,21 @@ export class ApplicationDataStorageDB extends Dexie {
  * Manages data storage for blockchain-related entities such as applications, flows, and micro-blocks.
  * Provides methods to interact with an IndexedDB database, allowing for storage, retrieval, and update operations.
  */
-export class ApplicationDataStorageHelper {
+export class AccountDataStorage {
 
 
-    private constructor(private db: ApplicationDataStorageDB, private account: Account) {}
+    private constructor(private db: AccountStorageDB, private account: Account) {}
 
     /**
      * Connects to the database for the specified account and initializes a DataStorage instance.
      *
      * @param {Account} account - The account object containing the details required to connect to the database.
-     * @return {Promise<ApplicationDataStorageHelper>} A promise that resolves to the initialized DataStorage instance.
+     * @return {Promise<AccountDataStorage>} A promise that resolves to the initialized DataStorage instance.
      */
-    static async connectDatabase(account: Account): Promise<ApplicationDataStorageHelper> {
+    static async connectDatabase(account: Account): Promise<AccountDataStorage> {
         const dbName = `account-${account.id}`;
-        const db = new ApplicationDataStorageDB(dbName);
-        return new ApplicationDataStorageHelper(db, account);
+        const db = new AccountStorageDB(dbName);
+        return new AccountDataStorage(db, account);
     }
 
     /**

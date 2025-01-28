@@ -43,9 +43,9 @@ import {SpinningWheel} from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
 import {useRecoilValue} from 'recoil';
 import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
-import {ApplicationDataStorageHelper} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {AccountDataStorage} from "@/entrypoints/main/account-data-storage.ts";
 import NotificationRightBar from "@/entrypoints/components/notification-rightbar.component.tsx";
-import {showNotifications, useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
+import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
 import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
@@ -332,8 +332,8 @@ function DashboardWelcomeCards() {
 	const [spentGaz, setSpentGaz] = useState<number | undefined>();
 
 	useEffect(() => {
-		ApplicationDataStorageHelper.connectDatabase(activeAccount)
-			.then(async (db: ApplicationDataStorageHelper) => {
+		AccountDataStorage.connectDatabase(activeAccount)
+			.then(async (db: AccountDataStorage) => {
 				db.getNumberOfApplications().then(setNumberOfApplications);
 				db.getFlowsNumberOfAccount().then(setNumberOfFlows);
 				db.getSpentGaz().then(setSpentGaz);
@@ -410,7 +410,7 @@ function DashboardVirtualBlockchainsList() {
 
 
 	function putDataInStates() {
-		ApplicationDataStorageHelper.connectDatabase(activeAccount)
+		AccountDataStorage.connectDatabase(activeAccount)
 			.then(async (db) => {
 				db.getAllFlowsOfAccount().then(setFlows);
 			});

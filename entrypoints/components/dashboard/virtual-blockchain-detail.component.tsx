@@ -23,7 +23,7 @@ import * as Carmentis from "@/lib/carmentis-nodejs-sdk";
 import {DataTreeViewer} from "@/entrypoints/components/dashboard/data-tree-viewer.component.tsx";
 import {activeAccountState, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilValue} from "recoil";
-import {ApplicationDataStorageHelper} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {AccountDataStorage} from "@/entrypoints/main/account-data-storage.ts";
 
 export function VirtualBlockchainDetailComponent(input: { chosenFlow: { applicationId: string, flowId: string}}) {
     // load history
@@ -48,7 +48,7 @@ export function VirtualBlockchainDetailComponent(input: { chosenFlow: { applicat
         setChosenBlock(undefined)
         if (!activeAccount) return;
         console.log("[flow details]", input);
-        ApplicationDataStorageHelper.connectDatabase(activeAccount).then((db) => {
+        AccountDataStorage.connectDatabase(activeAccount).then((db) => {
             db.getAllBlocksByFlowId(input.chosenFlow.flowId).then((blocks : MicroBlock[]) => {
                 blocks.sort( (b1, b2) => b1.nonce < b2.nonce ? -1 : 1 )
                 setBlocks(blocks);

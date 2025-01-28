@@ -17,8 +17,9 @@
 
 import {atom, selector, useRecoilValue} from "recoil";
 import {activeAccountState} from "@/entrypoints/contexts/authentication.context.tsx";
-import {ApplicationDataStorageDB} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {AccountStorageDB} from "@/entrypoints/main/account-data-storage.ts";
 import {useLiveQuery} from "dexie-react-hooks";
+import {NotificationStorageDB} from "@/entrypoints/main/notification-storage.ts";
 
 export interface AppNotification {
     notificationId?: string,
@@ -28,33 +29,24 @@ export interface AppNotification {
     seen: boolean,
     link?: string,
     buttonMessage?: string
+    accountId?: string
 }
 
 export const appNotificationState = selector<AppNotification[]>({
     key: 'appNotifications',
-    get: async ({get}) => {
-        const activeAccount = get(activeAccountState);
-        if (activeAccount) {
-            const db = await ApplicationDataStorageDB.connectDatabase(activeAccount);
-            const transactions = await db.notifications.orderBy('ts').toArray();
-            return transactions;
-        } else {
-            return []
-        }
+    get: async () => {
+        const db = await NotificationStorageDB.connectDatabase();
+        const transactions = await db.notifications.orderBy('ts').toArray();
+        return transactions;
     },
 });
 
 export function useApplicationNotificationHook() {
-    const activeAccount = useRecoilValue(activeAccountState);
     const storedNotifications: AppNotification[] | undefined = useLiveQuery(async () => {
-        if (activeAccount) {
-            const db = await ApplicationDataStorageDB.connectDatabase(activeAccount)
-            const result = await db.notifications.orderBy('ts').toArray();
-            if (result) return result
-            else return []
-        } else {
-            return []
-        }
+        const db = await NotificationStorageDB.connectDatabase()
+        const result = await db.notifications.orderBy('ts').toArray();
+        if (result) return result
+        else return []
     })
 
     return {

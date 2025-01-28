@@ -16,7 +16,7 @@
  */
 
 import React, {useContext, useEffect, useRef, useState} from "react";
-import {ActionMessage} from "@/entrypoints/main/client-request.ts";
+import {ClientRequest} from "@/entrypoints/main/client-request.ts";
 import {ActionMessageContext, useActionMessageContext} from "@/entrypoints/components/ActionMessage.tsx";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
 import * as sdk from "@cmts-dev/carmentis-sdk/client";
@@ -37,7 +37,7 @@ import {
     useAuthenticationContext,
     walletState
 } from '@/entrypoints/contexts/authentication.context.tsx';
-import {ApplicationDataStorageHelper} from "@/entrypoints/main/application-data-storage-helper.tsx";
+import {AccountDataStorage} from "@/entrypoints/main/account-data-storage.ts";
 import {useRecoilState, useRecoilValue} from "recoil";
 
 // the request state is only meaningful when a request is running.
@@ -123,7 +123,7 @@ export function PopupDashboard() {
     const activeAccount = useRecoilValue(activeAccountState);
 
     // create a reference on the action messages
-    const [localActionMessageOption, setLocalActionMessageOption] = useState<Optional<ActionMessage>>(
+    const [localActionMessageOption, setLocalActionMessageOption] = useState<Optional<ClientRequest>>(
         Optional.Empty()
     );
 
@@ -277,7 +277,7 @@ export function PopupDashboard() {
             console.log("[popup] there is an action message!", actionMessages);
         }
 
-        const actionMessage : ActionMessage = actionMessages[0];
+        const actionMessage : ClientRequest = actionMessages[0];
         setActionMessages(messages => {
             messages[0].clientRequest = request;
             return messages
@@ -510,7 +510,7 @@ export function PopupDashboard() {
 
 
                     // store the processRecord in the session
-                    setActionMessages((messages : ActionMessage[]) => {
+                    setActionMessages((messages : ClientRequest[]) => {
                         messages[0].eventApprovalData = res;
                         return messages
                     })
@@ -543,7 +543,7 @@ export function PopupDashboard() {
         confirmRecordDetails.current.nonce = request.data.nonce;
 
         // insert the block in indexeddb
-        ApplicationDataStorageHelper.connectDatabase(activeAccount).then((db) => {
+        AccountDataStorage.connectDatabase(activeAccount).then((db) => {
             return db.addApprovedBlockInActiveAccountHistory( confirmRecordDetails.current )
         }).then(() => {
             CloseOnSuccess()
