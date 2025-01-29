@@ -22,6 +22,7 @@ import {IllegalStateError} from "@/entrypoints/main/errors.tsx";
 import {AccountCreationModal} from "@/entrypoints/components/dashboard/account-creation-modal.component.tsx";
 import {activeAccountState, useWallet, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilValue, useSetRecoilState} from 'recoil';
+import Avatar from "boring-avatars";
 
 export function DropdownAccountSelection( input : {allowAccountCreation : boolean, large : boolean } ) {
 
@@ -114,8 +115,8 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
             }>
             <div onClick={() => setShowAccountSelectionMenu(true)}
                  className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                <img className="w-6 h-6 me-2 rounded-full"
-                     src="/src/assets/img/user-icon.jpg" alt="Jese image"/>
+                <Avatar className={"w-6 h-6 mr-2"} name={activeAccount?.pseudo} variant={"beam"}/>
+
                 <span
                     className="self-center text-md font-semibold  text-black">
                                 {activeAccount?.pseudo}
