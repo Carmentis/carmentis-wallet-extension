@@ -131,7 +131,7 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
                                 <div
                                     className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     <img className="w-6 h-6 me-2 rounded-full"
-                                         src="/src/assets/img/user-icon.jpg" alt="Jese image"/>
+                                         src="/assets/img/user-icon.jpg" alt="Jese image"/>
                                     {account.pseudo}
 
                                 </div>
