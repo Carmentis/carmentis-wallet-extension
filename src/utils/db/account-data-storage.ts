@@ -18,7 +18,7 @@
 import Dexie, { Table } from 'dexie';
 import { Account, Application, Flow, MicroBlock } from '@/entrypoints/main/Account.tsx';
 import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-view.tsx';
-import { RecordConfirmationData } from '@/entrypoints/components/popup/PopupDashboard.tsx';
+import { RecordConfirmationData } from '@/entrypoints/components/popup/popup-dashboard.tsx';
 import Guard from '@/entrypoints/main/Guard.tsx';
 import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
 import { Optional } from '@/utils/optional.ts';

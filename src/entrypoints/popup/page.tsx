@@ -17,7 +17,7 @@
 
 
 import {AuthenticationManager} from '@/entrypoints/components/authentication-manager.tsx';
-import {ActionMessageHandler} from '@/entrypoints/components/ActionMessage.tsx';
+import {ClientRequestStateWriter} from '@/entrypoints/components/client-request-state-writer.tsx';
 import {useApplicationStatus} from '@/entrypoints/contexts/application-status.context.tsx';
 import {
     activeAccountState,
@@ -28,7 +28,7 @@ import {Splashscreen} from '@/entrypoints/components/Splashscreen.tsx';
 import {NoWalletDetected} from '@/entrypoints/components/popup/NoWalletDetected.tsx';
 import Login from '@/entrypoints/components/Login.tsx';
 import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
-import {PopupDashboard} from '@/entrypoints/components/popup/PopupDashboard.tsx';
+import {PopupDashboard} from '@/entrypoints/components/popup/popup-dashboard.tsx';
 import {useRecoilValue} from "recoil";
 import OnBoarding from "@/entrypoints/components/onboarding/OnBoarding.tsx";
 import Dashboard from "@/entrypoints/components/dashboard/dashboard.component.tsx";
@@ -40,9 +40,9 @@ import Dashboard from "@/entrypoints/components/dashboard/dashboard.component.ts
 export function PopupAppEntrypoint() {
     return <>
         <AuthenticationManager>
-            <ActionMessageHandler>
+            <ClientRequestStateWriter>
                 <PopupApp></PopupApp>
-            </ActionMessageHandler>
+            </ClientRequestStateWriter>
         </AuthenticationManager>
     </>
 }

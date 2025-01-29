@@ -23,12 +23,13 @@ export default defineContentScript({
 
     window.addEventListener('message', async (message) => {
       console.log("[content] message received:", message);
-
       // send to background
       port.postMessage(JSON.stringify({
+        target: 'carmentis-wallet/background',
         request: message,
         data: message.data,
-        origin: message.origin
+        origin: message.origin,
+        from: 'content'
       }));
     });
 

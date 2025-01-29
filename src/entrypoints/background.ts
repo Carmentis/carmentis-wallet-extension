@@ -19,23 +19,43 @@ import {Runtime} from "webextension-polyfill";
 import Port = Runtime.Port;
 
 
-
 function processQRCode(origin: string, data: string) {
-    browser.action.openPopup().then(() => {
-        console.log("[background] open popup", data);
-        setTimeout(() => {
-            console.log("Sending message to popup");
-            browser.runtime.sendMessage({
-                action: "popup/processQRCode",
-                data: data,
-                origin: origin,
-            })
-        }, 250);
-        return true;
-    }).catch(error => {
-        console.log("[background] An error has been detected when opening the popup: ", error)
 
+    const message = {
+        action: "popup/processQRCode",
+        data: data,
+        origin: origin,
+    };
 
+    async function notifyExtension() {
+        try {
+            console.log("Attempting to open the extension...")
+             await browser.action.openPopup()
+            console.log("Extension open!")
+        } catch (e) {
+            console.log("Cannot open the extension:", e)
+        }
+
+        const trySending = (retryCount: number) => {
+            // Envoyer le message
+            browser.runtime.sendMessage(message)
+                .then(() => console.log("Message sent to extension"))
+                .catch((error) => {
+                    console.warn(`Try ${retryCount} failed :`, error);
+                    if (retryCount <= 0) {
+                        console.error("Extension non disponible après plusieurs tentatives.");
+                    } else {
+                        setTimeout(() => trySending(retryCount - 1), 100);
+                    }
+                });
+        };
+
+        trySending(10)
+    }
+
+    notifyExtension()
+
+        /*
         // occurs when the popup is already opened
         if (error.message === "Failed to open popup.") {
             console.log("[background] Retrying with a send message")
@@ -68,44 +88,22 @@ function processQRCode(origin: string, data: string) {
             });
         }
 
-        return true;
-    });
+         */
+
 }
 
-function launchExtensionOnTab(url: string) {
-    const extensionId = browser.runtime.id;
-
-    browser.tabs.query({}).then(allTabs => {
-        for (let tab of allTabs) {
-            console.log(tab)
-
-            if (tab.url == undefined || tab.id == undefined) continue
-
-            // check if the current page belongs to the extension
-            const belongsToExtension = tab.id && tab.url && tab.url.includes(extensionId);
-            if (!belongsToExtension) {
-                continue
-            }
-
-            // if the current page corresponds to extension but is not the desired URL, close it
-            if (!tab.url.includes(url)) {
-                browser.tabs.remove(tab.id);
-                continue
-            }
-
-            // the desired entrypoint is already open, so focus it
-            browser.tabs.update(tab.id, {active: true});
-            return
-
-        }
-
-        // otherwise open a new tab for it
-        browser.tabs.create({
-            url: url
-        })
-    })
-
-
+interface IncomingRequest {
+    "target": string,
+    "request":{
+        "isTrusted": boolean
+    },
+    "data":{
+        "action": string,
+        "data": string,
+        "from": string
+    },
+    "origin": string,
+    "from": string
 }
 
 export default defineBackground({
@@ -122,7 +120,7 @@ export default defineBackground({
 
 
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log("[background] message received:", message, sender, sendResponse);
+            console.log("[background] message received:", message);
 
             // we do not execute request coming from tab which are not active
             if (sender.tab && !sender.tab.active) {
@@ -132,9 +130,7 @@ export default defineBackground({
 
             if (message.action == "open") {
                 if (message.location == "main") {
-                    //launchExtensionOnTab( "./main.html" );
                     browser.tabs.create({url: "./main.html"});
-                    // browser.tabs.create({url: "./main.html"});
                 }
 
                 if (message.location == "onboarding") {
@@ -142,6 +138,7 @@ export default defineBackground({
                 }
             }
 
+            sendResponse({success: true});
             return true;
         });
 
@@ -150,17 +147,20 @@ export default defineBackground({
             console.log("[background] connected to: ", port);
             port.onMessage.addListener((rawRequest) => {
                 console.log("[background] message received from port:", rawRequest);
-                const request = JSON.parse(rawRequest);
-                console.log("[background] once decoded:", request);
-                const message = request.data
-                if (message.action === "processQRCode") {
-                    // get the data section
-                    let QRCodeData = message.data;
-                    processQRCode(request.origin, QRCodeData)
-
+                const request : IncomingRequest = JSON.parse(rawRequest as string);
+                if (request.target !== 'carmentis-wallet/background') {
+                    console.warn(`[background] Skipping the execution of incoming request: Invalid request target: got ${request.target}`)
                 } else {
-                    console.warn("[background] undefined action: I don't known the desired action: received message: ", message);
+                    const message = request.data
+                    if (message.action === "processQRCode") {
+                        // get the data section
+                        let QRCodeData = message.data;
+                        processQRCode(request.origin, QRCodeData)
+                    } else {
+                        console.warn("[background] undefined action: I don't known the desired action: received message: ", message);
+                    }
                 }
+
                 return true;
             })
         });
