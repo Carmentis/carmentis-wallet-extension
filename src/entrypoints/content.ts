@@ -15,38 +15,72 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import {
+    BACKGROUND_REQUEST_TYPE,
+    BackgroundRequest,
+    CLIENT_REQUEST_TYPE,
+    ClientAuthenticationRequest
+} from "@/entrypoints/background.ts";
+
+
+function handleClientAuthenticationRequest(challenge: string, origin: string,) {
+    const authRequest: BackgroundRequest<ClientAuthenticationRequest> = {
+        backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_REQUEST,
+        source: "content",
+        payload: {
+            clientRequestType: CLIENT_REQUEST_TYPE.AUTHENTICATION,
+            timestamp: new Date().getTime(),
+            origin: origin,
+            data: {
+                challenge: challenge,
+            }
+        }
+    }
+    console.log("[content] Sending authentication message to background")
+    //const port = browser.runtime.connect({name: 'carmentis-wallet'});
+    //console.log("[content] port created:", port)
+    //port.postMessage(authRequest);
+    browser.runtime.sendMessage(authRequest)
+}
+
 export default defineContentScript({
-  matches: ['*://*/*'],
-  main(ctx) {
-    const port = browser.runtime.connect({name: 'carmentis-wallet'});
-    console.log("[content] port created:", port)
+    matches: ['*://*/*'],
+    main(ctx) {
 
-    window.addEventListener('message', async (message) => {
-      console.log("[content] message received:", message);
-      // send to background
-      port.postMessage(JSON.stringify({
-        target: 'carmentis-wallet/background',
-        request: message,
-        data: message.data,
-        origin: message.origin,
-        from: 'content'
-      }));
-    });
+        const port = chrome.runtime.connect({name: 'carmentis-wallet'});
+        port.onMessage.addListener((msg) => {
+            console.log(msg.type);
+        });
 
 
-    const ui = createIntegratedUi(ctx, {
-      position: 'inline',
-      onMount: (container) => {
-        console.log('Carmentis Wallet mounted');
+        window.addEventListener('message', async (message) => {
+            console.log("[content] message received:", message);
+            // send to background
+            if (message.action === "carmentis/clientRequest" || message.data.action === "carmentis/clientRequest") {
+                handleClientAuthenticationRequest(message.data.challenge, message.origin)
+            }
+        });
 
-        const script = document.createElement('script');
-        script.type = 'module'; // Optional, if using ES6 modules
-        script.src = browser.runtime.getURL('/vendor/carmentis-wallet-init.js');
-        container.append(script);
+        // relay every message into the web page
+        browser.runtime.onMessage.addListener((message) => {
+            console.log("[content] Having received a message that I will post to the application")
+            window.postMessage(message, "*");
+        });
 
-      },
-    });
 
-    ui.mount();
-  },
+        const ui = createIntegratedUi(ctx, {
+            position: 'inline',
+            onMount: (container) => {
+                console.log('Carmentis Wallet mounted');
+
+                const script = document.createElement('script');
+                script.type = 'module'; // Optional, if using ES6 modules
+                script.src = browser.runtime.getURL('/vendor/carmentis-wallet-init.js');
+                container.append(script);
+
+            },
+        });
+
+        ui.mount();
+    },
 });

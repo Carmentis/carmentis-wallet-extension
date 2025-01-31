@@ -18,7 +18,8 @@
 import React, {useState} from "react";
 import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
 import {useAuthenticationContext, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
-import {useRecoilState, useRecoilValue} from "recoil";
+import {useRecoilValue} from "recoil";
+import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 
 export function PopupNavbar() {
 
@@ -35,10 +36,13 @@ export function PopupNavbar() {
      * This function is called when the user wants to see the extension in the main view.
      */
     function goToMainView() {
-        browser.runtime.sendMessage({
-            action: "open",
-            location: "main"
-        })
+        const openMainRequest : BackgroundRequest = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
+            payload: {
+                location: "main"
+            }
+        }
+        browser.runtime.sendMessage(openMainRequest)
     }
 
 

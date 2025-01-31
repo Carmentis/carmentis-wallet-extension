@@ -15,57 +15,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {PropsWithChildren, useContext, useEffect, useRef, useState} from "react";
-import {ClientRequest} from "@/utils/client-request.ts";
-import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import * as sdk from "../../../../../carmentis-core/dist/client";
-import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
-import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-import {Account, EmailValidationProofData} from "@/entrypoints/main/Account.tsx";
-import {QRCodeProcessRequestApproval} from "@/entrypoints/components/popup/QRCodeProcessRequestApproval.tsx";
+import React, {PropsWithChildren} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
-import {Optional} from "@/utils/optional.ts";
-import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
-import {SignInRequestApproval} from "@/entrypoints/components/popup/SignInRequestApproval.tsx";
-import {EventRequestApproval} from "@/entrypoints/components/popup/EventRequestApproval.tsx";
-import {AuthenticationRequest} from "@/entrypoints/components/popup/AuthenticationRequest.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
-import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
-import {
-    activeAccountState,
-    useAuthenticationContext, useWallet,
-    walletState
-} from '@/entrypoints/contexts/authentication.context.tsx';
-import {AccountDataStorage} from "@/utils/db/account-data-storage.ts";
+import {activeAccountState, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilState, useRecoilValue} from "recoil";
-import {useRuntimeMessageListener} from "@/utils/client-request-listener.tsx";
-import {useSessionStorage} from "react-use";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 import {Button, Typography} from "@mui/material";
-
-// the request state is only meaningful when a request is running.
-enum RequestTreatmentState {
-    IN_PROGRESS = "IN_PROGRESS",
-    SUCCESS = "SUCCESS",
-    ERROR = "ERROR",
-}
-
-
-interface BackgroundTaskExecutionOption {
-    showWaitingScreen?: boolean;
-    closeWaitingScreenOnSuccess?: boolean
-}
-
-interface ServerRequest {
-    "type": "blockData" | "confirmRecord",
-    "data": {
-        "recordId": string,
-        "applicationId": string,
-        "flowId": string | undefined,
-        "blockData": string
-    }
-}
-
+import {Encoders} from "@/entrypoints/main/Encoders.tsx";
+import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
+import {
+    BACKGROUND_REQUEST_TYPE,
+    BackgroundRequest,
+    CLIENT_REQUEST_TYPE,
+    ClientAuthenticationRequest,
+    ClientAuthenticationResponse,
+} from "@/entrypoints/background.ts";
+import {undefined} from "zod";
 
 
 export interface RecordConfirmationData {
@@ -138,7 +105,7 @@ function PopupBody() {
     console.log("[popup dashboard] Current client request:", clientRequest)
     // by default when there is no client request display the default dashboard
     if (!clientRequest)  return <PopupIdleBody/>
-    if (clientRequest.type === AUTH_BY_PK) return <PopupAuthByPublicKeyBody/>
+    if (clientRequest.clientRequestType === CLIENT_REQUEST_TYPE.AUTHENTICATION) return <PopupAuthByPublicKeyBody/>
 
 
     return <>You have a request!</>
@@ -147,23 +114,50 @@ function PopupBody() {
 function PopupIdleBody() {
     return <div className={"h-full w-full"}>
         <div id="popup-dashboard-main-container" className="h-full w-full flex justify-center items-center">
-            <img src="/src/assets/img/logo.svg" className="w-20 h-20" alt=""/>
+            <img src="/assets/img/logo.svg" className="w-20 h-20" alt=""/>
         </div>
     </div>
 }
 
+
+
+export function toHexa(array) {
+    if(!(array instanceof Uint8Array) && !Array.isArray(array)) {
+        return "";
+    }
+
+    return [...array].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("");
+}
+
+
 function PopupAuthByPublicKeyBody() {
     const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const authClientRequest = clientRequest as ClientAuthenticationRequest;
     const deleteClientRequest = () => setClientRequest(undefined);
     const wallet = useWallet();
     const activeAccount = useRecoilValue(activeAccountState);
 
     async function accept() {
-        //const keyPair = getUserKeyPair(wallet, activeAccount);
-        // TODO gen key pair from user
-        const sk = sdk.crypto.generateKey256();
-        const wi = new sdk.wiWallet(sk);
-        wi.approveRequestExecution(clientRequest)
+        if (!clientRequest) return;
+        console.log("[popup dashboard] Accepting the authentication request")
+        const keyPair = await getUserKeyPair(wallet, activeAccount);
+        const signature = Encoders.ToHexa(sdk.crypto.secp256k1.sign(
+            Encoders.ToHexa(keyPair.privateKey),
+            Encoders.FromHexa(authClientRequest.data.challenge)
+        ))
+
+        const response: BackgroundRequest<ClientAuthenticationResponse> = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+            payload: {
+                clientRequestType: CLIENT_REQUEST_TYPE.AUTHENTICATION,
+                data: {
+                    publicKey: Encoders.ToHexa(keyPair.publicKey),
+                    signature: signature,
+                },
+            }
+        }
+        console.log("[popup dashboard] Response:", response)
+        browser.runtime.sendMessage(response);
     }
 
     function decline() {
@@ -174,12 +168,28 @@ function PopupAuthByPublicKeyBody() {
         <div id="header">
             <Typography variant={"h6"}>Authentication request</Typography>
         </div>
-        <div id="body">
-
+        <div id="body" className={"h-full"}>
+            <p>
+                An application wants you to authenticate. You need to
+                approve the authentication or decline if
+                it is a mistake.
+            </p>
+            <p className="font-bold">Origin</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {authClientRequest.origin}
+            </p>
+            <p className="font-bold">Received at</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {new Date(authClientRequest.timestamp).toLocaleString()}
+            </p>
         </div>
-        <div id="footer" className={"w-full flex flex-row"}>
-            <Button className={"uppercase w-1/2 mr-2"} variant={"contained"} onClick={accept}>Accept</Button>
-            <Button className={"uppercase w-1/2 ml-2"} variant={"contained"} onClick={decline}>decline</Button>
+        <div id="footer" className={"w-full flex flex-row space-x-2"}>
+            <div className={"w-1/2"}>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={accept}>Accept</Button>
+            </div>
+            <div className={"w-1/2"}>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={decline}>decline</Button>
+            </div>
         </div>
     </div>
 }

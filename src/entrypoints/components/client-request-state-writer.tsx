@@ -15,48 +15,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ClientRequest, IncomingQR} from "@/utils/client-request.ts";
-import React, {createContext, Dispatch, ReactElement, SetStateAction, useContext, useEffect, useState} from "react";
-import {SessionStorage} from "@/utils/db/session-storage.tsx";
-import {Optional} from "@/utils/optional.ts";
-import {LoggerContext} from "@/entrypoints/components/authentication-manager.tsx";
-import {atom, AtomEffect, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
+import React, {ReactElement, useEffect} from "react";
+import {useRecoilValue, useSetRecoilState} from "recoil";
+import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
-import {activeAccountState, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
-import {Encoders} from "@/entrypoints/main/Encoders.tsx";
+import {
+    ClientRequestPayload,
+} from "@/entrypoints/background.ts";
 
 
-// from https://stackoverflow.com/questions/58325771/how-to-generate-random-hex-string-in-javascript
-/**
- * Generates a random hexadecimal string of the specified size.
- *
- * @param {number} size - The length of the hexadecimal string to generate.
- * @returns {string} A randomly generated hexadecimal string of the specified size.
- */
-const randomHex = (size: number) => {
-    let result = [];
-    let hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
-
-    for (let n = 0; n < size; n++) {
-        result.push(hexRef[Math.floor(Math.random() * 16)]);
-    }
-    return result.join('');
-}
-
-
-
-
-/**
- * A callback function that is triggered when a new action message is received.
- *
- * @type {(message: IncomingQR) => void}
- * @param {IncomingQR} message - The client request message that contains the details of the new action.
- */
-let onNewActionMessage : (message: IncomingQR) => void = function () {
-};
 
 /**
  * Handles action messages by updating the client request session state and rendering child components.
@@ -67,30 +35,46 @@ let onNewActionMessage : (message: IncomingQR) => void = function () {
  */
 export function ClientRequestStateWriter(props: { children: ReactElement }): JSX.Element {
     const setClientRequestSession = useSetRecoilState(clientRequestSessionState);
-    const wallet = useRecoilValue(walletState);
-    const activeAccount= useRecoilValue(activeAccountState);
 
     useEffect(() => {
-        const handleMessage = async (message: IncomingQR) => {
-            console.log("[client request] Receiving a client request:", message);
-            const keyPair = await getUserKeyPair(wallet, activeAccount);
-            // TODO use the used private key
-            const sk = sdk.crypto.generateKey256();
-            const w = new sdk.wiWallet(sk);
-            const data = await w.getRequestInfoFromQrCode(message.data);
-            console.log(data);
+        const handleMessage = async (message: ClientRequestPayload<unknown>|unknown) => {
+            console.log("[client request state writer] Received message:", message)
 
-            setClientRequestSession({
-                id: randomHex(12),
-                receivedAt: Date.now(),
-                action: message.action,
-                data: message.data,
-                origin: message.origin,
-                type: data.type,
-            });
+            // here we only handle new client request
+            if ((message as ClientRequestPayload<unknown>).clientRequestType) {
+                setClientRequestSession(message)
+            }
+            /*
+            const payload = message.payload as ClientRequestPayload<unknown>;
+            const isAwaitingForUserApprove = (payload as ClientRequestPayload<ClientRequestData<unknown>>).clientRequestType === CLIENT_REQUEST_TYPE.ASK_USER_FOR_APPROVE;
+            if (isAwaitingForUserApprove) {
+                const request = message as BackgroundRequest<ClientRequestPayload<ClientRequestData<unknown>>>;
+
+                const clientRequestPayload = newClientRequestMessage.payload;
+                const data = clientRequestPayload.data;
+                const preflightClientRequest = {
+                    id: randomHex(12),
+                    qrId: data.qrId,
+                    receivedAt: Date.now(),
+                    origin: data.origin,
+                    timestamp: data.timestamp,
+                    serverUrl: data.serverUrl,
+                }
+
+
+                console.log("[client request] Receiving a client request:", message);
+                const keyPair = await getUserKeyPair(wallet, activeAccount);
+
+                console.log("[client request state writer]", response);
+
+                console.log('[client request state writer] put in session the request payload:', request.payload)
+                setClientRequestSession(request.payload)
+            }
+             */
+
         };
 
-        const listener = (message: IncomingQR, sender, sendResponse) => {
+        const listener = (message: ClientRequestPayload<unknown>|unknown, sender, sendResponse) => {
             console.log("[client request] Message received:", message);
             handleMessage(message);
             sendResponse({success: true});

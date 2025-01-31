@@ -21,6 +21,7 @@ import {SecureWalletStorage} from "@/utils/db/wallet-storage.ts";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
 import {CreateFromPseudoAndSeed} from '@/entrypoints/main/wallet.tsx';
 import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
+import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 
 
 /**
@@ -59,10 +60,14 @@ export function SetupWallet() {
 
     function redirectToMainPage() {
         (async () => {
-            browser.runtime.sendMessage({
-                action: "open",
-                location: "main"
-            }).then(
+            const openMainRequest : BackgroundRequest = {
+                backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
+                payload: {
+                    location: "main"
+                }
+            }
+            browser.runtime.sendMessage(openMainRequest)
+                .then(
                 closeCurrentTab
             );
         })();

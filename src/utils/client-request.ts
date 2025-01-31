@@ -16,23 +16,3 @@
  */
 import * as sdk from '@cmts-dev/carmentis-sdk/client'
 
-
-
-export interface ClientRequest {
-    id: string,
-    action: string,
-    data: any,
-    receivedAt: number,
-    origin: string,
-    type : number, // TODO assign more precise type
-    eventApprovalData?: object
-    serverRequest?: object,
-    clientRequest?: object,
-
-}
-
-export interface IncomingQR {
-    action: string,
-    data: any,
-    origin: string,
-}

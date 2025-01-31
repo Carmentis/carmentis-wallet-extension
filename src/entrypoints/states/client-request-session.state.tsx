@@ -16,7 +16,7 @@
  */
 
 import {atom, AtomEffect} from "recoil";
-import {ClientRequest} from "@/utils/client-request.ts";
+import {ClientRequestPayload} from "@/entrypoints/background.ts";
 
 function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
@@ -42,7 +42,7 @@ function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
 };
 }
 
-export const clientRequestSessionState = atom<ClientRequest|undefined>({
+export const clientRequestSessionState = atom<ClientRequestPayload<unknown>|undefined>({
     key: "clientRequestSession",
-    effects: [clientRequestStorageEffect<ClientRequest|undefined>("clientRequestSession")],
+    effects: [clientRequestStorageEffect<ClientRequestPayload<unknown>|undefined>("clientRequestSession")],
 })

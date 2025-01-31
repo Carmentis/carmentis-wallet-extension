@@ -16,13 +16,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
+
 export function NoWalletDetected() {
 
     function goToWalletCreation() {
-        browser.runtime.sendMessage({
-            action: "open",
-            location: "main"
-        })
+        const openMainRequest : BackgroundRequest = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
+            payload: {
+                location: "main"
+            }
+        }
+        browser.runtime.sendMessage(openMainRequest)
     }
 
     function goToDocumentation()  {
