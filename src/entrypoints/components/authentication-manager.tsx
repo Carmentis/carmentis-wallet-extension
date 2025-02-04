@@ -46,6 +46,8 @@ import {useSessionStorage} from "react-use";
 import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import ApplicationNotificationContext from "@/entrypoints/contexts/application-notification.context.tsx";
+import {ErrorBoundary} from "react-error-boundary";
+import {ErrorFallback} from "@/entrypoints/contexts/error-boundary.context.tsx";
 
 const resources = {
     fr: {
@@ -166,20 +168,22 @@ export function AuthenticationManager({children}: PropsWithChildren) {
     let logger = useContext(LoggerContext);
 
     return <RecoilRoot>
-        <Suspense fallback={<Splashscreen/>}>
-            <ApplicationNotificationContext>
-                <LoggerContext.Provider value={logger}>
-                    <ToastContainer/>
-                    <AuthenticationContextProvider>
-                        <ApplicationStatusContextProvider>
-                            <AuthenticationDataAccess>
-                                {children}
-                            </AuthenticationDataAccess>
-                        </ApplicationStatusContextProvider>
-                    </AuthenticationContextProvider>
-                </LoggerContext.Provider>
-            </ApplicationNotificationContext>
-        </Suspense>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<Splashscreen/>}>
+                <ApplicationNotificationContext>
+                    <LoggerContext.Provider value={logger}>
+                        <ToastContainer/>
+                        <AuthenticationContextProvider>
+                            <ApplicationStatusContextProvider>
+                                <AuthenticationDataAccess>
+                                    {children}
+                                </AuthenticationDataAccess>
+                            </ApplicationStatusContextProvider>
+                        </AuthenticationContextProvider>
+                    </LoggerContext.Provider>
+                </ApplicationNotificationContext>
+            </Suspense>
+        </ErrorBoundary>
     </RecoilRoot>;
 
 }

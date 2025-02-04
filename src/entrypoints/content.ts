@@ -19,28 +19,21 @@ import {
     BACKGROUND_REQUEST_TYPE,
     BackgroundRequest,
     CLIENT_REQUEST_TYPE,
-    ClientAuthenticationRequest
+    ClientAuthenticationRequest, QRCodeRequestData, QRDataClientRequest
 } from "@/entrypoints/background.ts";
 
-
-function handleClientAuthenticationRequest(challenge: string, origin: string,) {
-    const authRequest: BackgroundRequest<ClientAuthenticationRequest> = {
+function handleClientRequest(requestData: QRCodeRequestData, origin: string) {
+    console.log("[content] Sending client request to background: requestData", requestData, "origin:", origin)
+    const request: BackgroundRequest<QRDataClientRequest> = {
         backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_REQUEST,
-        source: "content",
         payload: {
-            clientRequestType: CLIENT_REQUEST_TYPE.AUTHENTICATION,
             timestamp: new Date().getTime(),
             origin: origin,
-            data: {
-                challenge: challenge,
-            }
+            data: requestData
         }
     }
-    console.log("[content] Sending authentication message to background")
-    //const port = browser.runtime.connect({name: 'carmentis-wallet'});
-    //console.log("[content] port created:", port)
-    //port.postMessage(authRequest);
-    browser.runtime.sendMessage(authRequest)
+
+    browser.runtime.sendMessage(request)
 }
 
 export default defineContentScript({
@@ -53,19 +46,23 @@ export default defineContentScript({
         });
 
 
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            console.log("[content] message received from onMessage:", message)
+            window.postMessage({
+                data: message,
+                from: "carmentis/walletResponse"
+            }, "*")
+
+        })
+
         window.addEventListener('message', async (message) => {
-            console.log("[content] message received:", message);
+            console.log("[content] message received from port:", message);
             // send to background
-            if (message.action === "carmentis/clientRequest" || message.data.action === "carmentis/clientRequest") {
-                handleClientAuthenticationRequest(message.data.challenge, message.origin)
+            if (message.data.action === "carmentis/clientRequest") {
+                handleClientRequest(message.data.request, message.origin)
             }
         });
 
-        // relay every message into the web page
-        browser.runtime.onMessage.addListener((message) => {
-            console.log("[content] Having received a message that I will post to the application")
-            window.postMessage(message, "*");
-        });
 
 
         const ui = createIntegratedUi(ctx, {

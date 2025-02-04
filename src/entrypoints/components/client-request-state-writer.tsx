@@ -21,7 +21,7 @@ import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 
 import {
-    ClientRequestPayload,
+    ClientRequestPayload, QRDataClientRequest,
 } from "@/entrypoints/background.ts";
 
 
@@ -37,11 +37,11 @@ export function ClientRequestStateWriter(props: { children: ReactElement }): JSX
     const setClientRequestSession = useSetRecoilState(clientRequestSessionState);
 
     useEffect(() => {
-        const handleMessage = async (message: ClientRequestPayload<unknown>|unknown) => {
+        const handleMessage = async (message: QRDataClientRequest|unknown) => {
             console.log("[client request state writer] Received message:", message)
 
             // here we only handle new client request
-            if ((message as ClientRequestPayload<unknown>).clientRequestType) {
+            if ((message as QRDataClientRequest).data) {
                 setClientRequestSession(message)
             }
             /*
@@ -74,7 +74,7 @@ export function ClientRequestStateWriter(props: { children: ReactElement }): JSX
 
         };
 
-        const listener = (message: ClientRequestPayload<unknown>|unknown, sender, sendResponse) => {
+        const listener = (message: QRDataClientRequest|unknown, sender, sendResponse) => {
             console.log("[client request] Message received:", message);
             handleMessage(message);
             sendResponse({success: true});

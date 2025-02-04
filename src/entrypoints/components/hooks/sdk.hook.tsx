@@ -4,6 +4,13 @@ import {activeAccountPublicKeyState} from "@/entrypoints/contexts/authentication
 import useSWR from "swr";
 
 
+/**
+ * Retrieves the account balance for a specified public key.
+ *
+ * @param {string} accountPublicKey - The public key of the account to retrieve the balance for.
+ * @return {Promise<number>} The account balance in ECO tokens.
+ * @throws Will throw an error if the account balance cannot be retrieved.
+ */
 export async function useAccountBalance(accountPublicKey: string): Promise<number> {
 	try {
 		console.log("Load account by public key: ", accountPublicKey)
@@ -21,6 +28,13 @@ export async function useAccountBalance(accountPublicKey: string): Promise<numbe
 
 
 
+/**
+ * Custom hook to fetch and manage the account balance for the active account.
+ * It leverages the Recoil state for the active account's public key and uses `useSWR`
+ * for data fetching and caching.
+ *
+ * @return {object} An SWR response object containing the account balance data, loading state, and error state.
+ */
 export function useAccountBalanceHook() {
 	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
 	return useSWR(
@@ -30,6 +44,15 @@ export function useAccountBalanceHook() {
 }
 
 
+/**
+ * Fetches the transaction history for a given account based on its public key.
+ *
+ * @param {string} accountPublicKey - The public key of the account whose transaction history is to be retrieved.
+ * @param {number} [offset=0] - The starting position (offset) for fetching the history. Defaults to 0.
+ * @param {number} [maxRecords=50] - The maximum number of transaction records to fetch. Defaults to 50.
+ * @return {Promise<AccountTransactionHistoryEntry[]>} A promise that resolves to an array of account transaction history entries.
+ * @throws {Error} Throws an error if the account history retrieval fails.
+ */
 export async function useAccountHistory(
 	accountPublicKey: string,
 	offset = 0,

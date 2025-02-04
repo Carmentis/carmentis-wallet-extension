@@ -15,24 +15,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {PropsWithChildren} from "react";
+import React, {PropsWithChildren, useEffect, useRef} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
-import {activeAccountState, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
+import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilState, useRecoilValue} from "recoil";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 import {Button, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
 import {
     BACKGROUND_REQUEST_TYPE,
     BackgroundRequest,
     CLIENT_REQUEST_TYPE,
-    ClientAuthenticationRequest,
-    ClientAuthenticationResponse,
+    ClientAuthenticationResponse, ClientResponse, QRDataClientRequest,
 } from "@/entrypoints/background.ts";
-import {undefined} from "zod";
+import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
+import {Account} from "@/entrypoints/main/Account.tsx";
 
 
 export interface RecordConfirmationData {
@@ -96,17 +96,39 @@ function  PopupLayout({children}: PropsWithChildren) {
 }
 
 
-// TODO move these constants
-const AUTH_BY_PK = 0;
 function PopupBody() {
     // the current client request stored in session (possibly undefined)
+    const wallet = useRecoilValue(walletState);
+    const activeAccount = useRecoilValue(activeAccountState);
     const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
-
     console.log("[popup dashboard] Current client request:", clientRequest)
+
+    async function accept() {
+        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
+        const wiWallet = new sdk.wiExtensionWallet();
+        const keyPair = await getUserKeyPair(wallet as Wallet, activeAccount as Account)
+        const req = wiWallet.getRequestFromMessage(clientRequest.data)
+        const answer = wiWallet.approveRequestExecution(Encoders.ToHexa(keyPair.privateKey), req);
+
+        const response: BackgroundRequest<ClientResponse> = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+            payload: answer
+        }
+
+        console.log("[popup dashboard] Response:", response)
+        browser.runtime.sendMessage(response);
+        setClientRequest(undefined);
+    }
+
+    function decline() {
+        setClientRequest(undefined);
+    }
+
     // by default when there is no client request display the default dashboard
     if (!clientRequest)  return <PopupIdleBody/>
-    if (clientRequest.clientRequestType === CLIENT_REQUEST_TYPE.AUTHENTICATION) return <PopupAuthByPublicKeyBody/>
-
+    const wiWallet = new sdk.wiExtensionWallet();
+    const req = wiWallet.getRequestFromMessage(clientRequest.data)
+    if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody accept={accept} decline={decline}/>
 
     return <>You have a request!</>
 }
@@ -120,48 +142,24 @@ function PopupIdleBody() {
 }
 
 
-
-export function toHexa(array) {
-    if(!(array instanceof Uint8Array) && !Array.isArray(array)) {
-        return "";
-    }
-
-    return [...array].map(n => n.toString(16).toUpperCase().padStart(2, "0")).join("");
+type ClientRequestApproveCallback = {
+    accept: () => Promise<void>,
+    decline: () => void,
 }
+function PopupAuthByPublicKeyBody(
+    {accept, decline} : PropsWithChildren<ClientRequestApproveCallback>
+) {
+    const [cr, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const clientRequest = cr as QRDataClientRequest;
 
-
-function PopupAuthByPublicKeyBody() {
-    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
-    const authClientRequest = clientRequest as ClientAuthenticationRequest;
-    const deleteClientRequest = () => setClientRequest(undefined);
-    const wallet = useWallet();
-    const activeAccount = useRecoilValue(activeAccountState);
-
-    async function accept() {
-        if (!clientRequest) return;
-        console.log("[popup dashboard] Accepting the authentication request")
-        const keyPair = await getUserKeyPair(wallet, activeAccount);
-        const signature = Encoders.ToHexa(sdk.crypto.secp256k1.sign(
-            Encoders.ToHexa(keyPair.privateKey),
-            Encoders.FromHexa(authClientRequest.data.challenge)
-        ))
-
-        const response: BackgroundRequest<ClientAuthenticationResponse> = {
-            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-            payload: {
-                clientRequestType: CLIENT_REQUEST_TYPE.AUTHENTICATION,
-                data: {
-                    publicKey: Encoders.ToHexa(keyPair.publicKey),
-                    signature: signature,
-                },
-            }
-        }
-        console.log("[popup dashboard] Response:", response)
-        browser.runtime.sendMessage(response);
+    function onAccept(e:MouseEvent) {
+        e.preventDefault();
+        accept();
     }
 
-    function decline() {
-        deleteClientRequest()
+    function onDecline(e:MouseEvent){
+        e.preventDefault();
+        decline();
     }
 
     return <div className={"h-full w-full flex flex-col justify-between"}>
@@ -176,19 +174,19 @@ function PopupAuthByPublicKeyBody() {
             </p>
             <p className="font-bold">Origin</p>
             <p className="w-100 p-2 bg-gray-100 rounded-md">
-                {authClientRequest.origin}
+                {clientRequest.origin}
             </p>
             <p className="font-bold">Received at</p>
             <p className="w-100 p-2 bg-gray-100 rounded-md">
-                {new Date(authClientRequest.timestamp).toLocaleString()}
+                {new Date(clientRequest.timestamp).toLocaleString()}
             </p>
         </div>
         <div id="footer" className={"w-full flex flex-row space-x-2"}>
             <div className={"w-1/2"}>
-                <Button className={"uppercase w-full"} variant={"contained"} onClick={accept}>Accept</Button>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={onAccept}>Accept</Button>
             </div>
             <div className={"w-1/2"}>
-                <Button className={"uppercase w-full"} variant={"contained"} onClick={decline}>decline</Button>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={onDecline}>decline</Button>
             </div>
         </div>
     </div>

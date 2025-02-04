@@ -16,7 +16,7 @@
  */
 
 import {atom, AtomEffect} from "recoil";
-import {ClientRequestPayload} from "@/entrypoints/background.ts";
+import {ClientRequestPayload, QRDataClientRequest} from "@/entrypoints/background.ts";
 
 function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
@@ -42,7 +42,7 @@ function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
 };
 }
 
-export const clientRequestSessionState = atom<ClientRequestPayload<unknown>|undefined>({
+export const clientRequestSessionState = atom<QRDataClientRequest|undefined>({
     key: "clientRequestSession",
-    effects: [clientRequestStorageEffect<ClientRequestPayload<unknown>|undefined>("clientRequestSession")],
+    effects: [clientRequestStorageEffect<QRDataClientRequest|undefined>("clientRequestSession")],
 })

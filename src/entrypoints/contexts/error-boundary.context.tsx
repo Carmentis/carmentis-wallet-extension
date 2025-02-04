@@ -15,19 +15,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React from "react"
-import ReactDOM from 'react-dom/client';
-import PopupAppEntrypoint from './page.tsx';
-import './style.css'
-import './global.css';
-import {HashRouter} from "react-router-dom";
-
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-
-            <HashRouter>
-                <PopupAppEntrypoint/>
-            </HashRouter>
-);
-
-
+export function ErrorFallback({error, resetErrorBoundary}: {error: Error; resetErrorBoundary: () => void }) {
+    return (
+        <div>
+            <p>Something went wrong:</p>
+            <pre>{error.message}</pre>
+            <button onClick={resetErrorBoundary}>Try again</button>
+        </div>
+    );
+}

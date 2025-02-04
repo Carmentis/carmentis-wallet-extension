@@ -28,12 +28,9 @@ export enum BACKGROUND_REQUEST_TYPE {
 }
 
 export enum CLIENT_REQUEST_TYPE {
-    QR_REQUEST = "newClientRequest",
-    ASK_USER_FOR_APPROVE = "getDataFromServer",
-    RESPONSE_DATA_FROM_SERVER = "responseDataFromServer",
-    ACCEPT_AUTHENTICATION_REQUEST = "acceptAuthenticationRequest",
     AUTHENTICATION = "authentication"
 }
+
 
 export type BrowserActionPayload = {
     location: "main" | "onboarding"
@@ -45,6 +42,7 @@ export type BackgroundRequest<T> = {
     source?: string,
     payload: T
 }
+
 
 
 export type ClientRequestPayload<T> = {
@@ -63,10 +61,28 @@ export type ClientAuthenticationRequest = ClientRequestPayload<{challenge: strin
 export type ClientAuthenticationResponse = ClientResponsePayload<{publicKey: string, signature: string}>
 
 
+export type ClientResponse = {
+    answer: string,
+    answerType: number,
+}
+
+export type QRDataClientRequest = {
+    timestamp: number,
+    origin: string,
+    data: QRCodeRequestData
+}
+
+export type QRCodeRequestData  = {
+    requestType: number,
+    request: string
+}
 
 
 
-function forwardClientRequest(request: ClientRequestPayload<unknown>) {
+
+
+
+function forwardClientRequest(request: QRDataClientRequest) {
     async function notifyExtension() {
         try {
             console.log("Attempting to open the extension...")
@@ -126,7 +142,7 @@ export default defineBackground({
                 }
             } else if (request.backgroundRequestType == BACKGROUND_REQUEST_TYPE.CLIENT_REQUEST) {
                 console.log("[background] handling client request", request)
-                const clientRequest = request as BackgroundRequest<ClientRequestPayload<unknown>>;
+                const clientRequest = request as BackgroundRequest<QRDataClientRequest>;
                 forwardClientRequest(clientRequest.payload)
             } else if (request.backgroundRequestType == BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE) {
                 console.log("[background] handling client response", request)
