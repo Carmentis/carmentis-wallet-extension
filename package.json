@@ -15,7 +15,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@cmts-dev/carmentis-sdk": "^0.0.18",
+    "@cmts-dev/carmentis-sdk": "^0.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/base": "5.0.0-beta.69",
