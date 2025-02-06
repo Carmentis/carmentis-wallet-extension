@@ -20,24 +20,13 @@ import React, {useState} from 'react';
 import NoTokenAccount from '@/entrypoints/components/no-token-account.tsx';
 import {SparkLineChart} from "@mui/x-charts";
 import Skeleton from "react-loading-skeleton";
+import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 
 export default function HistoryPage() {
-	const wallet = useWallet();
-	const activeAccount = useAuthenticatedAccount();
-	const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([
-		{
-			height: 0,
-			previousHistoryHash: '',
-			name: 'Initial offer',
-			type: 0,
-			timestamp: 0,
-			linkedAccount: '027BFE1AAFFA979BD40E4C6D7CFBAAD36ED6E92BA05FFEA572A22F7564C7036C46',
-			amount: 100000,
-			chainReference: ''
-		},
-	]);
+	const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([]);
 	const balanceResponse = useAccountBalanceHook();
 
+	if (balanceResponse.isLoading) return <Splashscreen/>
 	if (balanceResponse.error) {
 		return <NoTokenAccount/>
 	}

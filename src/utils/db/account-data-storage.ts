@@ -21,8 +21,6 @@ import { VirtualBlockchainView } from '@/entrypoints/main/virtual-blockchain-vie
 import { RecordConfirmationData } from '@/entrypoints/components/popup/popup-dashboard.tsx';
 import Guard from '@/entrypoints/main/Guard.tsx';
 import { IllegalStateError } from '@/entrypoints/main/errors.tsx';
-import { Optional } from '@/utils/optional.ts';
-import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
 
 
 export class AccountStorageDB extends Dexie {

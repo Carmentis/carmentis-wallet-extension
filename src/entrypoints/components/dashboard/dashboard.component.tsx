@@ -202,7 +202,7 @@ function DashboardNavbar() {
 
 
 			<div className="relative inline-block text-left">
-				<div className={"flex flex-row justify-center items-center"}>
+				<div className={"flex flex-row justify-center items-center space-x-4"}>
 					<ClickableAppNotifications/>
 					<ClickableThreeDots onClick={() => setShowMenu(!showMenu)}/>
 				</div>
@@ -283,7 +283,6 @@ function DashboardHome() {
 	return <>
 		<div className="container mx-auto px-4">
 			<DashboardWelcomeCards />
-			<EmailConfigurationNotificationCard />
 			<DashboardVirtualBlockchainsList />
 		</div>
 
@@ -371,28 +370,6 @@ function DashboardWelcomeCards() {
 }
 
 
-/**
- * Renders a notification card prompting the user to configure their email if the email is not verified.
- *
- * This component checks whether the user's email has been verified. If the email is verified, it returns an empty component.
- * Otherwise, it displays a styled button. When clicked, the button navigates the user to the parameters page to configure their email.
- *
- * @return {JSX.Element} A notification button prompting the user to configure their email, or an empty component if the email is already verified.
- */
-function EmailConfigurationNotificationCard() {
-	const activeAccount = useAuthenticatedAccount();
-	const navigate = useNavigate();
-	if (activeAccount.emailValidationProof !== undefined) return <></>;
-
-	return <button type="button"
-				   className="brand-bar bg-green-100 p-4 rounded-md w-full text-left hover:underline mb-4"
-				   onClick={() => {
-					   navigate('/parameters');
-				   }}>
-		Configure your email
-	</button>;
-
-}
 
 
 /**

@@ -25,10 +25,7 @@ import {
 } from "@/entrypoints/states/application-nofications.state.tsx";
 import {mainInterfaceState, useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
 import {useNavigate} from "react-router";
-import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
-import {AccountStorageDB} from "@/utils/db/account-data-storage.ts";
 import {activeAccountState} from "@/entrypoints/contexts/authentication.context.tsx";
-import {useLiveQuery} from "dexie-react-hooks";
 import {NotificationStorageDB} from "@/utils/db/notification-storage.ts";
 
 
@@ -59,7 +56,9 @@ export default function NotificationRightBar() {
         open={mainInterfaceStatus.showNotifications}
         onClose={() => mainInterfaceActions.hideNotifications()}
     >
+
         <div className={"w-full h-full bg-gray-50 overflow-y-auto p-4 space-y-4 min-w-72"}>
+            <Typography><i className={"bi bi-bell-fill mr-2"}></i>Notifications</Typography>
             {notifications.length === 0 ? emptyContent : content}
         </div>
     </Drawer>
