@@ -15,13 +15,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export class Formatter {
-    static formatDate( ts : number ) : string {
-        return new Date(ts * 1000).toLocaleString()
-    }
+import {atom} from "recoil";
 
-	static cropPublicKey(publicKey: string) {
-        if (publicKey.length < 10) return publicKey
-		return publicKey.slice(0, 5) + '...' + publicKey.slice(publicKey.length-4, publicKey.length);
-	}
-}
+export const onboardingFirstnameAtom = atom({ key: 'onboarding-firstname', default: '' });
+export const onboardingLastnameAtom = atom({ key: 'onboarding-lastname', default: '' });
+export const onboardingPasswordAtom = atom({ key: 'onboarding-password', default: '' });
+export const onboardingSeedAtom = atom({ key: 'onboarding-seed', default: '' });

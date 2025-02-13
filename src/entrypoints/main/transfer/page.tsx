@@ -79,13 +79,14 @@ function TransferForm() {
 				<TextField
 					onChange={e => updatePublicKey(e.target.value)}
 					className={'w-full'}
-					placeholder={'0x123456'}
+					placeholder={'034FCF72080D340A1ED9D10F797A14E6390D3034013D9E1D38D27BF1887BC95EA5'}
 				/>
 			</div>
 			<div>
 				<label>Amount</label>
 				<TextField
 					onChange={e => updateTokenAmount(parseInt(e.target.value))}
+					placeholder={'0 CMTS'}
 					type={'number'}
 					className={'w-full'}
 				/>
@@ -119,7 +120,7 @@ function TransferGraphic() {
 				<Typography variant={"h6"}>{Formatter.cropPublicKey(tokenTransfer.publicKey)}</Typography>
 			}
 			{ !tokenTransfer.publicKey &&
-				<Typography variant={"h6"} color={"textDisabled"} className={"text-gray-50"}>0123...F41</Typography>
+				<Typography variant={"h6"} color={"textDisabled"} className={"text-gray-50"}>034F...5EA5</Typography>
 			}
 		</div>
 	</div>

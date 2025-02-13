@@ -18,24 +18,14 @@
 import React, {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
+import {useRecoilState, useSetRecoilState} from "recoil";
+import {onboardingSeedAtom} from "@/entrypoints/components/onboarding/onboarding.state.ts";
 
 export function ImportWallet() {
 
+    const setSeed = useSetRecoilState(onboardingSeedAtom);
     // ensures that the password is provided and return to the password creation otherwise.
-    const location = useLocation();
     const navigate = useNavigate();
-    const password = location.state.password;
-    const firstname = location.state.firstname;
-    if (!password || !firstname) {
-        useEffect(() => {
-            navigate("/create-password", {
-                state: {
-                    nextStep: "/import-wallet"
-                }
-            });
-        }, []);
-
-    }
 
     // states to import the wallet
     const [words, setWords] = useState<string>("");
@@ -63,13 +53,8 @@ export function ImportWallet() {
     async function importWallet( words : string[] ) {
         const provider = new CarmentisProvider();
         let seed = await provider.generateSeed(words);
-        navigate("/setup-wallet", {
-            state: {
-                ...location.state,
-                password: password,
-                seed: seed,
-            }
-        })
+        setSeed(seed);
+        navigate("/setup-wallet")
     }
 
     return (

@@ -61,18 +61,15 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
     }
 
 
-    /**
-     * This function is fired by the account creation modal to notify that the user has inputted a pseudo and wants
-     * to create a new account based on this modal.
-     */
-    function createAndActiveNewAccount(pseudo: string) {
-        console.log(`[popup] create a new account for ${pseudo}`)
+
+    function createAndActiveNewAccount(firstname: string, lastname: string) {
+        console.log(`[popup] create a new account for ${firstname} ${lastname}`)
 
 
         setWallet(wallet => {
             if (!wallet) return undefined;
             const nonce = wallet.counter + 1;
-            const createdAccount = CreateFromPseudoAndNonce(pseudo, nonce);
+            const createdAccount = CreateFromPseudoAndNonce(firstname, lastname, nonce);
 
             return {
                 ...wallet,
@@ -162,10 +159,10 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
                 setShowAccountCreation(false);
                 setShowAccountSelectionMenu(false);
             }}
-            onCreate={(pseudo: string) => {
+            onCreate={(firstname, lastname) => {
                 setShowAccountCreation(false);
                 setShowAccountSelectionMenu(false);
-                createAndActiveNewAccount(pseudo)
+                createAndActiveNewAccount(firstname, lastname)
             }}
         />}
     </>;

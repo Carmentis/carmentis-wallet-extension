@@ -17,11 +17,41 @@
 
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
+import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
+import {useRecoilValue, useSetRecoilState} from "recoil";
+import {
+    onboardingFirstnameAtom,
+    onboardingLastnameAtom,
+    onboardingPasswordAtom, onboardingSeedAtom
+} from "@/entrypoints/components/onboarding/onboarding.state.ts";
 
 
 export function Landing() {
     const navigate = useNavigate();
     const {t} = useTranslation();
+
+
+
+
+    if (import.meta.env.MODE === "development") {
+       async function populateWithDevWallet() {
+           // we create a default wallet
+           const setFirstname = useSetRecoilState(onboardingFirstnameAtom);
+           const setLastname = useSetRecoilState(onboardingLastnameAtom);
+           const setPassword = useSetRecoilState(onboardingPasswordAtom);
+           const setSeed = useSetRecoilState(onboardingSeedAtom);
+
+           setFirstname("Dev")
+           setLastname("Dev")
+           setPassword("aaa")
+           const provider = new CarmentisProvider();
+           let seed = await provider.generateSeed("cushion shield urge essence fire stable pond minimum monkey quality exit present".split(" "));
+           setSeed(seed);
+           navigate("/setup-wallet")
+       }
+
+       populateWithDevWallet()
+    }
 
 
 

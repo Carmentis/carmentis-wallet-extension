@@ -22,6 +22,13 @@ import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
 import {CreateFromIdentityAndSeed} from '@/entrypoints/main/wallet.tsx';
 import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
+import {useRecoilValue} from "recoil";
+import {
+    onboardingFirstnameAtom,
+    onboardingLastnameAtom,
+    onboardingPasswordAtom, onboardingSeedAtom
+} from "@/entrypoints/components/onboarding/onboarding.state.ts";
+import {useAuthenticationContext} from "@/entrypoints/contexts/authentication.context.tsx";
 
 
 /**
@@ -38,22 +45,13 @@ export function SetupWallet() {
 
     const [installed, setInstalled] = useState<boolean>(false);
     const notificationSystem = useAppNotification();
-
-    // recover the password and seed from given parameters, or back to home if at least one is not provided
-    const location = useLocation();
-    const navigate = useNavigate();
-    if (!location.state || !location.state.password || !location.state.seed || !location.state.firstname) {
-        useEffect(() => {
-            navigate("/");
-        });
-    }
-
+    const authentication = useAuthenticationContext();
 
     // recover the firstname, lastname, password and seed
-    const firstname = location.state.firstname;
-    const lastname = location.state.lastname;
-    const password = location.state.password;
-    const seed = location.state.seed;
+    const firstname = useRecoilValue(onboardingFirstnameAtom);
+    const lastname = useRecoilValue(onboardingLastnameAtom);
+    const password = useRecoilValue(onboardingPasswordAtom);
+    const seed = useRecoilValue(onboardingSeedAtom);
 
     // create the wallet
     const walletContext = CreateFromIdentityAndSeed(firstname, lastname, seed, password);
@@ -93,11 +91,12 @@ export function SetupWallet() {
     SecureWalletStorage.CreateSecureWalletStorage(provider, password)
         .then(storage => {
             storage.writeWalletToStorage(walletContext)
-                .then(() => {
+                .then(async () => {
 
                     // attempt to read the wallet to ensure that it is correctly installed
-                    storage.readWalletFromStorage()
+                    await storage.readWalletFromStorage()
                         .then(_ => {
+                            authentication.connect(walletContext);
                             setInstalled(true);
                             redirectToMainPage()
                         }).catch(_ => {

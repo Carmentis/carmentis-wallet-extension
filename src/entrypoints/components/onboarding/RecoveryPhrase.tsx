@@ -18,6 +18,8 @@
 import React, {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
 import {useLocation, useNavigate} from "react-router";
+import {useSetRecoilState} from "recoil";
+import {onboardingSeedAtom} from "@/entrypoints/components/onboarding/onboarding.state.ts";
 
 /**
  * Generate a random number included between the two provided (included) bounds.
@@ -51,13 +53,6 @@ export function RecoveryPhrase() {
     // creation page
     const navigate = useNavigate();
     const location = useLocation()
-    if (!location.state || !location.state.password || !location.state.fistname || !location.state.lastname) {
-
-        console.log("No pseudo/password defined: go to password creation")
-        useEffect(() => {
-            navigate("/create-password");
-        });
-    }
 
     // create a list of states
     let wordStates: string[] = [];
@@ -78,6 +73,7 @@ export function RecoveryPhrase() {
     // create the state defining if the challenge is started and is completed
     let [challengeStarted, setChallengeStarted] = useState(false);
     let [challengeCompleted, setChallengeCompleted] = useState(false);
+    const setSeed = useSetRecoilState(onboardingSeedAtom);
 
 
     /**
@@ -147,13 +143,8 @@ export function RecoveryPhrase() {
         if (isChallengeComplete()) {
             // generate an encrypted seed
             let seed = await provider.generateSeed(wordsList);
-            navigate("/setup-wallet", {
-                state: {
-                    ...location.state,
-                    seed: seed,
-                }
-            })
-
+            setSeed(seed);
+            navigate("/setup-wallet");
         }
     }
 

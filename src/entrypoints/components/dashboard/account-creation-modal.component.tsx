@@ -20,11 +20,12 @@ import {Box, Button, Modal, Typography} from "@mui/material";
 
 export function AccountCreationModal(input : {
     onClose: () => void,
-    onCreate: (pseudo: string) => void,
+    onCreate: (firstname: string, lastname: string) => void,
 }) {
 
     const [hasSubmitted, setHasSubmitted] = useState(false);
-    const [newAccountPseudo, setnewAccountPseudo] = useState("");
+    const [newAccountFirstname, setnewAccountFirstname] = useState("");
+    const [newAccountLastname, setnewAccountLastname] = useState("");
 
     /**
      * This event is fired when the form is trying to submit. At this point, we prevent the default behaviour of
@@ -37,8 +38,8 @@ export function AccountCreationModal(input : {
     function createAccount(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setHasSubmitted(true);
-        if ( newAccountPseudo !== "" ) {
-            input.onCreate(newAccountPseudo)
+        if ( newAccountFirstname !== "" && newAccountFirstname !== "" ) {
+            input.onCreate(newAccountFirstname, newAccountLastname)
         }
 
     }
@@ -53,6 +54,33 @@ export function AccountCreationModal(input : {
         p: 4,
     };
 
+    const inputs = [
+        { name: "firstname", value: newAccountFirstname, onEmpty: "The firstname cannot be empty", onChange: setnewAccountFirstname  },
+        { name: "lastname", value: newAccountLastname, onEmpty: "The lastname cannot be empty", onChange: setnewAccountLastname  }
+    ]
+
+    const formContent = inputs.map(f => <>
+        <div>
+            <label htmlFor={f.name}
+                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                {f.name}
+            </label>
+            <input
+                value={f.value}
+                onChange={(e) => f.onChange(e.target.value)}
+                type={f.name}
+                name={f.name}
+                id={f.name}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-300 focus:border-green-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                placeholder={f.name} required/>
+        </div>
+        {hasSubmitted && f.value.length === 0 &&
+            <p className="mt-2 text-pink-600">
+                {f.onEmpty}
+            </p>
+        }
+    </>)
+
     return <div className={"absolute w-screen h-screen left-0 top-0"}>
         <Modal
             open={true}
@@ -66,24 +94,8 @@ export function AccountCreationModal(input : {
                     Create user account
                 </Typography>
                 <form className="space-y-4" onSubmit={createAccount}>
-                    <div>
-                        <label htmlFor="pseudo"
-                               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pseudo</label>
-                        <input
-                            value={newAccountPseudo}
-                            onChange={(e) => setnewAccountPseudo(e.target.value)}
-                            type="pseudo"
-                            name="pseudo"
-                            id="pseudo"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-300 focus:border-green-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                            placeholder="Pseudo" required/>
-                    </div>
-                    {hasSubmitted && newAccountPseudo.length === 0 &&
-                        <p className="mt-2 text-pink-600">
-                            The provided pseudo is empty.
-                        </p>
-                    }
 
+                    {formContent}
                     <Button className="w-full btn-primary btn-highlight px-5 py-2.5" type={"submit"}>
                         Create Account
                     </Button>

@@ -297,7 +297,14 @@ function AccountBalanceCard() {
 	console.log("account balance card:", data, isLoading, error)
 
 
-	if (isLoading) return <Skeleton/>
+	if (isLoading) return <Card className={'flex-1'}>
+		<CardContent className={'flex flex-col justify-center'}>
+			<div className="h-full w-full">
+				<i className={'bi bi-info-circle-fill text-lg'}></i>
+			</div>
+			<Skeleton/>
+		</CardContent>
+	</Card>
 
 	if (error) return <Card className={'flex-1'}>
 		<CardContent className={'flex flex-col justify-center'}>

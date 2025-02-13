@@ -27,7 +27,7 @@ import {Encoders} from '@/entrypoints/main/Encoders.tsx';
  *
  * @constant {string}
  */
-const DEFAULT_NODE_ENDPOINT = "https://node.testapps.carmentis.io"
+const DEFAULT_NODE_ENDPOINT = "https://dev-node.beta.carmentis.io"
 const DEFAULT_EMAIL_ORACLE_ENDPOINT = "https://data.testapps.carmentis.io"
 const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.themis.carmentis.io"
 

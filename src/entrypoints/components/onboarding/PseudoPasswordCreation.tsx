@@ -17,14 +17,16 @@
 
 import {useState} from "react";
 import {useLocation, useNavigate} from "react-router";
+import {useRecoilState} from "recoil";
+import {onboardingFirstnameAtom, onboardingLastnameAtom, onboardingPasswordAtom} from "@/entrypoints/components/onboarding/onboarding.state.ts";
 
 
 export function PseudoPasswordCreation() {
     // the state of the component
-    const [firstname, setFirstname] = useState("");
-    const [lastname, setLastname] = useState("");
-    const [password, setPassword] = useState('aaa');
-    const [confirmPassword, setConfirmPassword] = useState('aaa');
+    const [firstname, setFirstname] = useRecoilState(onboardingFirstnameAtom);
+    const [lastname, setLastname] = useRecoilState(onboardingLastnameAtom);
+    const [password, setPassword] = useRecoilState(onboardingPasswordAtom);
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [consent, setConsent] = useState(0);
 
     // errors
@@ -91,13 +93,7 @@ export function PseudoPasswordCreation() {
     const nextStep = location.state.nextStep;
     const target = nextStep ? nextStep : "/recovery-phrase";
     function onCorrectPseudoPasswordForm() {
-        navigate(target, {
-            state: {
-                firstname: firstname,
-                lastname: lastname,
-                password: password,
-            }
-        });
+        navigate(target);
     }
 
 
@@ -149,6 +145,7 @@ export function PseudoPasswordCreation() {
                         <input type="text" name="password" id="password"
                                value={password}
                                onChange={(e) => setPassword(e.target.value)}
+                               placeholder={"Password"}
                                className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset  sm:text-sm sm:leading-6"/>
                         {activeForm && isWeakPassword &&
                             <p className="mt-2 text-pink-600">
@@ -165,6 +162,7 @@ export function PseudoPasswordCreation() {
                         <input type="text" name="confirm-password" id="confirm-password"
                                value={confirmPassword}
                                onChange={(e) => setConfirmPassword(e.target.value)}
+                               placeholder={"Confirm password"}
                                className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset  sm:text-sm sm:leading-6"/>
                         {activeForm && password !== confirmPassword &&
                             <p className="mt-2 text-pink-600">

@@ -10,7 +10,6 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
-import {useAuthenticatedAccount, useWallet} from '@/entrypoints/contexts/authentication.context.tsx';
 import {
     AccountTransactionHistoryEntry,
     useAccountBalanceHook,
