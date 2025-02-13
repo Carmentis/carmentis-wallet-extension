@@ -16,7 +16,7 @@
  */
 
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import {Account, DefaultAccountWithPseudo} from '@/entrypoints/main/Account.tsx';
+import {Account, DefaultAccountWithIdentity} from '@/entrypoints/main/Account.tsx';
 
 import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 
@@ -44,14 +44,14 @@ export interface Wallet {
 }
 
 
-export function CreateFromPseudoAndSeed(pseudo : string, seed : Uint8Array, password: string) : Wallet {
+export function CreateFromIdentityAndSeed(firstname : string, lastname: string, seed : Uint8Array, password: string) : Wallet {
 
     if ( !seed ) {
         throw new Error( "Cannot instantiate a wallet from undefined seed" );
     }
 
     console.log("[wallet] Creating wallet from seed:", seed)
-    const createdAccount = DefaultAccountWithPseudo(pseudo);
+    const createdAccount = DefaultAccountWithIdentity(firstname, lastname);
     return {
         seed: seed,
         password: password,

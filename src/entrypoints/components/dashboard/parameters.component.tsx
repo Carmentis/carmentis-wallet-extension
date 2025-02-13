@@ -102,8 +102,12 @@ export default function Parameters() {
 	const activeAccount = useRecoilValue(activeAccountState);
 
 
+	const navigate = useNavigate();
+
+
 	// state for the pseudo, email and nonce edition
-	const [pseudo, setPseudo] = useState(activeAccount?.pseudo);
+	const [firstname, setFirstname] = useState(activeAccount?.firstname);
+	const [lastname, setLastname] = useState(activeAccount?.lastname);
 	const [email, setEmail] = useState(activeAccount?.email);
 	const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount?.emailValidationProof !== undefined);
 	const [nonce, setNonce] = useState(activeAccount?.nonce);
@@ -134,11 +138,6 @@ export default function Parameters() {
 	}, [wallet]);
 
 
-	const navigate = useNavigate();
-
-	function goToMain() {
-		navigate('/');
-	}
 
 
 	/**
@@ -146,7 +145,7 @@ export default function Parameters() {
 	 */
 	function saveParameters() {
 		// prevent invalid parameters
-		if (pseudo === '') {
+		if (firstname === '') {
 			// TODO notify the user
 			console.error('[parameters] cannot update the active account pseudo with an empty pseudo');
 			return;
@@ -162,7 +161,8 @@ export default function Parameters() {
 				if (a.id !== wallet.activeAccountId) return a;
 				return {
 					...a,
-					pseudo,
+					firstname: firstname,
+					lastname: lastname,
 					nonce,
 				}
 			});
@@ -179,16 +179,119 @@ export default function Parameters() {
 	 * This function is fired when the user wants to delete the current active account.
 	 */
 	function deleteActiveAccount() {
-		if (activeAccount && activeAccount.pseudo === accountDeletionPseudo) {
-			console.log(`[g] deleting ${activeAccount.pseudo}`);
+		if (activeAccount && activeAccount.firstname === accountDeletionPseudo) {
+			console.log(`[g] deleting ${activeAccount.firstname}`);
 			setWallet(wallet => {
 				if (!wallet) return undefined;
 				const accounts = wallet.accounts
-					.filter(a => a.pseudo !== accountDeletionPseudo);
+					.filter(a => a.firstname !== accountDeletionPseudo);
 				return {...wallet, accounts}
 			});
 		}
 	}
+
+	const generalItems = [
+		{
+			name: 'Firstname',
+			description: 'Firstname of the user owning the account',
+			field: <InputWithDynamicConfirmSaveComponent
+				protect={false}
+				value={firstname}
+				onChange={setFirstname}
+				onSave={saveParameters}/>
+		},
+		{
+			name: 'Lastname',
+			description: 'Lastname of the user owning the account',
+			field: 	<InputWithDynamicConfirmSaveComponent
+				protect={false}
+				value={lastname}
+				onChange={setLastname}
+				onSave={saveParameters}/>
+		},
+		{
+			name: 'Account Nonce',
+			description: 'The nonce of your account, used to derive different keys.',
+			field: <InputNumberWithDynamicConfirmSaveComponent
+				value={nonce}
+				onChange={setNonce}
+				onSave={saveParameters}/>
+		}
+	];
+
+	const keysItem = [
+		{
+			name: "User Authentication Private Key",
+			description: "Your private signature authentication key.",
+			field: <>
+				<div className="parameter-icon-input bg-gray-200 flex flex-column p-2 rounded-md ">
+					<svg onClick={() => setShowPrivateKeys(!showPrivateKeys)}
+						 xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+						 className="pr-2 mr-2 w-6 h-6 border-r-2 border-gray-300 hover:cursor-pointer"
+						 viewBox="0 0 16 16">
+						<path
+							d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+						<path
+							d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+					</svg>
+
+					<input className="block w-full bg-gray-200"
+						   type={showPrivateKeys ? 'text' : 'password'} onClick={() => {
+						navigator.clipboard.writeText(userPrivateKey);
+					}} readOnly={true} value={userPrivateKey}/>
+				</div>
+			</>
+		},
+		{
+			name: "User Authentication Public Key",
+			description: "Your public signature authentication key.",
+			field: <>
+				<input type="text" onClick={() => {
+					navigator.clipboard.writeText(userPublicKey);
+				}}
+					   className="parameter-input mb-2" readOnly={true} value={userPublicKey}/>
+				{userPublicKey &&
+					<div className="flex items-end">
+						<button
+							className="btn-primary btn-highlight"
+							onClick={() => {
+								window.open(`mailto:?subject=Public%20key&body=Hey%20!%0A%0AHere%20is%20my%20public%20key%3A%0A%0A${userPublicKey}`);
+							}}>
+							Share your public key
+						</button>
+					</div>
+				}
+				</>
+		}
+	];
+	const oracleItems = [
+		{
+			name: "Email",
+			description: "",
+			field: <>
+				<input type="text"
+					   className="parameter-input" readOnly={true} value={email}/>
+			</>
+		}
+	]
+
+	const networkItems = [
+		{
+			name: "Carmentis Node Endpoint",
+			description: "The endpoint of the carmentis node server. Make sure that this node belongs to the Carmentis network.",
+			field: <InputWithDynamicConfirmSaveComponent
+				protect={false}
+				value={nodeEndpoint}
+				onChange={setNodeEndpoint}
+				onSave={saveParameters}/>
+		},
+		{
+			name: "Carmentis Explorer Endpoint",
+			description: "The endpoint of the explorer.",
+			field: <input type="text"
+						  className="parameter-input mb-2" readOnly={true} value={wallet?.explorerEndpoint || ''}/>
+		}
+	]
 
 	return <>
 		<div className="md:container md:mx-auto flex flex-col space-y-8">
@@ -199,134 +302,10 @@ export default function Parameters() {
 
 
 			<EmailValidation/>
-
-			<Card>
-				<CardContent>
-					<h2>General</h2>
-					<div className="parameter-group">
-						<div className="parameter-title">Account Name</div>
-						<div className="parameter-description">The name of your account.</div>
-						<InputWithDynamicConfirmSaveComponent
-							protect={false}
-							value={pseudo}
-							onChange={setPseudo}
-							onSave={saveParameters}/>
-
-					</div>
-
-					<div className="parameter-group">
-						<div className="parameter-title">Account Nonce</div>
-						<div className="parameter-description">
-							The nonce of your account.
-							The nonce is used to derive a different key pair for each account.
-						</div>
-						<InputNumberWithDynamicConfirmSaveComponent
-							value={nonce}
-							onChange={setNonce}
-							onSave={saveParameters}/>
-
-					</div>
-
-
-				</CardContent>
-			</Card>
-
-			<Card className="parameter-section">
-				<CardContent>
-
-					<h2>User Keys</h2>
-					<div className="parameter-group">
-						<div className="parameter-title">User Authentication Private Key</div>
-						<div className="parameter-description">Your private signature authentication key.</div>
-
-						<div className="parameter-icon-input bg-gray-200 flex flex-column p-2 rounded-md ">
-							<svg onClick={() => setShowPrivateKeys(!showPrivateKeys)}
-								 xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-								 className="pr-2 mr-2 w-6 h-6 border-r-2 border-gray-300 hover:cursor-pointer"
-								 viewBox="0 0 16 16">
-								<path
-									d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-								<path
-									d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-							</svg>
-
-							<input className="block w-full bg-gray-200"
-								   type={showPrivateKeys ? 'text' : 'password'} onClick={() => {
-								navigator.clipboard.writeText(userPrivateKey);
-							}} readOnly={true} value={userPrivateKey}/>
-						</div>
-
-
-					</div>
-					<div className="parameter-group">
-						<div className="parameter-title">User Authentication Public Key</div>
-						<div className="parameter-description">Your public signature authentication key.</div>
-						<input type="text" onClick={() => {
-							navigator.clipboard.writeText(userPublicKey);
-						}}
-							   className="parameter-input mb-2" readOnly={true} value={userPublicKey}/>
-						{userPublicKey &&
-							<div className="flex items-end">
-								<button
-									className="btn-primary btn-highlight"
-									onClick={() => {
-										window.open(`mailto:?subject=Public%20key&body=Hey%20!%0A%0AHere%20is%20my%20public%20key%3A%0A%0A${userPublicKey}`);
-									}}>
-									Share your public key
-								</button>
-							</div>
-						}
-					</div>
-
-				</CardContent>
-			</Card>
-
-			<Card className="parameter-section">
-				<CardContent>
-
-					<h2>Oracles</h2>
-					<div className="parameter-group">
-						<div className="parameter-title">Email</div>
-						<div className="parameter-description">
-							The email linked with account. {verifiedEmail &&
-							<span
-								className="text-green-600">(Verified with the Carmentis email verification oracle at {wallet?.emailOracleEndpoint})</span>}
-						</div>
-						<input type="text"
-							   className="parameter-input" readOnly={true} value={email}/>
-					</div>
-				</CardContent>
-			</Card>
-
-
-			<Card className="parameter-section">
-				<CardContent>
-					<h2>Network</h2>
-
-					<div className="parameter-group">
-						<div className="parameter-title">Carmentis Node Endpoint</div>
-						<div className="parameter-description">
-							The endpoint of the carmentis node server.
-							Make sure that this node belongs to the Carmentis network.
-						</div>
-
-						<InputWithDynamicConfirmSaveComponent
-							protect={false}
-							value={nodeEndpoint}
-							onChange={setNodeEndpoint}
-							onSave={saveParameters}/>
-					</div>
-
-					<div className="parameter-group">
-						<div className="parameter-title">Carmentis Explorer Endpoint</div>
-						<div className="parameter-description">
-							The endpoint of the explorer.
-						</div>
-						<input type="text"
-							   className="parameter-input mb-2" readOnly={true} value={wallet?.explorerEndpoint || ''}/>
-					</div>
-				</CardContent>
-			</Card>
+			<GeneralParameters items={generalItems}/>
+			<KeysParameters items={keysItem}/>
+			<OracleParameters items={oracleItems}/>
+			<NetworkParameters items={networkItems}/>
 
 
 			{wallet?.accounts.length !== 1 &&
@@ -337,7 +316,7 @@ export default function Parameters() {
 						<div className="parameter-group text-red-500">
 							<div className="parameter-title">Account Deletion</div>
 							<div className="parameter-description">
-								Delete the current account named <b>{activeAccount?.pseudo}</b>.
+								Delete the current account named <b>{activeAccount?.firstname}</b>.
 								Write your account name below to confirm the deletion.
 							</div>
 							<input type="text" className="parameter-input" value={accountDeletionPseudo}
@@ -352,4 +331,65 @@ export default function Parameters() {
 			}
 		</div>
 	</>;
+}
+
+type GeneralParametersProps = {
+	items: {
+		name: string, description: string, field: ReactElement,
+	}[]
+}
+function GeneralParameters({items}: GeneralParametersProps) {
+	const content = items.map(it => <div className="parameter-group">
+		<div className="parameter-title">{it.name}</div>
+		<div className="parameter-description">{it.description}</div>
+		{it.field}
+	</div>)
+	return <Card>
+		<CardContent>
+			<h2>General</h2>
+			{content}
+		</CardContent>
+	</Card>
+}
+
+function KeysParameters({items}: GeneralParametersProps) {
+	const content = items.map(it => <div className="parameter-group">
+		<div className="parameter-title">{it.name}</div>
+		<div className="parameter-description">{it.description}</div>
+		{it.field}
+	</div>)
+	return <Card>
+		<CardContent>
+			<h2>User Keys</h2>
+			{content}
+		</CardContent>
+	</Card>
+}
+
+function OracleParameters({items}: GeneralParametersProps) {
+	const content = items.map(it => <div className="parameter-group">
+		<div className="parameter-title">{it.name}</div>
+		<div className="parameter-description">{it.description}</div>
+		{it.field}
+	</div>)
+	return <Card className="parameter-section">
+		<CardContent>
+			<h2>Oracles</h2>
+			{content}
+		</CardContent>
+	</Card>
+}
+
+function NetworkParameters({items}: GeneralParametersProps) {
+	const content = items.map(it => <div className="parameter-group">
+			<div className="parameter-title">{it.name}</div>
+			<div className="parameter-description">{it.description}</div>
+			{it.field}
+		</div>)
+	return <Card className="parameter-section">
+		<CardContent>
+			<h2>Network</h2>
+			{content}
+		</CardContent>
+	</Card>
 }

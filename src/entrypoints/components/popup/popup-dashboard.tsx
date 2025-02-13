@@ -108,7 +108,8 @@ function PopupBody() {
         const wiWallet = new sdk.wiExtensionWallet();
         const keyPair = await getUserKeyPair(wallet as Wallet, activeAccount as Account)
         const req = wiWallet.getRequestFromMessage(clientRequest.data)
-        const answer = wiWallet.approveRequestExecution(Encoders.ToHexa(keyPair.privateKey), req);
+        console.log(req, req.object, req.object.challenge)
+        const answer = wiWallet.signAuthenticationByPublicKey(Encoders.ToHexa(keyPair.privateKey), req.object);
 
         const response: BackgroundRequest<ClientResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
@@ -129,8 +130,132 @@ function PopupBody() {
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data)
     if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody accept={accept} decline={decline}/>
+    if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_EMAIL) return <PopupGetEmail/>
+    if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_USER_DATA) return <PopupGetUserData/>
 
     return <>You have a request!</>
+}
+
+function PopupGetUserData() {
+    const activeAccount = useRecoilValue(activeAccountState);
+    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const wiWallet = new sdk.wiExtensionWallet();
+    const req = wiWallet.getRequestFromMessage(clientRequest.data);
+    const requiredData : string[] = req.object.requiredData!
+
+    async function accept() {
+        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
+
+        // transform each data
+        const userData = {}
+        if ('firstname' in requiredData) userData['firstname'] = activeAccount?.firstname;
+        if ('lastname' in requiredData) userData['lastname'] = activeAccount?.lastname;
+        if ('email' in requiredData) userData['email'] = activeAccount?.email;
+
+
+        const wiWallet = new sdk.wiExtensionWallet();
+        const answer = await wiWallet.approveGetUserDataRequest(userData);
+
+
+        const response: BackgroundRequest<ClientResponse> = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+            payload: answer
+        }
+
+        console.log("[popup dashboard] Response:", response)
+        browser.runtime.sendMessage(response);
+        setClientRequest(undefined);
+    }
+
+    async function decline() {
+        setClientRequest(undefined)
+    }
+
+    return <div className={"h-full w-full flex flex-col justify-between"}>
+        <div id="header">
+            <Typography variant={"h6"}>Personal Data Access</Typography>
+        </div>
+        <div id="body" className={"h-full"}>
+            <p>
+                An application wants to access your personal data.
+            </p>
+            <p className="font-bold">Origin</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {clientRequest.origin}
+            </p>
+            <p className="font-bold">Received at</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {new Date(clientRequest.timestamp).toLocaleString()}
+            </p>
+            <p className="font-bold">Shared Information</p>
+            <div className="w-100 p-2 bg-gray-100 rounded-md">
+                {requiredData.map(d => <span>{d}</span>)}
+            </div>
+        </div>
+        <div id="footer" className={"w-full flex flex-row space-x-2"}>
+            <div className={"w-1/2"} onClick={accept}>
+                <Button className={"uppercase w-full"} variant={"contained"}>Accept</Button>
+            </div>
+            <div className={"w-1/2"} onClick={decline}>
+                <Button className={"uppercase w-full"} variant={"contained"} >decline</Button>
+            </div>
+        </div>
+    </div>
+}
+
+function PopupGetEmail() {
+    const activeAccount = useRecoilValue(activeAccountState);
+    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+
+    async function accept() {
+        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
+        const wiWallet = new sdk.wiExtensionWallet();
+        //const answer = wiWallet.approveGetEmailRequest(activeAccount?.email as string);
+        const answer = await wiWallet.approveGetEmailRequest(activeAccount?.email as string);
+        console.log("[get email] answer:", answer)
+
+
+        const response: BackgroundRequest<ClientResponse> = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+            payload: answer
+        }
+
+        console.log("[popup dashboard] Response:", response)
+        browser.runtime.sendMessage(response);
+        setClientRequest(undefined);
+    }
+
+    async function decline() {
+        setClientRequest(undefined)
+    }
+
+
+    return <div className={"h-full w-full flex flex-col justify-between"}>
+        <div id="header">
+            <Typography variant={"h6"}>Email Access</Typography>
+        </div>
+        <div id="body" className={"h-full"}>
+            <p>
+                An application wants to access the email stored in your wallet.
+            </p>
+            <p className="font-bold">Origin</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {clientRequest.origin}
+            </p>
+            <p className="font-bold">Received at</p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {new Date(clientRequest.timestamp).toLocaleString()}
+            </p>
+        </div>
+        <div id="footer" className={"w-full flex flex-row space-x-2"}>
+            <div className={"w-1/2"}>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={accept}>Accept</Button>
+            </div>
+            <div className={"w-1/2"}>
+                <Button className={"uppercase w-full"} variant={"contained"} onClick={decline}>decline</Button>
+            </div>
+        </div>
+    </div>
 }
 
 function PopupIdleBody() {
@@ -140,6 +265,7 @@ function PopupIdleBody() {
         </div>
     </div>
 }
+
 
 
 type ClientRequestApproveCallback = {

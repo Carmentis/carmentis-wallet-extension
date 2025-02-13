@@ -25,8 +25,8 @@ export function ImportWallet() {
     const location = useLocation();
     const navigate = useNavigate();
     const password = location.state.password;
-    const pseudo = location.state.pseudo;
-    if (!password || !pseudo) {
+    const firstname = location.state.firstname;
+    if (!password || !firstname) {
         useEffect(() => {
             navigate("/create-password", {
                 state: {
@@ -65,7 +65,7 @@ export function ImportWallet() {
         let seed = await provider.generateSeed(words);
         navigate("/setup-wallet", {
             state: {
-                pseudo: pseudo,
+                ...location.state,
                 password: password,
                 seed: seed,
             }

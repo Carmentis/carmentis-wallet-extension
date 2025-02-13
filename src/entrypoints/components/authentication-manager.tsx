@@ -159,7 +159,7 @@ function AuthenticationDataAccess({children}: PropsWithChildren) {
 export function useToast() {
     return {
         success: (msg: string) => toast(msg),
-        error: (msg: string) => toast(msg)
+        error: (msg: string) => toast.error(msg)
     }
 }
 

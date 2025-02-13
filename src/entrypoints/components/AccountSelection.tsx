@@ -63,7 +63,7 @@ export default function AccountSelection() {
                             />
                             <span
                                 className="self-center text-xl font-semibold whitespace-nowrap text-black">
-                        {account.pseudo}
+                        {account.firstname}
                     </span>
                         </div>
                     })

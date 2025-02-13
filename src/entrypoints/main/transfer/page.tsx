@@ -63,7 +63,9 @@ function TransferForm() {
 			console.log(response)
 		}
 
-		executeTransfer().then(() => toast.success("Tokens successfully transferred")).catch(toast.error)
+		executeTransfer()
+			.then(() => toast.success("Tokens successfully transferred"))
+			.catch(e => toast.error(`An error occurred: ${e}`))
 	}
 
 	return <Card className={"w-auto "}>
@@ -107,8 +109,8 @@ function TransferGraphic() {
 	const activeAccount = useAuthenticatedAccount();
 	return <div className={"flex space-x-32 justify-center items-center"}>
 		<div className={"w-24 flex flex-col justify-center items-center space-y-4"}>
-			<Avatar name={activeAccount.pseudo} variant={"beam"} />
-			<Typography variant={"h6"}>{activeAccount.pseudo}</Typography>
+			<Avatar name={activeAccount.firstname} variant={"beam"} />
+			<Typography variant={"h6"}>{activeAccount.firstname}</Typography>
 		</div>
 		<i className={"bi bi-arrow-right text-3xl"}></i>
 		<div className={"w-24  flex flex-col justify-center items-center space-y-4"}>

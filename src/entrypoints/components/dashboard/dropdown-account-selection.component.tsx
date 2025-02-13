@@ -120,7 +120,7 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
 
                 <span
                     className="self-center text-md font-semibold  text-black">
-                                {activeAccount?.pseudo}
+                                {activeAccount?.firstname}
                             </span>
             </div>
             {showAccountSelectionMenu &&
@@ -132,7 +132,7 @@ export function DropdownAccountSelection( input : {allowAccountCreation : boolea
                                 <div
                                     className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     <AvatarUser className="w-6 h-6 me-2 rounded-full" user={account}/>
-                                    {account.pseudo}
+                                    {account.firstname}
 
                                 </div>
                             </li>

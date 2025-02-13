@@ -101,24 +101,34 @@ export async function searchAccountHashByPublicKey(publicKey: string) {
 }
 
 export async function transferTokensToPublicKey(senderPrivateKey: string, senderPublicKey: string, receiverPublicKey: string, tokenAmount: number) {
-	const senderAccountHash  = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(senderPublicKey);
-	const receiverAccountHash = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(receiverPublicKey);
+	try {
+		console.log("Searching for accounts")
+		const senderAccountHash  = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(senderPublicKey);
+		const receiverAccountHash = await sdk.blockchain.blockchainQuery.getAccountByPublicKey(receiverPublicKey);
 
-	const vb = new sdk.blockchain.accountVb();
-	await vb.load(senderAccountHash);
-	sdk.blockchain.blockchainCore.setUser(
-		sdk.blockchain.ROLES.USER,
-		senderPrivateKey
-	);
+		console.log("Configuring SDK for the sending")
+		const vb = new sdk.blockchain.accountVb();
+		await vb.load(senderAccountHash);
+		sdk.blockchain.blockchainCore.setUser(
+			sdk.blockchain.ROLES.USER,
+			senderPrivateKey
+		);
 
-	const transfer = vb.createTransfer(receiverAccountHash, tokenAmount * sdk.constants.ECO.TOKEN);
-	transfer.addPublicReference("public ref");
-	transfer.addPrivateReference("private ref");
-	await transfer.commit();
+		console.log("Create transfer")
+		const transfer = vb.createTransfer(receiverAccountHash, tokenAmount * sdk.constants.ECO.TOKEN);
+		transfer.addPublicReference("public ref");
+		transfer.addPrivateReference("private ref");
+		await transfer.commit();
 
-	await vb.sign();
-	vb.setGasPrice(sdk.constants.ECO.TOKEN);
-	await vb.publish();
+		console.log("Signing of the transaction")
+		await vb.sign();
+		vb.setGasPrice(sdk.constants.ECO.TOKEN);
+
+		console.log("Publishing the transaction")
+		await vb.publish();
+	} catch (e) {
+		throw e;
+	}
 
 }
 

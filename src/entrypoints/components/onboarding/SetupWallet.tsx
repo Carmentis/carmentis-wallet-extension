@@ -19,7 +19,7 @@ import {useLocation, useNavigate} from "react-router";
 import {useEffect, useState} from "react";
 import {SecureWalletStorage} from "@/utils/db/wallet-storage.ts";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
-import {CreateFromPseudoAndSeed} from '@/entrypoints/main/wallet.tsx';
+import {CreateFromIdentityAndSeed} from '@/entrypoints/main/wallet.tsx';
 import {useAppNotification} from "@/entrypoints/contexts/application-notification.context.tsx";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 
@@ -42,20 +42,21 @@ export function SetupWallet() {
     // recover the password and seed from given parameters, or back to home if at least one is not provided
     const location = useLocation();
     const navigate = useNavigate();
-    if (!location.state || !location.state.password || !location.state.seed || !location.state.pseudo) {
+    if (!location.state || !location.state.password || !location.state.seed || !location.state.firstname) {
         useEffect(() => {
             navigate("/");
         });
     }
 
 
-    // recover the pseudo, password and seed
-    const pseudo = location.state.pseudo;
+    // recover the firstname, lastname, password and seed
+    const firstname = location.state.firstname;
+    const lastname = location.state.lastname;
     const password = location.state.password;
     const seed = location.state.seed;
 
     // create the wallet
-    const walletContext = CreateFromPseudoAndSeed(pseudo, seed, password);
+    const walletContext = CreateFromIdentityAndSeed(firstname, lastname, seed, password);
 
 
     function redirectToMainPage() {

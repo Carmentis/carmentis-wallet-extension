@@ -51,7 +51,7 @@ export function RecoveryPhrase() {
     // creation page
     const navigate = useNavigate();
     const location = useLocation()
-    if (!location.state || !location.state.password || !location.state.pseudo) {
+    if (!location.state || !location.state.password || !location.state.fistname || !location.state.lastname) {
 
         console.log("No pseudo/password defined: go to password creation")
         useEffect(() => {
@@ -149,8 +149,7 @@ export function RecoveryPhrase() {
             let seed = await provider.generateSeed(wordsList);
             navigate("/setup-wallet", {
                 state: {
-                    pseudo: location.state.pseudo,
-                    password: location.state.password,
+                    ...location.state,
                     seed: seed,
                 }
             })

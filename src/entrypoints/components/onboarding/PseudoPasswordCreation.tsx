@@ -21,7 +21,8 @@ import {useLocation, useNavigate} from "react-router";
 
 export function PseudoPasswordCreation() {
     // the state of the component
-    const [pseudo, setPseudo] = useState("");
+    const [firstname, setFirstname] = useState("");
+    const [lastname, setLastname] = useState("");
     const [password, setPassword] = useState('aaa');
     const [confirmPassword, setConfirmPassword] = useState('aaa');
     const [consent, setConsent] = useState(0);
@@ -36,7 +37,7 @@ export function PseudoPasswordCreation() {
         // the pseudo should not be empty
         {
             evaluate: () => {
-                return pseudo !== "";
+                return firstname !== "";
             },
             onFailure: () => {
                 setPseudoIsEmpty(true)
@@ -68,7 +69,7 @@ export function PseudoPasswordCreation() {
     ]
 
     // checks the conditions defined above.
-    function onSubmitPseudoPasswordCreation() {
+    function onSubmitCreation() {
         // checks conditions
         setActiveForm(true)
         let containsError = false;
@@ -92,7 +93,8 @@ export function PseudoPasswordCreation() {
     function onCorrectPseudoPasswordForm() {
         navigate(target, {
             state: {
-                pseudo: pseudo,
+                firstname: firstname,
+                lastname: lastname,
                 password: password,
             }
         });
@@ -108,17 +110,33 @@ export function PseudoPasswordCreation() {
 
             <div className="flex items-center justify-between align-items-center justify-content-center flex-col">
                 <div className="mb-4">
-                    <label htmlFor="pseudo"
-                           className="block text-sm font-medium leading-6 text-gray-900">Pseudo</label>
+                    <label htmlFor="firstname"
+                           className="block text-sm font-medium leading-6 text-gray-900">Firstname</label>
                     <div className="relative mt-2 rounded-md shadow-sm">
-                        <input type="text" name="pseudo" id="pseudo"
-                               placeholder="Pseudo"
-                               value={pseudo}
-                               onChange={(e) => setPseudo(e.target.value)}
+                        <input type="text" name="firstname" id="firstname"
+                               placeholder="Firstname"
+                               value={firstname}
+                               onChange={(e) => setFirstname(e.target.value)}
                                className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset  sm:text-sm sm:leading-6"/>
                         {activeForm && pseudoIsEmpty &&
                             <p className="mt-2 text-pink-600">
                                 The pseudo is required.
+                            </p>
+                        }
+                    </div>
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="lastname"
+                           className="block text-sm font-medium leading-6 text-gray-900">Lastname</label>
+                    <div className="relative mt-2 rounded-md shadow-sm">
+                        <input type="text" name="lastname" id="lastname"
+                               placeholder="Lastname"
+                               value={lastname}
+                               onChange={(e) => setLastname(e.target.value)}
+                               className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset  sm:text-sm sm:leading-6"/>
+                        {activeForm && lastname == "" &&
+                            <p className="mt-2 text-pink-600">
+                                The lastname is required.
                             </p>
                         }
                     </div>
@@ -175,7 +193,7 @@ export function PseudoPasswordCreation() {
             </div>
 
 
-            <button className="btn-primary btn-highlight w-full" onClick={onSubmitPseudoPasswordCreation}>
+            <button className="btn-primary btn-highlight w-full" onClick={onSubmitCreation}>
                 Next
             </button>
         </>
