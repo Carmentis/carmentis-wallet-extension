@@ -3,7 +3,7 @@ import {getUserKeyPair, SignatureKeyPair, Wallet} from '@/entrypoints/main/walle
 import {Account} from '@/entrypoints/main/Account.tsx';
 import {atom, selector, useRecoilState, useRecoilValue} from 'recoil';
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-import * as sdk from "../../../../carmentis-core/dist/client";
+import * as sdk from "@cmts-dev/carmentis-sdk/client";
 import {AtomEffect} from "recoil";
 
 export interface AuthenticationContainer {

@@ -21,7 +21,7 @@ import {SecureWalletStorage} from '@/utils/db/wallet-storage.ts';
 import pino from 'pino';
 import {CarmentisProvider} from '@/providers/carmentisProvider.tsx';
 import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
-import * as sdk from '../../../../carmentis-core/dist/client';
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
 
 
 // setup the internationalisation

@@ -1,4 +1,4 @@
-import * as sdk from '../../../../../carmentis-core/dist/client';
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
 import {useRecoilValue} from "recoil";
 import {activeAccountPublicKeyState} from "@/entrypoints/contexts/authentication.context.tsx";
 import useSWR from "swr";
