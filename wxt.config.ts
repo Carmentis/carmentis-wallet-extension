@@ -6,7 +6,7 @@ export default defineConfig({
   outDir: './.output',
   manifest: {
     name: 'Carmentis Wallet',
-    version: '0.8.1',
+    version: '0.8.3',
     description: 'Carmentis Wallet',
     host_permissions: ['*://*/*'],
     browser_action: {},
