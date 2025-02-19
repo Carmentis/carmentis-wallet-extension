@@ -143,14 +143,20 @@ function PopupGetUserData() {
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const requiredData : string[] = req.object.requiredData!
 
+    function mapRequiredDataItemWithValue(requiredItem: string) {
+        if (requiredItem === 'firstname') return activeAccount?.firstname || '';
+        if (requiredItem === 'lastname' ) return activeAccount?.lastname || '';
+        if (requiredItem === 'email') return activeAccount?.email || '';
+        return ''
+    }
+
     async function accept() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
 
+
+
         // transform each data
-        const userData = {}
-        if ('firstname' in requiredData) userData['firstname'] = activeAccount?.firstname;
-        if ('lastname' in requiredData) userData['lastname'] = activeAccount?.lastname;
-        if ('email' in requiredData) userData['email'] = activeAccount?.email;
+        const userData = requiredData.map(mapRequiredDataItemWithValue)
 
 
         const wiWallet = new sdk.wiExtensionWallet();
