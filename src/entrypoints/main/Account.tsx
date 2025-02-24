@@ -16,6 +16,7 @@
  */
 
 import {randomHex} from "@/entrypoints/main/Random.tsx";
+import {deprecate} from "node:util";
 
 const DEFAULT_ACCOUNT_NAME = "Account"
 const DEFAULT_NONCE = 0;
@@ -45,6 +46,10 @@ export interface Flow {
     flowId : string,
     accountId: string,
     applicationId: string,
+}
+
+export interface ApplicationVirtualBlockchain {
+    virtualBlockchainId : string,
 }
 
 /**

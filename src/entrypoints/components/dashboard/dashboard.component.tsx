@@ -22,23 +22,21 @@ import {Route, Routes, useNavigate} from 'react-router';
 import Parameters from '@/entrypoints/components/dashboard/parameters.component.tsx';
 import {DropdownAccountSelection} from '@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx';
 import Skeleton from 'react-loading-skeleton';
-
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
 
 import 'react-loading-skeleton/dist/skeleton.css';
-import {Formatter} from '@/entrypoints/main/Formatter.tsx';
-import {VirtualBlockchainDetailComponent} from '@/entrypoints/components/dashboard/virtual-blockchain-detail.component.tsx';
-import {VirtualBlockchainView} from '@/entrypoints/main/virtual-blockchain-view.tsx';
 import {
+	activeAccountState,
 	nodeEndpointState,
 	useAuthenticatedAccount,
 	useAuthenticationContext,
-	useWallet,
+	useWallet, walletState,
 } from '@/entrypoints/contexts/authentication.context.tsx';
 import {NavbarSidebarLayout} from '@/entrypoints/components/layout/navbar-sidebar.layout.tsx';
 import {SidebarItem} from '@/entrypoints/components/layout/sidebar-components.tsx';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
 import {useAccountBalanceHook} from '@/entrypoints/components/hooks/sdk.hook.tsx';
-import {Badge, Card, CardContent, Tooltip, Typography} from '@mui/material';
+import {Badge, Box, Card, CardContent, CardHeader, Tooltip, Typography} from '@mui/material';
 import {SpinningWheel} from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
 import {useRecoilValue} from 'recoil';
@@ -47,6 +45,7 @@ import {AccountDataStorage} from "@/utils/db/account-data-storage.ts";
 import NotificationRightBar from "@/entrypoints/components/notification-rightbar.component.tsx";
 import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
 import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
+import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -283,7 +282,7 @@ function DashboardHome() {
 	return <>
 		<div className="container mx-auto px-4">
 			<DashboardWelcomeCards />
-			<DashboardVirtualBlockchainsList />
+			<ChainVisualizer/>
 		</div>
 
 	</>;
@@ -340,9 +339,11 @@ function DashboardWelcomeCards() {
 	useEffect(() => {
 		AccountDataStorage.connectDatabase(activeAccount)
 			.then(async (db: AccountDataStorage) => {
+				/*
 				db.getNumberOfApplications().then(setNumberOfApplications);
 				db.getFlowsNumberOfAccount().then(setNumberOfFlows);
 				db.getSpentGaz().then(setSpentGaz);
+				 */
 			});
 	}, []);
 
@@ -352,180 +353,99 @@ function DashboardWelcomeCards() {
 
 		<div className="flex w-full flex-row space-x-4">
 			<AccountBalanceCard />
-			<Card className={'flex-1'}>
-				<CardContent>
-					<h3>Applications</h3>
-					<SpanWithLoader text={numberOfApplications}></SpanWithLoader>
-				</CardContent>
-			</Card>
-			<Card className={'flex-1'}>
-				<CardContent>
-
-					<h3>Virtual blockchains</h3>
-					<SpanWithLoader text={numberOfFlows}></SpanWithLoader>
-				</CardContent>
-			</Card>
-			<Card className={'flex-1'}>
-				<CardContent>
-					<h3>Spent Gas</h3>
-					<SpanWithLoader text={spentGaz}></SpanWithLoader>
-				</CardContent>
-			</Card>
-
 		</div>
 	</div>;
 }
 
 
+function ChainVisualizer() {
+	const offset = 0;
+	const limit = 200;
+	const wallet = useRecoilValue(walletState);
+	const activeAccount = useRecoilValue(activeAccountState);
+	if (!activeAccount) return <></>;
+	const [chains, setChains] = useState<string[]>([]);
 
-
-/**
- * DashboardVirtualBlockchainsList renders a dashboard interface displaying a list of virtual blockchains (flows).
- * It synchronizes data from the blockchain and database, and allows user interactions like exploring flows and viewing details.
- *
- * @return {JSX.Element} A JSX element representing the dashboard section, which includes a list of flows, detail view for the selected flow, and interactive actions such as opening external links or exploring specific flows.
- */
-function DashboardVirtualBlockchainsList() {
-	const activeAccount = useAuthenticatedAccount();
-	const wallet = useWallet();
-	const [flows, setFlows] = useState<VirtualBlockchainView[]>([]);
-	const [chosenVirtualBlockchainId, setChosenVirtualBlockchainId] = useState<{ applicationId: string, flowId: string } | undefined>();
-	const [isLoading, setIsTransition] = useState(false);
-
-
-	function putDataInStates() {
-		AccountDataStorage.connectDatabase(activeAccount)
-			.then(async (db) => {
-				db.getAllFlowsOfAccount().then(setFlows);
-			});
+	async function loadChains() {
+		const db = await AccountDataStorage.connectDatabase(activeAccount!);
+		const keyPair = await getUserKeyPair(wallet!, activeAccount!)
+		const chains = await db.getAllApplicationVirtualBlockchainId(offset, limit);
+		sdk.blockchain.blockchainCore.setUser(sdk.blockchain.ROLES.OPERATOR, sdk.utils.encoding.toHexa(keyPair.privateKey))
+		setChains(chains.map(c => c.virtualBlockchainId))
 	}
 
 	useEffect(() => {
-		synchronizeWithBlockchain();
+		loadChains()
 	}, []);
 
 
-	function synchronizeWithBlockchain() {
-		// TODO
-		/*
-		IndexedStorage.ConnectDatabase(activeAccount).then(async (db: IndexedStorage) => {
-			try {
+	const content = chains.map(c => <SingleChain key={c} chainId={c}/>)
+	return <Box className={"flex flex-col space-y-4"}>
+		{content}
+	</Box>
+}
 
-				const flows = await db.getAllFlowsOfAccount();
-				for (const flow of flows) {
+function SingleChain( {chainId}: {chainId: string} ) {
+	const vb = new sdk.blockchain.appLedgerVb(chainId);
+	const [height, setHeight] = useState<number|undefined>(undefined);
 
-					const flowId = flow.virtualBlockchainId;
-					const microChain = await Carmentis.getMicroChain(Encoders.FromHexa(flowId));
-					const blocksOnChain = microChain.microBlock;
-					for (const block of blocksOnChain) {
-
-						const microBlockId: string = Encoders.ToHexa(block.hash);
-						const foundInDatabase = await db.checkMicroBlockExists(
-							flow.virtualBlockchainId,
-							block.nonce,
-						);
-						if (foundInDatabase) {
-							if (typeof block.masterBlock === 'number') {
-								console.log('[dashbord] update of existing block:', block);
-
-								await db.updateMasterMicroBlock(
-									microBlockId,
-									block.masterBlock,
-								);
-							}
-						} else {
-
-							const importMicroBlock: MicroBlock = {
-								accountId: activeAccount.id,
-								applicationId: flow.applicationId,
-								flowId: flowId,
-								data: undefined,
-								gas: block.gas,
-								gasPrice: block.gasPrice,
-								isInitiator: false,
-								masterBlock: block.masterBlock,
-								microBlockId: Encoders.ToHexa(block.hash),
-								nonce: block.nonce,
-								ts: block.ts,
-								version: block.version,
-							};
-
-							console.log('[dashboard] add in database:', importMicroBlock);
-							await db.addMicroBlock(importMicroBlock);
-
-						}
-					}
-
-				}
-
-			} catch (e: any) {
-				throw new Error(e);
-			}
-
-		});
-		 */
-
+	async function loadChain() {
+		await vb.load();
+		const height = vb.getHeight();
+		setHeight(height-1)
 	}
 
-	if (isLoading) return <Skeleton count={5} />;
+	useEffect(() => {
+		loadChain()
+	}, []);
 
+	if (!height) return <Skeleton height={40}/>
 
-	return <>
+	const content = []
+	for (let i = 1; i <= height; i++) {
+		content.push( <BlocViewer key={`${chainId}-${i}`} chainId={chainId} index={i} />)
+	}
+	return (
 		<Card>
 			<CardContent>
-				<Typography variant={'h6'}>Virtual blockchains</Typography>
-				<div className="rounded-gray">
-					<table className="table table-auto w-full text-sm text-left rtl:text-right ">
-						<thead className="text-xs uppercase bg-gray-50 d">
-						<tr>
-							<th>Flow Id</th>
-							<th>Last update</th>
-							<th>Application</th>
-							<th>Length</th>
-							<th>Domain</th>
-							<th></th>
-						</tr>
-						</thead>
-						<tbody>
-						{flows.map(flow =>
-							<tr
-								key={flow.virtualBlockchainId}
-								className={
-									'hover:bg-gray-100 hover:cursor-pointer ' + (
-										chosenVirtualBlockchainId !== undefined && chosenVirtualBlockchainId.flowId === flow.virtualBlockchainId ?
-											'bg-gray-200' : ''
-									)
-								}
-								onClick={() => {
-									setChosenVirtualBlockchainId({
-										applicationId: flow.applicationId,
-										flowId: flow.virtualBlockchainId,
-									});
-								}}>
-								<td>{capStringSize(flow.virtualBlockchainId, 20)}</td>
-								<td>{Formatter.formatDate(flow.lastUpdate)}</td>
-								<td>{flow.applicationName} <span
-									className="text-gray-400">({capStringSize(flow.applicationId, 30)})</span></td>
-								<td>{flow.flowLength}</td>
-								<td onClick={() => window.open('https://' + flow.applicationDomain, '_blank')}
-									className="hover:cursor-pointer">{flow.applicationDomain}</td>
-								<td onClick={() => window.open(EXPLORER_DOMAIN + '/explorer/microchain/0x' + flow.virtualBlockchainId)}>
-									<button className="btn-primary">Explore flow</button>
-								</td>
-							</tr>)
-						}
-						</tbody>
-					</table>
+				<Typography variant="body2" gutterBottom>
+					Chain {chainId}
+				</Typography>
+				<div style={{display: 'flex', flexWrap: 'wrap', gap: '16px'}}>
+					{content}
 				</div>
 			</CardContent>
 		</Card>
+	);
 
-		{chosenVirtualBlockchainId !== undefined &&
-			<div className="dashboard-section">
-				<VirtualBlockchainDetailComponent key={chosenVirtualBlockchainId.flowId} chosenFlow={chosenVirtualBlockchainId} />
-			</div>
-		}
-	</>;
+
+}
+
+function BlocViewer( {chainId, index}: {chainId: string, index: number})  {
+	const vb = new sdk.blockchain.appLedgerVb(chainId);
+	const [record, setRecord] = useState<Record<string, any>|undefined>(undefined);
+
+	async function loadBlock() {
+		await vb.load();
+		const record = vb.getRecord(index);
+		setRecord(record);
+	}
+
+	useEffect(() => {
+		loadBlock()
+	}, []);
+
+	if (!record) <Skeleton/>
+	return (
+		<Card style={{flex: '0 1 300px'}} key={index}>
+			<CardContent>
+				<Typography variant="h6">Bloc {index}</Typography>
+				<Typography variant="body2">
+					{JSON.stringify(record)}
+				</Typography>
+			</CardContent>
+		</Card>
+	);
 }
 
 export default Dashboard;

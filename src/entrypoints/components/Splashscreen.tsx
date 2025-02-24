@@ -18,7 +18,7 @@
 import React from "react";
 
 
-export function Splashscreen() {
+export function Splashscreen( {label} : {label?: string} ) {
 
 
     return (
@@ -43,6 +43,9 @@ export function Splashscreen() {
                                 fill="currentFill"/>
                         </svg>
                     </div>
+                    <p hidden={label === undefined}>
+                        {label}
+                    </p>
                 </div>
             </div>
         </>

@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {PropsWithChildren, useEffect, useRef} from "react";
+import React, {PropsWithChildren, useEffect, useRef, useState} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
@@ -33,6 +33,8 @@ import {
 } from "@/entrypoints/background.ts";
 import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {Account} from "@/entrypoints/main/Account.tsx";
+import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
+import PopupEventApproval from "@/entrypoints/components/popup/popup-event-approval.tsx";
 
 
 export interface RecordConfirmationData {
@@ -132,9 +134,11 @@ function PopupBody() {
     if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody accept={accept} decline={decline}/>
     if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_EMAIL) return <PopupGetEmail/>
     if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_USER_DATA) return <PopupGetUserData/>
+    if (req.type === sdk.constants.SCHEMAS.WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
 
     return <>You have a request!</>
 }
+
 
 function PopupGetUserData() {
     const activeAccount = useRecoilValue(activeAccountState);
@@ -323,6 +327,7 @@ function PopupAuthByPublicKeyBody(
         </div>
     </div>
 }
+
 
 
 

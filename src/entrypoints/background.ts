@@ -1,24 +1,4 @@
-/*
- * Copyright (c) Carmentis. All rights reserved.
- * Licensed under the Apache 2.0 licence.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
-import {Runtime} from "webextension-polyfill";
-import Port = Runtime.Port;
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
-import {undefined} from "zod";
 
 
 export enum BACKGROUND_REQUEST_TYPE {
@@ -78,7 +58,15 @@ export type QRCodeRequestData  = {
 }
 
 
-
+function debounce(func: any, delay: number) {
+    let timer: any;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
 
 
 
@@ -111,6 +99,23 @@ function forwardClientRequest(request: QRDataClientRequest) {
 
     notifyExtension()
 }
+
+function forwardRequestToFront(request: BackgroundRequest<ClientResponse>) {
+    browser.tabs
+        .query({
+            currentWindow: true,
+            active: true,
+        })
+        .then(tabs => {
+            console.log("[background] tabs:", tabs)
+            if (tabs.length !== 0) {
+                const id = tabs[0].id as number;
+                browser.tabs.sendMessage(id, request.payload)
+            }
+
+        })
+}
+const bouncedFormatRequestToFront = debounce(forwardRequestToFront, 500)
 
 export default defineBackground({
     persistent: true,
@@ -146,19 +151,7 @@ export default defineBackground({
                 forwardClientRequest(clientRequest.payload)
             } else if (request.backgroundRequestType == BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE) {
                 console.log("[background] handling client response", request)
-                browser.tabs
-                    .query({
-                        currentWindow: true,
-                        active: true,
-                    })
-                    .then(tabs => {
-                        console.log("[background] tabs:", tabs)
-                        if (tabs.length !== 0) {
-                            const id = tabs[0].id as number;
-                            browser.tabs.sendMessage(id, request.payload)
-                        }
-
-                    })
+                bouncedFormatRequestToFront(request)
             } else {
                 console.warn("[background] unknown request:", request)
             }
