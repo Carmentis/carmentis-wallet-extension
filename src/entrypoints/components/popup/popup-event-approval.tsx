@@ -289,8 +289,8 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
     const h = height ?? vb.getHeight();
     const record = vb.getRecord(h);
     const data = path.reduce((r, item) => r[item], record)
-    console.log("h:", h)
 
+    /*
     const rowEntryClass = 'w-full first:rounded-t last:rounded-b border-b-2 border-gray-50'
 
     function renderEntry(index: number, key: string, value: any) {
@@ -358,6 +358,8 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
         </>
     }
 
+     */
+
     function goToStart() {
         setHeight(1)
     }
@@ -387,8 +389,82 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
         <ButtonGroup variant="contained" fullWidth={true} aria-label=" uppercase outlined primary button group">
             {buttons.map((b, i) => <Button size={'small'} key={i} disabled={b.disabled} onClick={b.onClick}>{b.label}</Button>)}
         </ButtonGroup>
-        {renderRecord()}
+        <BlockViewer data={data} initialPath={path}/>
     </div>
+}
+
+export function BlockViewer({data, initialPath}: {data: Record<string, any>, initialPath: string[]}) {
+    const [path, setPath] = useState(initialPath)
+
+    const rowEntryClass = 'w-full first:rounded-t last:rounded-b border-b-2 border-gray-50'
+    function renderEntry(index: number, key: string, value: any) {
+        let content;
+        const isArrayOfStrings = Array.isArray(value) && value.every(v => typeof v === 'string')
+        if (typeof value === 'string' || typeof value === 'number' || isArrayOfStrings) {
+            content = <>
+                <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
+                <td className={"p-1"}>{isArrayOfStrings ? value.join(', ') : value}</td>
+            </>
+        } else {
+            // check if supported
+            const isArray = Array.isArray(value);
+            const isObject = typeof value === 'object';
+            const isDate = value instanceof Date;
+            if (!isArray && isObject) {
+                content = <>
+                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
+                    <td className={"p-1 text-gray-500 hover:cursor-pointer"} onClick={() => setPath(p => {
+                        return [...p, key];
+                    })}>See more
+                    </td>
+                </>
+            } else if (isDate) {
+                content = <>
+                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
+                    <td className={"p-1 text-gray-500"}>{new Date(value).toLocaleString()}</td>
+                </>
+            } else {
+                content = <>
+                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
+                    <td className={"p-1 text-gray-500"}>Cannot expand</td>
+                </>
+            }
+
+        }
+        return <TableRow key={index} className={rowEntryClass}>
+            {content}
+        </TableRow>
+    }
+
+    function renderPreviousPath() {
+        if (path.length == 0) return
+        return <TableRow className={rowEntryClass}>
+            <td onClick={() => setPath(p => {
+                p.pop();
+                return p;
+            })}>Back
+            </td>
+        </TableRow>
+    }
+
+    function renderRecord() {
+        const previousPath = renderPreviousPath();
+        const content = Object.entries(data).map(([key, value], i) => renderEntry(i, key, value))
+        return <>
+            <TableContainer >
+                <Table component={Paper} elevation={1}>
+                    <TableBody>
+                        {previousPath}
+                        {content}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </>
+    }
+
+
+
+    return <>{renderRecord()}</>
 }
 
 

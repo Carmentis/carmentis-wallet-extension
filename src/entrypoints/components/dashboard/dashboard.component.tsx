@@ -46,6 +46,7 @@ import NotificationRightBar from "@/entrypoints/components/notification-rightbar
 import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
 import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -435,13 +436,13 @@ function BlocViewer( {chainId, index}: {chainId: string, index: number})  {
 		loadBlock()
 	}, []);
 
-	if (!record) <Skeleton/>
+	if (record === undefined) return <Skeleton/>
 	return (
 		<Card style={{flex: '0 1 300px'}} key={index}>
 			<CardContent>
 				<Typography variant="h6">Bloc {index}</Typography>
 				<Typography variant="body2">
-					{JSON.stringify(record)}
+					<BlockViewer initialPath={[]} data={record}/>
 				</Typography>
 			</CardContent>
 		</Card>
