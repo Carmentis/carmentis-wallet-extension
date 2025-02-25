@@ -142,7 +142,7 @@ export function PseudoPasswordCreation() {
                     <label htmlFor="password"
                            className="block text-sm font-medium leading-6 text-gray-900">Password</label>
                     <div className="relative mt-2 rounded-md shadow-sm">
-                        <input type="text" name="password" id="password"
+                        <input type="password" name="password" id="password"
                                value={password}
                                onChange={(e) => setPassword(e.target.value)}
                                placeholder={"Password"}
@@ -159,7 +159,7 @@ export function PseudoPasswordCreation() {
                     <label htmlFor="confirm-password"
                            className="block text-sm font-medium leading-6 text-gray-900">Confirm Password</label>
                     <div className="relative mt-2 rounded-md shadow-sm">
-                        <input type="text" name="confirm-password" id="confirm-password"
+                        <input type="password" name="confirm-password" id="confirm-password"
                                value={confirmPassword}
                                onChange={(e) => setConfirmPassword(e.target.value)}
                                placeholder={"Confirm password"}
