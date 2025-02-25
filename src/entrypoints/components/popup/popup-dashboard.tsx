@@ -21,7 +21,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilState, useRecoilValue} from "recoil";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
-import {Button, Typography} from "@mui/material";
+import {Box, Button, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
@@ -35,6 +35,7 @@ import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {Account} from "@/entrypoints/main/Account.tsx";
 import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
 import PopupEventApproval from "@/entrypoints/components/popup/popup-event-approval.tsx";
+import {errorState} from "@/entrypoints/components/popup/popup-even-approval.state.ts";
 
 
 export interface RecordConfirmationData {
@@ -103,6 +104,7 @@ function PopupBody() {
     const wallet = useRecoilValue(walletState);
     const activeAccount = useRecoilValue(activeAccountState);
     const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const error = useRecoilValue(errorState);
     console.log("[popup dashboard] Current client request:", clientRequest)
 
     async function accept() {
@@ -110,7 +112,6 @@ function PopupBody() {
         const wiWallet = new sdk.wiExtensionWallet();
         const keyPair = await getUserKeyPair(wallet as Wallet, activeAccount as Account)
         const req = wiWallet.getRequestFromMessage(clientRequest.data)
-        console.log(req, req.object, req.object.challenge)
         const answer = wiWallet.signAuthenticationByPublicKey(Encoders.ToHexa(keyPair.privateKey), req.object);
 
         const response: BackgroundRequest<ClientResponse> = {
@@ -128,6 +129,7 @@ function PopupBody() {
     }
 
     // by default when there is no client request display the default dashboard
+    if (error) return <PopupError/>
     if (!clientRequest)  return <PopupIdleBody/>
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data)
@@ -137,6 +139,41 @@ function PopupBody() {
     if (req.type === sdk.constants.SCHEMAS.WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
 
     return <>You have a request!</>
+}
+
+function PopupError() {
+    const [error, setError] = useRecoilState(errorState);
+    const wallet = useRecoilValue(walletState);
+
+
+    return  <div className={"h-full w-full flex flex-col justify-between"}>
+        <div id="header">
+            <Typography variant={"h6"}>Error</Typography>
+        </div>
+        <div id="body" className={"h-full"}>
+            <p>
+                An error occurred:
+            </p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md overflow-x-auto max-w-full w-full">
+                {error}
+            </p>
+            <p>
+
+                The error might be caused by an invalid configuration of the server or an incorrect setup of your
+                wallet.
+                Please ensure that the application and your wallet are connected to the same network to avoid
+                compatibility issues. You are currently connected to the following node:
+            </p>
+            <p className="w-100 p-2 bg-gray-100 rounded-md">
+                {wallet?.nodeEndpoint}
+            </p>
+        </div>
+        <div id="footer" className={"w-full flex flex-row space-x-2"}>
+            <div className={"w-full"} onClick={() => setError(undefined)}>
+                <Button className={"uppercase w-full"} variant={"contained"}>Close</Button>
+            </div>
+        </div>
+    </div>
 }
 
 
@@ -285,7 +322,7 @@ type ClientRequestApproveCallback = {
 function PopupAuthByPublicKeyBody(
     {accept, decline} : PropsWithChildren<ClientRequestApproveCallback>
 ) {
-    const [cr, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const cr = useSetRecoilState(clientRequestSessionState);
     const clientRequest = cr as QRDataClientRequest;
 
     function onAccept(e:MouseEvent) {

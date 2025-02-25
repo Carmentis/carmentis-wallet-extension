@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import Skeleton from "react-loading-skeleton";
 import {
-    dataViewEnabledState,
+    dataViewEnabledState, errorState,
     heightState,
     pathState
 } from "@/entrypoints/components/popup/popup-even-approval.state.ts";
@@ -40,11 +40,13 @@ export default function PopupEventApproval() {
     const wallet = useRecoilValue(walletState);
     const activeAccount = useRecoilValue(activeAccountState);
     const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    console.log("Popup Event approval: ", clientRequest)
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const [ready, setReady] = useState(false);
     const virtualBlockchainRef = useRef<sdk.blockchain.appLedgerVb | null>(null);
     const [dataViewEnabled, setDataViewEnabled] = useRecoilState(dataViewEnabledState);
+    const setError = useSetRecoilState(errorState);
 
     useEffect(() => {
         setDataViewEnabled(true);
@@ -64,12 +66,14 @@ export default function PopupEventApproval() {
                     console.log("chain id:", res.vb.id)
                     setReady(true)
                 }).catch(e => {
-                    toast.error(e)
                     setClientRequest(undefined);
+                    console.error(e);
+                    setError(e.message);
                 });
         };
 
         loadRequest();
+
 
         return () => {
             setClientRequest(undefined);
@@ -275,6 +279,10 @@ function max(a: number, b: number) {
     return a < b ? b : a
 }
 
+function min(a: number, b: number) {
+    return a < b ? a : b
+}
+
 /**
  * Renders a viewer component for displaying and navigating through record data.
  *
@@ -365,12 +373,11 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
     }
 
     function goToPrev() {
-        console.log(height, h)
         setHeight(height => max(height ? height - 1 : h - 1, 1));
     }
 
     function goToNext() {
-        setHeight(height => max(height ? height + 1 : h + 1, maxH));
+        setHeight(height => min(height ? height + 1 : h + 1, maxH));
     }
 
     function goToEnd() {
@@ -378,7 +385,7 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
     }
 
     const buttons = [
-        {label: "Begin", onClick: goToStart, disabled: false},
+        {label: "Begin", onClick: goToStart, disabled: h === 1},
         {label: "Previous", onClick: goToPrev, disabled: h === 1},
         {label: "Next", onClick: goToNext, disabled: h == maxH},
         {label: "End", onClick: goToEnd, disabled: h == maxH},
