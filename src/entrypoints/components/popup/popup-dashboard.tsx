@@ -19,7 +19,7 @@ import React, {PropsWithChildren, useEffect, useRef, useState} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
-import {useRecoilState, useRecoilValue} from "recoil";
+import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 import {Box, Button, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
@@ -322,7 +322,7 @@ type ClientRequestApproveCallback = {
 function PopupAuthByPublicKeyBody(
     {accept, decline} : PropsWithChildren<ClientRequestApproveCallback>
 ) {
-    const cr = useSetRecoilState(clientRequestSessionState);
+    const cr = useRecoilValue(clientRequestSessionState);
     const clientRequest = cr as QRDataClientRequest;
 
     function onAccept(e:MouseEvent) {
