@@ -21,7 +21,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
-import {Box, Button, Typography} from "@mui/material";
+import {Box, Button, List, ListItem, ListItemButton, ListItemText, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
@@ -235,9 +235,12 @@ function PopupGetUserData() {
                 {new Date(clientRequest.timestamp).toLocaleString()}
             </p>
             <p className="font-bold">Shared Information</p>
-            <div className="w-100 p-2 bg-gray-100 rounded-md">
-                {requiredData.map(d => <span>{d}</span>)}
-            </div>
+            <p>
+                The application wants the following information:
+            </p>
+            <ul>
+                {requiredData.map(d => <li>- {d}</li>)}
+            </ul>
         </div>
         <div id="footer" className={"w-full flex flex-row space-x-2"}>
             <div className={"w-1/2"} onClick={accept}>
