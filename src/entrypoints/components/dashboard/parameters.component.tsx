@@ -20,10 +20,22 @@ import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 import {useNavigate} from 'react-router';
 import {EmailValidation} from '@/entrypoints/components/dashboard/email-validation.component..tsx';
 import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
-import {Card, CardContent, Typography} from '@mui/material';
+import {
+	Box,
+	Button,
+	Card,
+	CardContent,
+	FormControl, IconButton, InputAdornment,
+	InputLabel,
+	OutlinedInput,
+	TextField,
+	Typography
+} from '@mui/material';
 import {useRecoilState, useRecoilValue} from 'recoil';
 import {getUserKeyPair, Wallet} from '@/entrypoints/main/wallet.tsx';
 import {useToast} from "@/entrypoints/components/authentication-manager.tsx";
+import Skeleton from "react-loading-skeleton";
+import {Visibility, VisibilityOff} from "@mui/icons-material";
 
 function InputWithDynamicConfirmSaveComponent(input: {
 	value: string,
@@ -54,12 +66,16 @@ function InputWithDynamicConfirmSaveComponent(input: {
 	}
 
 	return <>
-		<input type={input.protect ? 'password' : 'text'} onChange={e => onChange(e.target.value)}
-			   className="parameter-input" value={input.value} />
+		<OutlinedInput
+			size={"small"}
+			fullWidth={true}
+			type={input.protect ? 'password' : 'text'}
+			onChange={e => onChange(e.target.value)}
+			value={input.value} />
 
 		{hasChanged &&
 			<div className="flex justify-end items-end space-x-1 mt-1">
-				<button className="btn-primary btn-highlight" onClick={onSave}>Save</button>
+				<Button variant={"contained"} size={"small"} onClick={onSave}>Save</Button>
 			</div>
 		}
 	</>;
@@ -89,12 +105,16 @@ function InputNumberWithDynamicConfirmSaveComponent(input: {
 	}
 
 	return <>
-		<input type="number" onChange={e => onChange(parseInt(e.target.value))}
-			   className="parameter-input" value={input.value} />
+		<OutlinedInput
+			size={"small"}
+			fullWidth={true}
+			type={"number"}
+			onChange={e => onChange(parseInt(e.target.value))}
+			value={input.value} />
 
 		{hasChanged &&
 			<div className="flex justify-end items-end space-x-1 mt-1">
-				<button className="btn-primary btn-highlight" onClick={onSave}>Save</button>
+				<Button variant={"contained"} size={"small"} onClick={onSave}>Save</Button>
 			</div>
 		}
 	</>;
@@ -120,6 +140,7 @@ export default function Parameters() {
 
 	// states for the endpoints
 	const [nodeEndpoint, setNodeEndpoint] = useState(wallet?.nodeEndpoint);
+	const [explorerEndpoint, setExplorerEndpoint] = useState(wallet?.explorerEndpoint);
 
 
 	// states for the user keys
@@ -173,7 +194,8 @@ export default function Parameters() {
 			return {
 				...wallet,
 				accounts,
-				nodeEndpoint
+				nodeEndpoint,
+				explorerEndpoint
 			} as Wallet
 		});
 	}
@@ -233,45 +255,32 @@ export default function Parameters() {
 		{
 			name: "User Authentication Private Key",
 			description: "Your private signature authentication key.",
-			field: <>
-				<div className="parameter-icon-input bg-gray-200 flex flex-column p-2 rounded-md ">
-					<svg onClick={() => setShowPrivateKeys(!showPrivateKeys)}
-						 xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-						 className="pr-2 mr-2 w-6 h-6 border-r-2 border-gray-300 hover:cursor-pointer"
-						 viewBox="0 0 16 16">
-						<path
-							d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-						<path
-							d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-					</svg>
-
-					<input className="block w-full bg-gray-200"
-						   type={showPrivateKeys ? 'text' : 'password'} onClick={() => {
-						navigator.clipboard.writeText(userPrivateKey);
-					}} readOnly={true} value={userPrivateKey}/>
-				</div>
-			</>
+			field: <OutlinedInput
+					id="outlined-adornment-password"
+					type={showPrivateKeys ? 'text' : 'password'}
+					endAdornment={
+						<InputAdornment position="end">
+							<IconButton
+								aria-label={
+									showPrivateKeys ? 'hide private key' : 'display private key'
+								}
+								onClick={() => setShowPrivateKeys(!showPrivateKeys)}
+								edge="end"
+							>
+								{showPrivateKeys ? <VisibilityOff /> : <Visibility />}
+							</IconButton>
+						</InputAdornment>
+					}
+					value={userPrivateKey}
+					size={"small"}
+					fullWidth={true}
+					label="Private key"
+				/>
 		},
 		{
 			name: "User Authentication Public Key",
 			description: "Your public signature authentication key.",
-			field: <>
-				<input type="text" onClick={() => {
-					navigator.clipboard.writeText(userPublicKey);
-				}}
-					   className="parameter-input mb-2" readOnly={true} value={userPublicKey}/>
-				{userPublicKey &&
-					<div className="flex items-end">
-						<button
-							className="btn-primary btn-highlight"
-							onClick={() => {
-								window.open(`mailto:?subject=Public%20key&body=Hey%20!%0A%0AHere%20is%20my%20public%20key%3A%0A%0A${userPublicKey}`);
-							}}>
-							Share your public key
-						</button>
-					</div>
-				}
-				</>
+			field: <PublicKeyInputField/>
 		}
 	];
 	const oracleItems = [
@@ -298,8 +307,25 @@ export default function Parameters() {
 		{
 			name: "Carmentis Explorer Endpoint",
 			description: "The endpoint of the explorer.",
-			field: <input type="text"
-						  className="parameter-input mb-2" readOnly={true} value={wallet?.explorerEndpoint || ''}/>
+			field: <InputWithDynamicConfirmSaveComponent
+				protect={false}
+				value={explorerEndpoint}
+				onChange={setExplorerEndpoint}
+				onSave={saveParameters}/>
+		}
+	]
+
+	const dangerousZone = [
+		{
+			name: "Account Deletion",
+			description: "Delete the current account named {activeAccount?.firstname} Write your account name below to confirm the deletion.",
+			field: <>
+				<input type="text" className="parameter-input" value={accountDeletionPseudo}
+					   onChange={e => setAccountDeletionPseudo(e.target.value)}/>
+				<div className="flex justify-end items-end space-x-1 mt-1">
+					<Button color={"red"} onClick={deleteActiveAccount}>Delete</Button>
+				</div>
+			</>
 		}
 	]
 
@@ -311,93 +337,77 @@ export default function Parameters() {
 			</div>
 
 
-			<GeneralParameters items={generalItems}/>
-			<KeysParameters items={keysItem}/>
-			<NetworkParameters items={networkItems}/>
-
-
+			<ParameterSection sectionTitle={"General"} items={generalItems}/>
+			<ParameterSection sectionTitle={"User Keys"} items={keysItem}/>
+			<ParameterSection sectionTitle={"Network"} items={networkItems}/>
 			{wallet?.accounts.length !== 1 &&
-				<Card className="parameter-section">
-					<CardContent>
-						<h2>Dangerous Zone</h2>
-
-						<div className="parameter-group text-red-500">
-							<div className="parameter-title">Account Deletion</div>
-							<div className="parameter-description">
-								Delete the current account named <b>{activeAccount?.firstname}</b>.
-								Write your account name below to confirm the deletion.
-							</div>
-							<input type="text" className="parameter-input" value={accountDeletionPseudo}
-								   onChange={e => setAccountDeletionPseudo(e.target.value)}/>
-							<div className="flex justify-end items-end space-x-1 mt-1">
-								<button className="btn-primary bg-red-500" onClick={deleteActiveAccount}>Delete</button>
-							</div>
-
-						</div>
-					</CardContent>
-				</Card>
+				<ParameterSection sectionTitle={"Account Management"} items={dangerousZone} />
 			}
 		</div>
 	</>;
 }
 
-type GeneralParametersProps = {
+function PublicKeyInputField() {
+	const toast = useToast();
+	const wallet = useRecoilValue(walletState);
+	const account = useRecoilValue(activeAccountState);
+	const [userPublicKey, setUserPublicKey] = useState('');
+
+	useEffect(() => {
+		getUserKeyPair(wallet!, account!).then(keyPair => {
+			setUserPublicKey(Encoders.ToHexa(keyPair.publicKey));
+		})
+	}, [wallet, account]);
+
+	if (!userPublicKey) return <Skeleton/>
+	return (
+		<Box display="flex" flexDirection={"column"} alignItems="start" gap={1}>
+			<TextField
+				value={userPublicKey}
+				variant="outlined"
+				fullWidth
+				inputProps={
+					{ readOnly: true, }
+				}
+				size={"small"}
+				onClick={() => {
+					navigator.clipboard.writeText(userPublicKey);
+					toast.success("Public key copied.")
+				}}
+			/>
+			<Button
+				variant="contained"
+				onClick={() => {
+					window.open(`mailto:?subject=Public%20key&body=Hey%20!%0A%0AHere%20is%20my%20public%20key%3A%0A%0A${userPublicKey}`);
+				}}
+			>
+				Share public key
+			</Button>
+		</Box>
+	);
+}
+
+type ParametersSectionProps = {
+	sectionTitle: string,
 	items: {
 		name: string, description: string, field: ReactElement,
 	}[]
 }
-function GeneralParameters({items}: GeneralParametersProps) {
-	const content = items.map(it => <div className="parameter-group">
-		<div className="parameter-title">{it.name}</div>
-		<div className="parameter-description">{it.description}</div>
-		{it.field}
-	</div>)
-	return <Card>
-		<CardContent>
-			<h2>General</h2>
-			{content}
-		</CardContent>
-	</Card>
-}
 
-function KeysParameters({items}: GeneralParametersProps) {
-	const content = items.map(it => <div className="parameter-group">
-		<div className="parameter-title">{it.name}</div>
-		<div className="parameter-description">{it.description}</div>
-		{it.field}
-	</div>)
-	return <Card>
-		<CardContent>
-			<h2>User Keys</h2>
-			{content}
-		</CardContent>
-	</Card>
-}
-
-function OracleParameters({items}: GeneralParametersProps) {
-	const content = items.map(it => <div className="parameter-group">
-		<div className="parameter-title">{it.name}</div>
-		<div className="parameter-description">{it.description}</div>
-		{it.field}
-	</div>)
+function ParameterSection({sectionTitle, items}: ParametersSectionProps) {
+	const content = items.map(it => <LabelAndField name={it.name} description={it.description} field={it.field} />)
 	return <Card className="parameter-section">
-		<CardContent>
-			<h2>Oracles</h2>
+		<CardContent className={"space-y-4"}>
+			<Typography variant={"h5"}>{sectionTitle}</Typography>
 			{content}
 		</CardContent>
 	</Card>
 }
 
-function NetworkParameters({items}: GeneralParametersProps) {
-	const content = items.map(it => <div className="parameter-group">
-			<div className="parameter-title">{it.name}</div>
-			<div className="parameter-description">{it.description}</div>
-			{it.field}
-		</div>)
-	return <Card className="parameter-section">
-		<CardContent>
-			<h2>Network</h2>
-			{content}
-		</CardContent>
-	</Card>
+function LabelAndField(it: {name: string, description: string, field: ReactElement}) {
+	return <Box sx={{display:"flex", flexDirection: "column"}}>
+		<Typography fontWeight={"bolder"}>{it.name}</Typography>
+		<Typography>{it.description}</Typography>
+		{it.field}
+	</Box>
 }
