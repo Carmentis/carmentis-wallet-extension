@@ -6,6 +6,7 @@ import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {
+    Box,
     Button,
     ButtonGroup,
     Paper,
@@ -25,6 +26,12 @@ import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse} from "@/entr
 import {useToast} from "@/entrypoints/components/authentication-manager.tsx";
 import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {AccountDataStorage} from "@/utils/db/account-data-storage.ts";
+import {
+    AcceptDeclineButtonsFooter,
+    OriginAndDateOfCurrentRequest,
+    PopupNotificationLayout
+} from "@/entrypoints/components/popup/popup-dashboard.tsx";
+import AccountSelection from "@/entrypoints/components/AccountSelection.tsx";
 
 /**
  * PopupEventApproval is a React functional component that handles the process of approving or declining
@@ -40,7 +47,6 @@ export default function PopupEventApproval() {
     const wallet = useRecoilValue(walletState);
     const activeAccount = useRecoilValue(activeAccountState);
     const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
-    console.log("Popup Event approval: ", clientRequest)
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const [ready, setReady] = useState(false);
@@ -112,19 +118,23 @@ export default function PopupEventApproval() {
 
     let header = <></>;
     let body = <></>;
+    const footer = <Box sx={{display: "flex", flexDirection: "column", width: "100%"}} className={"space-y-2"} >
+        <Button
+            fullWidth={true}
+            className={"uppercase"}
+            variant={"outlined"}
+            onClick={() => setDataViewEnabled(!dataViewEnabled)}>
+            { dataViewEnabled ? "Back" : "Browse Data" }
+        </Button>
+        <AcceptDeclineButtonsFooter accept={accept} decline={decline}/>
+    </Box>
     if (dataViewEnabled) {
-        header = <>
-            <Typography variant={"h6"}>Approval Request</Typography>
-        </>;
+        header = <></>;
         body = <>
-            <div>
-                <ApprovalMessageViewer vb={vb}/>
-            </div>
-            <div className={"flex-grow"}>
+            <div className={"flex-grow h-full"}>
                 <RecordDataViewer vb={vb}/>
             </div>
-            <Button className={"uppercase w-full"} variant={"outlined"}
-                    onClick={() => setDataViewEnabled(false)}>Back</Button>
+
         </>
     } else {
         header = <>
@@ -134,43 +144,14 @@ export default function PopupEventApproval() {
             </p>
         </>
         body = <>
-            <div>
-                <p className="font-bold">Origin</p>
-                <p className="w-100 p-2 bg-gray-100 rounded-md">
-                    {clientRequest.origin}
-                </p>
-            </div>
-            <div>
-                <p className="font-bold">Received at</p>
-                <p className="w-100 p-2 bg-gray-100 rounded-md">
-                    {new Date(clientRequest.timestamp).toLocaleString()}
-                </p>
-            </div>
+            <OriginAndDateOfCurrentRequest/>
             <div className={"flex-grow"}>
                 <ApprovalMessageViewer vb={vb}/>
             </div>
-            <Button className={"uppercase w-full"} variant={"outlined"} onClick={() => setDataViewEnabled(true)}>browse
-                data</Button>
+
         </>
     }
-
-
-    return <div className={"h-full max-h-full w-full flex flex-col space-y-2"}>
-        <div id="header">
-            {header}
-        </div>
-        <div id="body" className={"flex-grow flex flex-col"}>
-            {body}
-        </div>
-        <div id="footer" className={"w-full flex flex-row space-x-2 "}>
-            <div className={"w-1/2"} onClick={accept}>
-                <Button className={"uppercase w-full"} variant={"contained"}>Accept</Button>
-            </div>
-            <div className={"w-1/2"} onClick={decline}>
-                <Button className={"uppercase w-full"} variant={"contained"}>decline</Button>
-            </div>
-        </div>
-    </div>
+    return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
 
 /**
@@ -252,7 +233,7 @@ function ApprovalMessageViewer({vb}: AppLedgerVBProps) {
                 return <span key={i}>{token.value}</span>
             }
         })
-        return <p className="p-2 bg-gray-100 rounded-md h-full overflow-auto max-h-[150px]">
+        return <p className="p-2 bg-gray-100 rounded-md h-full overflow-auto">
             {approvalMessage}
         </p>
     }
@@ -298,75 +279,6 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
     const record = vb.getRecord(h);
     const data = path.reduce((r, item) => r[item], record)
 
-    /*
-    const rowEntryClass = 'w-full first:rounded-t last:rounded-b border-b-2 border-gray-50'
-
-    function renderEntry(index: number, key: string, value: any) {
-        let content;
-        const isArrayOfStrings = Array.isArray(value) && value.every(v => typeof v === 'string')
-        if (typeof value === 'string' || typeof value === 'number' || isArrayOfStrings) {
-            content = <>
-                <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
-                <td className={"p-1"}>{isArrayOfStrings ? value.join(', ') : value}</td>
-            </>
-        } else {
-            // check if supported
-            const isArray = Array.isArray(value);
-            const isObject = typeof value === 'object';
-            const isDate = value instanceof Date;
-            if (!isArray && isObject) {
-                content = <>
-                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
-                    <td className={"p-1 text-gray-500 hover:cursor-pointer"} onClick={() => setPath(p => {
-                        return [...p, key];
-                    })}>See more
-                    </td>
-                </>
-            } else if (isDate) {
-                content = <>
-                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
-                    <td className={"p-1 text-gray-500"}>{new Date(value).toLocaleString()}</td>
-                </>
-            } else {
-                content = <>
-                    <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
-                    <td className={"p-1 text-gray-500"}>Cannot expand</td>
-                </>
-            }
-
-        }
-        return <TableRow key={index} className={rowEntryClass}>
-            {content}
-        </TableRow>
-    }
-
-    function renderPreviousPath() {
-        if (path.length == 0) return
-        return <TableRow className={rowEntryClass}>
-            <td onClick={() => setPath(p => {
-                p.pop();
-                return p;
-            })}>Back
-            </td>
-        </TableRow>
-    }
-
-    function renderRecord() {
-        const previousPath = renderPreviousPath();
-        const content = Object.entries(data).map(([key, value], i) => renderEntry(i, key, value))
-        return <>
-            <TableContainer className={"shadow-lg"}>
-                <Table component={Paper} elevation={1}>
-                    <TableBody>
-                        {previousPath}
-                        {content}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </>
-    }
-
-     */
 
     function goToStart() {
         setHeight(1)

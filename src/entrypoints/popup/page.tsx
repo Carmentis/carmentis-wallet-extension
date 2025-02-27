@@ -32,19 +32,24 @@ import {PopupDashboard} from '@/entrypoints/components/popup/popup-dashboard.tsx
 import {useRecoilValue} from "recoil";
 import OnBoarding from "@/entrypoints/components/onboarding/OnBoarding.tsx";
 import Dashboard from "@/entrypoints/components/dashboard/dashboard.component.tsx";
+import {PropsWithChildren} from "react";
 
-/**
- *
- * @constructor
- */
 export function PopupAppEntrypoint() {
     return <>
         <AuthenticationManager>
             <ClientRequestStateWriter>
-                <PopupApp></PopupApp>
+                <PopupLayout>
+                    <PopupApp></PopupApp>
+                </PopupLayout>
             </ClientRequestStateWriter>
         </AuthenticationManager>
     </>
+}
+
+function PopupLayout({children}: PropsWithChildren) {
+    return <div className={"max-h-[500px] h-[500px]"}>
+        {children}
+    </div>
 }
 
 
@@ -57,20 +62,6 @@ function PopupApp() {
     if(!wallet) return <Login/>
     if(!activeAccount) return <AccountSelection/>
     return <PopupDashboard key={wallet.activeAccountId}/>
-
-    /*
-    const wallet = useRecoilValue(walletState);
-    let {applicationInitialised, accountCreated} = useApplicationStatus();
-
-
-    if (!applicationInitialised) return <Splashscreen/>
-    if (!accountCreated) return  <NoWalletDetected/>
-    if (!wallet) return <Login/>
-    if (!wallet.activeAccountId) return  <AccountSelection/>
-    return  <PopupDashboard
-        key={wallet.activeAccountId}
-    />
-     */
 }
 
 export default PopupAppEntrypoint;
