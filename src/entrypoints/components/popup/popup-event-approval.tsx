@@ -1,5 +1,5 @@
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {activeAccountState, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
+import {activeAccountState, useWallet, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 import * as sdk from "@cmts-dev/carmentis-sdk/client";
 import React, {ReactElement, useEffect, useRef, useState} from "react";
@@ -23,15 +23,13 @@ import {
     pathState
 } from "@/entrypoints/components/popup/popup-even-approval.state.ts";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse} from "@/entrypoints/background.ts";
-import {useToast} from "@/entrypoints/components/authentication-manager.tsx";
 import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
 import {AccountDataStorage} from "@/utils/db/account-data-storage.ts";
 import {
     AcceptDeclineButtonsFooter,
     OriginAndDateOfCurrentRequest,
-    PopupNotificationLayout
+    PopupNotificationLayout, useAccept, useActiveAccount, useClearClientRequest, useUserKeyPair
 } from "@/entrypoints/components/popup/popup-dashboard.tsx";
-import AccountSelection from "@/entrypoints/components/AccountSelection.tsx";
 
 /**
  * PopupEventApproval is a React functional component that handles the process of approving or declining
@@ -43,10 +41,12 @@ import AccountSelection from "@/entrypoints/components/AccountSelection.tsx";
  *                       and actionable buttons for the user to accept or decline the request.
  */
 export default function PopupEventApproval() {
-    const toast = useToast();
-    const wallet = useRecoilValue(walletState);
-    const activeAccount = useRecoilValue(activeAccountState);
-    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const clearRequest = useClearClientRequest();
+    const maskAsAccepted = useAccept();
+    const genKeyPair = useUserKeyPair();
+    const wallet = useWallet();
+    const activeAccount = useActiveAccount();
+    const clientRequest = useRecoilValue(clientRequestSessionState);
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const [ready, setReady] = useState(false);
@@ -57,7 +57,7 @@ export default function PopupEventApproval() {
     useEffect(() => {
         setDataViewEnabled(true);
         const loadRequest = async () => {
-            const keyPair = await getUserKeyPair(wallet!, activeAccount!);
+            const keyPair = await genKeyPair();
             const sk = Encoders.ToHexa(keyPair.privateKey);
             sdk.blockchain.blockchainCore.setUser(sdk.blockchain.ROLES.USER, sk);
             wiWallet.getApprovalData(sk, req.object)
@@ -72,7 +72,7 @@ export default function PopupEventApproval() {
                     console.log("chain id:", res.vb.id)
                     setReady(true)
                 }).catch(e => {
-                    setClientRequest(undefined);
+                    clearRequest()
                     console.error(e);
                     setError(e.message);
                 });
@@ -82,7 +82,7 @@ export default function PopupEventApproval() {
 
 
         return () => {
-            setClientRequest(undefined);
+            clearRequest()
         }
     }, []);
 
@@ -91,7 +91,6 @@ export default function PopupEventApproval() {
         const keyPair = await getUserKeyPair(wallet!, activeAccount!);
         const sk = Encoders.ToHexa(keyPair.privateKey);
         const signature = await vb.signAsEndorser();
-        console.log("test")
         const answer = await wiWallet.sendApprovalSignature(sk, req.object, signature);
 
         // store the virtual blockchain id in which the user is involved
@@ -99,7 +98,6 @@ export default function PopupEventApproval() {
         await db.storeApplicationVirtualBlockchainId(answer.walletObject.vbHash)
 
         // clear the current request
-        setClientRequest(undefined);
         const response: BackgroundRequest<ClientResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
             payload: answer.clientAnswer
@@ -107,10 +105,7 @@ export default function PopupEventApproval() {
 
         console.log("[popup dashboard] Response:", response)
         browser.runtime.sendMessage(response);
-    }
-
-    function decline() {
-        setClientRequest(undefined);
+        maskAsAccepted()
     }
 
     if (!ready) return <Splashscreen label={"Request loading..."}/>
@@ -126,7 +121,7 @@ export default function PopupEventApproval() {
             onClick={() => setDataViewEnabled(!dataViewEnabled)}>
             { dataViewEnabled ? "Back" : "Browse Data" }
         </Button>
-        <AcceptDeclineButtonsFooter accept={accept} decline={decline}/>
+        <AcceptDeclineButtonsFooter accept={accept}/>
     </Box>
     if (dataViewEnabled) {
         header = <></>;

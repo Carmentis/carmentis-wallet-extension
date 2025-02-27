@@ -15,28 +15,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {PropsWithChildren, ReactElement, useEffect, useRef, useState} from "react";
+import React, {PropsWithChildren, ReactElement} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
-import {activeAccountState, useWallet, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
+import {activeAccountState, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
-import {Box, Button, List, ListItem, ListItemButton, ListItemText, Typography} from "@mui/material";
+import {clientRequestSessionState, showSuccessScreenState} from "@/entrypoints/states/client-request-session.state.tsx";
+import {Box, Button, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
-import {
-    BACKGROUND_REQUEST_TYPE,
-    BackgroundRequest,
-    CLIENT_REQUEST_TYPE,
-    ClientAuthenticationResponse, ClientResponse, QRDataClientRequest,
-} from "@/entrypoints/background.ts";
-import {Splashscreen} from "@/entrypoints/components/Splashscreen.tsx";
+import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse,} from "@/entrypoints/background.ts";
 import {Account} from "@/entrypoints/main/Account.tsx";
-import {SpinningWheel} from "@/entrypoints/components/SpinningWheel.tsx";
 import PopupEventApproval from "@/entrypoints/components/popup/popup-event-approval.tsx";
 import {errorState} from "@/entrypoints/components/popup/popup-even-approval.state.ts";
 import Skeleton from "react-loading-skeleton";
+import image from '~/assets/success.png';
+
 
 
 export interface RecordConfirmationData {
@@ -82,7 +77,48 @@ export interface Flow {
 }
 
 
+export const useClearClientRequest = () => {
+    const setClientRequest = useSetRecoilState(clientRequestSessionState);
+    return () => {
+        setClientRequest(undefined);
+    }
+}
 
+export const useWallet = () =>  {
+    return useRecoilValue(walletState);
+}
+
+export const useActiveAccount = () =>  {
+    return useRecoilValue(activeAccountState);
+}
+
+export const useAccept = () => {
+    const clearRequest = useClearClientRequest();
+    const setShow = useSetRecoilState(showSuccessScreenState);
+    return () => {
+        clearRequest()
+        setShow(true)
+        setTimeout(() => setShow(false), 1000)
+    }
+}
+
+export const useUserKeyPair = () =>  {
+    const wallet = useWallet();
+    const activeAccount = useActiveAccount();
+    return async () => {
+        const keyPair = await getUserKeyPair(wallet!, activeAccount!);
+        return keyPair
+    }
+}
+
+
+export const useClientRequest = () => {
+    const clientRequest = useRecoilValue(clientRequestSessionState);
+    const noRequest = clientRequest === undefined;
+    const error = useRecoilValue(errorState);
+    const success = useRecoilValue(showSuccessScreenState);
+    return { clientRequest, noRequest, error, success  };
+}
 
 export function PopupDashboard() {
     return <PopupLayout>
@@ -123,15 +159,24 @@ export function PopupNotificationLayout({header, body, footer}: PopupNotificatio
 
 export type AcceptDeclineButtonsFooterProps = {
     accept: () => void,
-    decline: () => void
+    decline?: () => void
 }
 export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProps) {
+    const clearRequest = useClearClientRequest();
+
+    function decline() {
+        if (props.decline) { props.decline() }
+        else {
+            clearRequest();
+        }
+    }
+
     return <div className={"w-full flex  space-x-2"}>
         <div className={"w-1/2"} onClick={props.accept}>
             <Button className={"uppercase w-full"} variant={"contained"}>Accept</Button>
         </div>
-        <div className={"w-1/2"} onClick={props.decline}>
-            <Button className={"uppercase w-full"} variant={"contained"}>decline</Button>
+        <div className={"w-1/2"} onClick={decline}>
+            <Button className={"uppercase w-full"} variant={"outlined"}>decline</Button>
         </div>
     </div>
 }
@@ -151,7 +196,7 @@ function ValueWithLabel({label, value}: { label: string, value: string }) {
 }
 
 export function OriginAndDateOfCurrentRequest() {
-    const clientRequest = useRecoilValue(clientRequestSessionState);
+    const {clientRequest} = useClientRequest();
     if (!clientRequest) return <Skeleton />;
     return <>
         <ValueWithLabel label={"Origin"} value={clientRequest.origin} />
@@ -162,39 +207,15 @@ export function OriginAndDateOfCurrentRequest() {
 
 function PopupBody() {
     // the current client request stored in session (possibly undefined)
-    const wallet = useRecoilValue(walletState);
-    const activeAccount = useRecoilValue(activeAccountState);
-    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
-    const error = useRecoilValue(errorState);
-    console.log("[popup dashboard] Current client request:", clientRequest)
-
-    async function accept() {
-        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
-        const wiWallet = new sdk.wiExtensionWallet();
-        const keyPair = await getUserKeyPair(wallet as Wallet, activeAccount as Account)
-        const req = wiWallet.getRequestFromMessage(clientRequest.data)
-        const answer = wiWallet.signAuthenticationByPublicKey(Encoders.ToHexa(keyPair.privateKey), req.object);
-
-        const response: BackgroundRequest<ClientResponse> = {
-            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-            payload: answer
-        }
-
-        console.log("[popup dashboard] Response:", response)
-        browser.runtime.sendMessage(response);
-        setClientRequest(undefined);
-    }
-
-    function decline() {
-        setClientRequest(undefined);
-    }
+    const {clientRequest, noRequest, error, success} = useClientRequest();
 
     // by default when there is no client request display the default dashboard
     if (error) return <PopupError/>
-    if (!clientRequest)  return <PopupIdleBody/>
+    if (success) return <PopupSuccess/>
+    if (noRequest)  return <PopupIdleBody/>
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data)
-    if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody accept={accept} decline={decline}/>
+    if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody/>
     if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_EMAIL) return <PopupGetEmail/>
     if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_USER_DATA) return <PopupGetUserData/>
     if (req.type === sdk.constants.SCHEMAS.WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
@@ -202,9 +223,15 @@ function PopupBody() {
     return <>You have a request!</>
 }
 
+function PopupSuccess() {
+    return <Box width={'100%'} height={"100%"} display={"flex"} justifyContent={"center"} alignItems={"center"} >
+        <img width={"100px"} src={image}/>
+    </Box>
+}
+
 function PopupError() {
+    const wallet = useWallet();
     const [error, setError] = useRecoilState(errorState);
-    const wallet = useRecoilValue(walletState);
 
     const header = <Typography variant={"h6"}>Error</Typography>
     const body = <>
@@ -228,8 +255,9 @@ function PopupError() {
 
 
 function PopupGetUserData() {
-    const activeAccount = useRecoilValue(activeAccountState);
-    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const markAsAccepted = useAccept();
+    const activeAccount = useActiveAccount();
+    const {clientRequest} = useClientRequest();
     const wiWallet = new sdk.wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const requiredData : string[] = req.object.requiredData!
@@ -261,11 +289,7 @@ function PopupGetUserData() {
 
         console.log("[popup dashboard] Response:", response)
         browser.runtime.sendMessage(response);
-        setClientRequest(undefined);
-    }
-
-    async function decline() {
-        setClientRequest(undefined)
+        markAsAccepted();
     }
 
     const header = <>
@@ -284,13 +308,14 @@ function PopupGetUserData() {
             {requiredData.map(d => <li>- {d}</li>)}
         </ul>
     </>
-    const footer = <AcceptDeclineButtonsFooter accept={accept} decline={decline}/>
+    const footer = <AcceptDeclineButtonsFooter accept={accept} />
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
 
 function PopupGetEmail() {
+    const markAsAccepted = useAccept();
     const activeAccount = useRecoilValue(activeAccountState);
-    const [clientRequest, setClientRequest] = useRecoilState(clientRequestSessionState);
+    const clientRequest = useRecoilValue(clientRequestSessionState);
 
     async function accept() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
@@ -306,11 +331,7 @@ function PopupGetEmail() {
 
         console.log("[popup dashboard] Response:", response)
         browser.runtime.sendMessage(response);
-        setClientRequest(undefined);
-    }
-
-    async function decline() {
-        setClientRequest(undefined)
+        markAsAccepted();
     }
 
     const header =  <Typography variant={"h6"}>Email Access</Typography>;
@@ -320,7 +341,7 @@ function PopupGetEmail() {
         </p>
         <OriginAndDateOfCurrentRequest/>
     </>
-    const footer = <AcceptDeclineButtonsFooter accept={accept} decline={decline}/>
+    const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
 
@@ -334,13 +355,29 @@ function PopupIdleBody() {
 
 
 
-type ClientRequestApproveCallback = {
-    accept: () => Promise<void>,
-    decline: () => void,
-}
-function PopupAuthByPublicKeyBody(
-    {accept, decline} : PropsWithChildren<ClientRequestApproveCallback>
-) {
+function PopupAuthByPublicKeyBody() {
+    const maskAsAccepted = useAccept();
+    const {clientRequest} = useClientRequest();
+    const genKeyPair = useUserKeyPair()
+
+
+    async function accept() {
+        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
+        const wiWallet = new sdk.wiExtensionWallet();
+        const keyPair = await genKeyPair()
+        const req = wiWallet.getRequestFromMessage(clientRequest.data)
+        const answer = wiWallet.signAuthenticationByPublicKey(Encoders.ToHexa(keyPair.privateKey), req.object);
+
+        const response: BackgroundRequest<ClientResponse> = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+            payload: answer
+        }
+
+        console.log("[popup dashboard] Response:", response)
+        browser.runtime.sendMessage(response);
+        maskAsAccepted()
+    }
+
     const header = <Typography variant={"h6"}>Authentication request</Typography>;
     const body = <>
         <p>
@@ -351,6 +388,6 @@ function PopupAuthByPublicKeyBody(
 
         <OriginAndDateOfCurrentRequest/>
     </>
-    const footer = <AcceptDeclineButtonsFooter accept={accept} decline={decline}/>
+    const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }

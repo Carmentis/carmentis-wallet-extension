@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {atom, AtomEffect} from "recoil";
+import {atom, AtomEffect, selector} from "recoil";
 import {ClientRequestPayload, QRDataClientRequest} from "@/entrypoints/background.ts";
 
 function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
@@ -45,4 +45,9 @@ function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
 export const clientRequestSessionState = atom<QRDataClientRequest|undefined>({
     key: "clientRequestSession",
     effects: [clientRequestStorageEffect<QRDataClientRequest|undefined>("clientRequestSession")],
+})
+
+export const showSuccessScreenState = atom<boolean>({
+    key: 'showSuccessScreen',
+    default: false,
 })
