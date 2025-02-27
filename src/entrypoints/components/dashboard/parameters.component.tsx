@@ -23,6 +23,7 @@ import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentic
 import {Card, CardContent, Typography} from '@mui/material';
 import {useRecoilState, useRecoilValue} from 'recoil';
 import {getUserKeyPair, Wallet} from '@/entrypoints/main/wallet.tsx';
+import {useToast} from "@/entrypoints/components/authentication-manager.tsx";
 
 function InputWithDynamicConfirmSaveComponent(input: {
 	value: string,
@@ -69,7 +70,7 @@ function InputNumberWithDynamicConfirmSaveComponent(input: {
 	onChange: (value: number) => void,
 	onSave: () => void,
 }): ReactElement {
-
+	const toast = useToast();
 	const [hasChanged, setHasChanged] = useState<boolean>(false);
 
 
@@ -79,8 +80,12 @@ function InputNumberWithDynamicConfirmSaveComponent(input: {
 	}
 
 	function onSave() {
-		setHasChanged(false);
-		input.onSave();
+		try {
+			input.onSave();
+			setHasChanged(false);
+		} catch (e) {
+			toast.error(`Error: ${e}`)
+		}
 	}
 
 	return <>
@@ -102,14 +107,10 @@ export default function Parameters() {
 	const activeAccount = useRecoilValue(activeAccountState);
 
 
-	const navigate = useNavigate();
-
-
 	// state for the pseudo, email and nonce edition
 	const [firstname, setFirstname] = useState(activeAccount?.firstname);
 	const [lastname, setLastname] = useState(activeAccount?.lastname);
 	const [email, setEmail] = useState(activeAccount?.email);
-	const [verifiedEmail, setVerifiedEmail] = useState<boolean>(activeAccount?.emailValidationProof !== undefined);
 	const [nonce, setNonce] = useState(activeAccount?.nonce);
 	const [showPrivateKeys, setShowPrivateKeys] = useState<boolean>(false);
 
@@ -127,8 +128,7 @@ export default function Parameters() {
 
 	useEffect(() => {
 		// load the authentication key pair
-		if (!wallet || !activeAccount) return
-		console.log("exposing signature keys:", wallet, activeAccount);
+		if (!wallet || !activeAccount) return;
 		getUserKeyPair(wallet, activeAccount)
 			.then(keyPair => {
 				setUserPrivateKey(Encoders.ToHexa(keyPair.privateKey));
@@ -145,10 +145,12 @@ export default function Parameters() {
 	 */
 	function saveParameters() {
 		// prevent invalid parameters
-		if (firstname === '') {
-			// TODO notify the user
-			console.error('[parameters] cannot update the active account pseudo with an empty pseudo');
-			return;
+		if (firstname === '' || lastname == '') {
+			throw new Error("Empty firstname or lastname");
+		}
+
+		if (email === '') {
+			throw new Error("Empty email.")
 		}
 
 
@@ -161,8 +163,9 @@ export default function Parameters() {
 				if (a.id !== wallet.activeAccountId) return a;
 				return {
 					...a,
-					firstname: firstname,
-					lastname: lastname,
+					firstname,
+					lastname,
+					email,
 					nonce,
 				}
 			});
@@ -180,7 +183,6 @@ export default function Parameters() {
 	 */
 	function deleteActiveAccount() {
 		if (activeAccount && activeAccount.firstname === accountDeletionPseudo) {
-			console.log(`[g] deleting ${activeAccount.firstname}`);
 			setWallet(wallet => {
 				if (!wallet) return undefined;
 				const accounts = wallet.accounts
@@ -215,6 +217,14 @@ export default function Parameters() {
 			field: <InputNumberWithDynamicConfirmSaveComponent
 				value={nonce}
 				onChange={setNonce}
+				onSave={saveParameters}/>
+		},
+		{
+			name: 'Email',
+			description: 'The email associated to your account.',
+			field: <InputWithDynamicConfirmSaveComponent
+				value={email}
+				onChange={setEmail}
 				onSave={saveParameters}/>
 		}
 	];
@@ -301,10 +311,8 @@ export default function Parameters() {
 			</div>
 
 
-			<EmailValidation/>
 			<GeneralParameters items={generalItems}/>
 			<KeysParameters items={keysItem}/>
-			<OracleParameters items={oracleItems}/>
 			<NetworkParameters items={networkItems}/>
 
 

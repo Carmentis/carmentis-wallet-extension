@@ -76,16 +76,6 @@ export function SetupWallet() {
         window.close()
     }
 
-    useEffect(() => {
-        // insert initial notifications
-        notificationSystem.notifyWithButtonLink(
-            "Configure your email",
-            "You account is currently not associated with an email.",
-            "Configure",
-            "/parameters"
-        );
-    }, []);
-
     // store the seed in the wallet
     const provider = new CarmentisProvider();
     SecureWalletStorage.CreateSecureWalletStorage(provider, password)
