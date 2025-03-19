@@ -91,21 +91,28 @@ export default function PopupEventApproval() {
         const keyPair = await getUserKeyPair(wallet!, activeAccount!);
         const sk = Encoders.ToHexa(keyPair.privateKey);
         const signature = await vb.signAsEndorser();
-        const answer = await wiWallet.sendApprovalSignature(sk, req.object, signature);
+        try {
+            const answer = await wiWallet.sendApprovalSignature(sk, req.object, signature);
 
-        // store the virtual blockchain id in which the user is involved
-        const db = await AccountDataStorage.connectDatabase(activeAccount!);
-        await db.storeApplicationVirtualBlockchainId(answer.walletObject.vbHash)
 
-        // clear the current request
-        const response: BackgroundRequest<ClientResponse> = {
-            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-            payload: answer.clientAnswer
+            // store the virtual blockchain id in which the user is involved
+            const db = await AccountDataStorage.connectDatabase(activeAccount!);
+            await db.storeApplicationVirtualBlockchainId(answer.walletObject.vbHash)
+
+            // clear the current request
+            const response: BackgroundRequest<ClientResponse> = {
+                backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
+                payload: answer.clientAnswer
+            }
+
+            console.log("[popup dashboard] Response:", response)
+            browser.runtime.sendMessage(response);
+            maskAsAccepted()
+        } catch (e) {
+            console.error(e);
+            setError(e)
         }
 
-        console.log("[popup dashboard] Response:", response)
-        browser.runtime.sendMessage(response);
-        maskAsAccepted()
     }
 
     if (!ready) return <Splashscreen label={"Request loading..."}/>

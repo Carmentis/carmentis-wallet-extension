@@ -183,7 +183,7 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
 
 
 function NotificationDataField( value: {value: string} ) {
-    return <p className="w-100 p-2 bg-gray-100 rounded-md">
+    return <p className="w-full max-w-full  overflow-x-auto p-2 bg-gray-100 rounded-md">
         {value.value}
     </p>
 }
@@ -233,12 +233,26 @@ function PopupError() {
     const wallet = useWallet();
     const [error, setError] = useRecoilState(errorState);
 
+    function renderNotificationError( error: unknown ) {
+        if (typeof error === 'string') {
+            return <NotificationDataField value={error}/>
+        } else if (Array.isArray(error) && error.every(v => typeof v === 'string')) {
+            return  <NotificationDataField value={error.join(", ")}/>
+        } else if ( 'message' in error && typeof error.message === 'string' ) {
+            return  <NotificationDataField value={error.message}/>
+        } else if (typeof error !== 'undefined' && 'toString' in error && typeof error.toString === 'function') {
+            return  <NotificationDataField value={error.toString()}/>
+        } else {
+            return <NotificationDataField value={`${error}`}/>
+        }
+    }
+
     const header = <Typography variant={"h6"}>Error</Typography>
     const body = <>
         <p>
             An error occurred:
         </p>
-        <NotificationDataField value={error.join(", ")}/>
+        {renderNotificationError(error)}
         <p>
 
             The error might be caused by an invalid configuration of the server or an incorrect setup of your
