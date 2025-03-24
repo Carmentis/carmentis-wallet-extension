@@ -47,6 +47,9 @@ import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state
 import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.tsx";
+import ActivityPage from "@/entrypoints/components/dashboard/activity.tsx";
+import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/virtual-blockchain-viewer.tsx";
+import ProofChecker from "@/entrypoints/components/dashboard/proof-checker.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -73,7 +76,6 @@ export function Dashboard(): ReactElement {
 
 	// load the authentication context
 	const wallet = useWallet();
-	console.log("dashboard wallet?", wallet)
 
 	return (
 		<NavbarSidebarLayout
@@ -86,6 +88,18 @@ export function Dashboard(): ReactElement {
 					element={
 						<DashboardHome key={wallet.activeAccountId} />
 					}
+				/>
+				<Route
+					path="/activity"
+					element={<ActivityPage />}
+				/>
+				<Route
+					path="/activity/:hash"
+					element={<VirtualBlockchainViewer />}
+				/>
+				<Route
+					path="/proofChecker"
+					element={<ProofChecker />}
 				/>
 				<Route
 					path="/transfer"
@@ -108,8 +122,10 @@ export function Dashboard(): ReactElement {
 function DashboardSidebar() {
 	return <>
 		<SidebarItem icon={'bi-house'} text={'Home'} activeRegex={/\/$/} link={'/'} />
+		<SidebarItem icon={'bi-box-fill'} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
 		<SidebarItem icon={'bi-arrows'} text={'Token transfer'} activeRegex={/transfer$/} link={'/transfer'} />
 		<SidebarItem icon={'bi-clock'} text={'History'} activeRegex={/history$/} link={'/history'} />
+		<SidebarItem icon={'bi-check'} text={'Proof checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
 		<SidebarItem icon={'bi-gear'} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
 		<NodeConnectionStatusSidebarItem/>
 	</>;
@@ -255,18 +271,6 @@ function ClickableThreeDots(input: {onClick: () => void}) {
 	</button>
 }
 
-/**
- * Truncates a string if its length exceeds the specified maximum size.
- * If truncation occurs, appends "..." to indicate the truncation.
- *
- * @param {string} text - The string to be truncated.
- * @param {number} maxSize - The maximum allowable length of the string.
- * @return {string} The modified string if truncation occurs, otherwise the original string.
- */
-function capStringSize(text: string, maxSize: number) {
-	if (text.length <= maxSize) return text;
-	return text.slice(0, maxSize) + '...';
-}
 
 /**
  * Represents the home dashboard component of the application.
@@ -283,7 +287,6 @@ function DashboardHome() {
 	return <>
 		<div className="container mx-auto px-4">
 			<DashboardWelcomeCards />
-			<ChainVisualizer/>
 		</div>
 
 	</>;
@@ -292,9 +295,7 @@ function DashboardHome() {
 
 function AccountBalanceCard() {
 
-	console.log("Attempting to read the balance account hook")
 	const {data, isLoading, error} = useAccountBalanceHook();
-	console.log("account balance card:", data, isLoading, error)
 
 
 	if (isLoading) return <Card className={'flex-1'}>
@@ -359,94 +360,5 @@ function DashboardWelcomeCards() {
 }
 
 
-function ChainVisualizer() {
-	const offset = 0;
-	const limit = 200;
-	const wallet = useRecoilValue(walletState);
-	const activeAccount = useRecoilValue(activeAccountState);
-	if (!activeAccount) return <></>;
-	const [chains, setChains] = useState<string[]>([]);
-
-	async function loadChains() {
-		const db = await AccountDataStorage.connectDatabase(activeAccount!);
-		const keyPair = await getUserKeyPair(wallet!, activeAccount!)
-		const chains = await db.getAllApplicationVirtualBlockchainId(offset, limit);
-		sdk.blockchain.blockchainCore.setUser(sdk.blockchain.ROLES.OPERATOR, sdk.utils.encoding.toHexa(keyPair.privateKey))
-		setChains(chains.map(c => c.virtualBlockchainId))
-	}
-
-	useEffect(() => {
-		loadChains()
-	}, []);
-
-
-	const content = chains.map(c => <SingleChain key={c} chainId={c}/>)
-	return <Box className={"flex flex-col space-y-4"}>
-		{content}
-	</Box>
-}
-
-function SingleChain( {chainId}: {chainId: string} ) {
-	const vb = new sdk.blockchain.appLedgerVb(chainId);
-	const [height, setHeight] = useState<number|undefined>(undefined);
-
-	async function loadChain() {
-		await vb.load();
-		const height = vb.getHeight();
-		setHeight(height-1)
-	}
-
-	useEffect(() => {
-		loadChain()
-	}, []);
-
-	if (!height) return <Skeleton height={40}/>
-
-	const content = []
-	for (let i = 1; i <= height; i++) {
-		content.push( <BlocViewer key={`${chainId}-${i}`} chainId={chainId} index={i} />)
-	}
-	return (
-		<Card>
-			<CardContent>
-				<Typography variant="body2" gutterBottom>
-					Chain {chainId}
-				</Typography>
-				<div style={{display: 'flex', flexWrap: 'wrap', gap: '16px'}}>
-					{content}
-				</div>
-			</CardContent>
-		</Card>
-	);
-
-
-}
-
-function BlocViewer( {chainId, index}: {chainId: string, index: number})  {
-	const vb = new sdk.blockchain.appLedgerVb(chainId);
-	const [record, setRecord] = useState<Record<string, any>|undefined>(undefined);
-
-	async function loadBlock() {
-		await vb.load();
-		const record = vb.getRecord(index);
-		setRecord(record);
-	}
-
-	useEffect(() => {
-		loadBlock()
-	}, []);
-
-	if (record === undefined) return <Skeleton/>
-	return (
-		<Card style={{flex: '0 1 300px'}} key={index}>
-			<CardContent>
-				<Typography variant="h6">Bloc {index}</Typography>
-				<Typography variant="body2">
-					<BlockViewer initialPath={[]} data={record}/>
-				</Typography>
-			</CardContent>
-		</Card>
-	);
-}
 
 export default Dashboard;
