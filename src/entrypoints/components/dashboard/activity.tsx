@@ -25,6 +25,7 @@ import {Box, Breadcrumbs, Card, CardContent, Link, Typography} from "@mui/materi
 import Skeleton from "react-loading-skeleton";
 import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.tsx";
 import {useNavigate} from "react-router";
+import {DynamicTableComponent} from "@/entrypoints/components/async-row-table.tsx";
 
 export default function ActivityPage() {
     return <>
@@ -61,13 +62,44 @@ function TableOfChains() {
         navigate(`/activity/${chainId}`)
     }
 
+
+    async function renderRow(chain: string, index: number) {
+        const vb = new sdk.blockchain.appLedgerVb(chain);
+        await vb.load();
+        const applicationId = vb.state.applicationId;
+        const applicationVb = new sdk.blockchain.applicationVb(applicationId);
+        await applicationVb.load();
+        const application = await applicationVb.getDescriptionObject();
+        const organisation = await applicationVb.getOrganizationVb();
+        const organisationDescription = await organisation.getDescriptionObject();
+        const height = vb.getHeight() - 1;
+        return [
+            <Typography>{application.getName()}</Typography>,
+            <Typography>{organisationDescription.getName()}</Typography>,
+            <Typography>{height}</Typography>
+        ]
+    }
+
     return <Box>
         <Card>
             <CardContent>
                 <Typography variant="h5" gutterBottom>
                     Virtual Blockchains
                 </Typography>
-                <Box sx={{overflow: 'auto'}}>
+                <DynamicTableComponent
+                    header={["Application", "Organisation", "Virtual Blockchain Height"]}
+                    data={chains}
+                    renderRow={renderRow}
+                    onRowClicked={(hash) => navigateToVirtualBlockchainView(hash)}/>
+
+            </CardContent>
+        </Card>
+    </Box>
+
+}
+
+/*
+ <Box sx={{overflow: 'auto'}}>
                     <table style={{width: '100%', borderCollapse: 'collapse'}}>
                         <thead>
                         <tr>
@@ -87,10 +119,7 @@ function TableOfChains() {
                         </tbody>
                     </table>
                 </Box>
-            </CardContent>
-        </Card>
-    </Box>
-}
+ */
 
 
 function ChainVisualizer() {
