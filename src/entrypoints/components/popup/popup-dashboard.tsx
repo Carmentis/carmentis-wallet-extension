@@ -52,31 +52,6 @@ export interface RecordConfirmationData {
     authorPublicKey: string | undefined,
 }
 
-export interface Flow {
-    applicationId: string;
-    appDescription: {
-        name: string,
-        rootDomain: string,
-        homepageUrl: string,
-        logoUrl: string,
-    },
-    "flowObject": {
-        "chain": {
-            currentNonce: number,
-            hash: Uint8Array,
-            "microBlock":
-                {
-                    "version": 1,
-                    "nonce": 1,
-                    "ts": 1729169460,
-                    "gas": 1890,
-                    "gasPrice": 100000,
-                }[]
-        }
-    }
-}
-
-
 export const useClearClientRequest = () => {
     const setClientRequest = useSetRecoilState(clientRequestSessionState);
     return () => {

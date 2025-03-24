@@ -316,6 +316,18 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
 
 export function BlockViewer({data, initialPath}: {data: Record<string, any>, initialPath: string[]}) {
     const [path, setPath] = useState(initialPath)
+    const [shownData, setShowData] = useState(data);
+
+    useEffect(() => {
+        // compute the shown data
+        let shownData = data;
+        for ( const token of path ) {
+            shownData = shownData[token]
+        }
+        setShowData(shownData);
+    }, [path, setShowData]);
+
+
 
     const rowEntryClass = 'w-full first:rounded-t last:rounded-b border-b-2 border-gray-50'
     function renderEntry(index: number, key: string, value: any) {
@@ -335,6 +347,7 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
                 content = <>
                     <td className={"p-1 border-gray-50 border-r-2"}>{key}</td>
                     <td className={"p-1 text-gray-500 hover:cursor-pointer"} onClick={() => setPath(p => {
+                        console.log("Accessing path:", p, key)
                         return [...p, key];
                     })}>See more
                     </td>
@@ -357,20 +370,23 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
         </TableRow>
     }
 
+
+    function backPath() {
+        path.pop();
+        return setPath([...path])
+    }
+
     function renderPreviousPath() {
         if (path.length == 0) return
         return <TableRow className={rowEntryClass}>
-            <td onClick={() => setPath(p => {
-                p.pop();
-                return p;
-            })}>Back
+            <td onClick={() => backPath()}>Back
             </td>
         </TableRow>
     }
 
     function renderRecord() {
         const previousPath = renderPreviousPath();
-        const content = Object.entries(data).map(([key, value], i) => renderEntry(i, key, value))
+        const content = Object.entries(shownData).map(([key, value], i) => renderEntry(i, key, value))
         return <>
             <TableContainer >
                 <Table component={Paper} elevation={1}>
