@@ -304,13 +304,13 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
         {label: "Next", onClick: goToNext, disabled: h == maxH},
         {label: "End", onClick: goToEnd, disabled: h == maxH},
     ]
-
+    console.log(h, data)
     return <div className={"flex flex-col space-y-2 h-full"}>
         <p className="font-bold">Data (block {h}/{maxH})</p>
         <ButtonGroup variant="contained" fullWidth={true} aria-label=" uppercase outlined primary button group">
             {buttons.map((b, i) => <Button size={'small'} key={i} disabled={b.disabled} onClick={b.onClick}>{b.label}</Button>)}
         </ButtonGroup>
-        <BlockViewer data={data} initialPath={path}/>
+        <BlockViewer data={data} initialPath={path} key={h}/>
     </div>
 }
 
