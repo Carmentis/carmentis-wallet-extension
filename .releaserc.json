@@ -1,4 +1,5 @@
 {
+  "tagAnnotate": true,
   "noCi": true,
   "analyzeCommits": {
     "preset": "angular"
