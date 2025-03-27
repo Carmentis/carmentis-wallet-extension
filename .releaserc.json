@@ -1,24 +1,25 @@
 {
   "noCi": true,
+  "tagFormat": "v${nextRelease.version}",
   "analyzeCommits": {
     "preset": "angular"
   },
   "generateNotes": {
     "preset": "angular"
   },
-    "verifyConditions": [
-      "@semantic-release/changelog",
-      "@semantic-release/git"
-    ],
-    "prepare": [
-      "@semantic-release/changelog",
-      {
-        "path": "@semantic-release/git",
-        "assets": [ "package.json" ],
-        "message": "Release: ${nextRelease.version}"
-      }
-    ],
-    "publish": [
-      "@semantic-release/github"
-    ]
+  "verifyConditions": [
+    "@semantic-release/changelog",
+    "@semantic-release/git"
+  ],
+  "prepare": [
+    "@semantic-release/changelog",
+    {
+      "path": "@semantic-release/git",
+      "assets": ["package.json", "CHANGELOG.md"],
+      "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+    }
+  ],
+  "publish": [
+    "@semantic-release/github"
+  ]
 }
