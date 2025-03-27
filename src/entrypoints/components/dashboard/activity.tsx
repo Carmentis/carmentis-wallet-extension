@@ -26,6 +26,8 @@ import Skeleton from "react-loading-skeleton";
 import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.tsx";
 import {useNavigate} from "react-router";
 import {DynamicTableComponent} from "@/entrypoints/components/async-row-table.tsx";
+import assert from "node:assert";
+import {ArrowRight} from "@mui/icons-material";
 
 export default function ActivityPage() {
     return <>
@@ -66,6 +68,7 @@ function TableOfChains() {
     async function renderRow(chain: string, index: number) {
         const vb = new sdk.blockchain.appLedgerVb(chain);
         await vb.load();
+        console.log(`vb on chain ${chain}:`, vb)
         const applicationId = vb.state.applicationId;
         const applicationVb = new sdk.blockchain.applicationVb(applicationId);
         await applicationVb.load();
@@ -73,10 +76,20 @@ function TableOfChains() {
         const organisation = await applicationVb.getOrganizationVb();
         const organisationDescription = await organisation.getDescriptionObject();
         const height = vb.getHeight() - 1;
+
+        // find the range of timeline for the virtual blockchain
+        const microblocks = vb.microblocks;
+        console.assert(Array.isArray(microblocks) && microblocks.length > 0);
+        console.assert(microblocks.every(m => 'object' in m && 'header' in m.object && "timestamp" in m.object.header))
+        console.assert(microblocks.every(m => typeof m.object.header.timestamp === 'number'), `Invalid type of timestamp}`)
+        const timestamps: number[] = microblocks.map(m => m.object.header.timestamp)
+        const min = timestamps.reduce((a, b) => Math.min(a, b), timestamps[0]);
+        const max = timestamps.reduce((a, b) => Math.max(a, b), timestamps[0]);
         return [
             <Typography>{application.getName()}</Typography>,
             <Typography>{organisationDescription.getName()}</Typography>,
-            <Typography>{height}</Typography>
+            <Typography>{height}</Typography>,
+            <Typography>{new Date(min * 1000).toISOString()} <ArrowRight/> {new Date(max * 1000).toISOString()}</Typography>
         ]
     }
 
@@ -87,7 +100,7 @@ function TableOfChains() {
                     Virtual Blockchains
                 </Typography>
                 <DynamicTableComponent
-                    header={["Application", "Organisation", "Virtual Blockchain Height"]}
+                    header={["Application", "Organisation", "Virtual Blockchain Height", "Range Time"]}
                     data={chains}
                     renderRow={renderRow}
                     onRowClicked={(hash) => navigateToVirtualBlockchainView(hash)}/>
