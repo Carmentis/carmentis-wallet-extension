@@ -29,7 +29,7 @@ import {Encoders} from '@/entrypoints/main/Encoders.tsx';
  */
 const DEFAULT_NODE_ENDPOINT = "https://dev-node.beta.carmentis.io"
 const DEFAULT_EMAIL_ORACLE_ENDPOINT = "https://data.testapps.carmentis.io"
-const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.themis.carmentis.io"
+const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.beta.carmentis.io"
 
 
 export interface Wallet {
