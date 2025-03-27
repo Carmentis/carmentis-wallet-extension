@@ -52,8 +52,8 @@ import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/virtual-
 import ProofChecker from "@/entrypoints/components/dashboard/proof-checker.tsx";
 import {useAsync, useAsyncFn} from "react-use";
 import {DashboardNavbar} from "@/entrypoints/components/dashboard/dashboard-navbar.tsx";
-import {Checklist, Loop, MenuBook, Search} from "@mui/icons-material";
-import {Boxes, Check2Square, GearFill} from "react-bootstrap-icons";
+import {AddCard, Checklist, Loop, MenuBook, Search} from "@mui/icons-material";
+import {Boxes, Check2Square, Coin, GearFill} from "react-bootstrap-icons";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -283,8 +283,9 @@ function DashboardLinks() {
 	const items = [
 		{title: 'Documentation', icon: <MenuBook/>, description: "Read the documentation to get help.", onClick: () => open('https://docs.carmentis.io')},
 		{title: 'Activity', icon: <MenuBook/>, description: "Check your activity.", onClick: () => navigate('/activity')},
-		{title: 'Check Proof', icon: <Checklist/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
 		{title: 'Explorer', icon: <Search/>, description: "Explore the chain.", onClick: () => open(explorerUrl)},
+		{title: 'Purchase Tokens', icon: <AddCard/>, description: "Purchase Carmentis Tokens", onClick: () => open(`https://exchange.beta.carmentis.io`)},
+		{title: 'Check Proof', icon: <Checklist/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
 		{title: 'Parameters', icon: <GearFill/>, description: "Change parameters of your wallet.", onClick: () => navigate("/parameters")},
 
 
