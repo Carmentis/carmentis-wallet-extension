@@ -23,29 +23,12 @@ jobs:
       - name: Build project
         run: npm run tailwind && npm run zip && npm run zip:firefox
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .output/carmentis-wallet-extension*
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .output/carmentis-wallet-extension*
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          files: .output/carmentis-wallet-extension*
+          files: .output/carmentis-wallet-extension*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
