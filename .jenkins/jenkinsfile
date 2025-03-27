@@ -21,4 +21,11 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            echo "Cleaning repository"
+            deleteDir()
+        }
+    }
 }
