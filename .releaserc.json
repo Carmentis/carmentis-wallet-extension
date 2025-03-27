@@ -1,6 +1,5 @@
 {
   "noCi": true,
-  "tagFormat": "v${nextRelease.version}",
   "analyzeCommits": {
     "preset": "angular"
   },
@@ -9,14 +8,16 @@
   },
   "verifyConditions": [
     "@semantic-release/changelog",
+    "@semantic-release/npm",
     "@semantic-release/git"
   ],
   "prepare": [
     "@semantic-release/changelog",
+    "@semantic-release/npm",
     {
       "path": "@semantic-release/git",
-      "assets": ["package.json", "CHANGELOG.md"],
-      "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+      "assets": [ "package.json" ],
+      "message": "Release: ${nextRelease.version}"
     }
   ],
   "publish": [
