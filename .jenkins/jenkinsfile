@@ -1,0 +1,24 @@
+// The release stage in the pipeline will run only if the test stage in the pipeline is successful
+pipeline {
+    agent {
+        docker {
+            image 'node:20'
+        }
+    }
+    environment {
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+    }
+    stages {
+        stage('Install dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Release') {
+            steps {
+                sh 'npx semantic-release'
+            }
+        }
+    }
+}

@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import { version } from './package.json'
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -6,7 +7,7 @@ export default defineConfig({
   outDir: './.output',
   manifest: {
     name: 'Carmentis Wallet',
-    version: '0.9.1',
+    version: version,
     description: 'Carmentis Wallet',
     host_permissions: ['*://*/*'],
     browser_action: {},

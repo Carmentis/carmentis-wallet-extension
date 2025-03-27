@@ -1,0 +1,24 @@
+{
+  "noCi": true,
+  "analyzeCommits": {
+    "preset": "angular"
+  },
+  "generateNotes": {
+    "preset": "angular"
+  },
+    "verifyConditions": [
+      "@semantic-release/changelog",
+      "@semantic-release/git"
+    ],
+    "prepare": [
+      "@semantic-release/changelog",
+      {
+        "path": "@semantic-release/git",
+        "assets": [ "package.json" ],
+        "message": "Release: ${nextRelease.version}"
+      }
+    ],
+    "publish": [
+      "@semantic-release/github"
+    ]
+}
