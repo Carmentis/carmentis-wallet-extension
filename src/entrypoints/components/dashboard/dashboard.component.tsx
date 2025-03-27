@@ -50,6 +50,10 @@ import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.t
 import ActivityPage from "@/entrypoints/components/dashboard/activity.tsx";
 import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/virtual-blockchain-viewer.tsx";
 import ProofChecker from "@/entrypoints/components/dashboard/proof-checker.tsx";
+import {useAsync, useAsyncFn} from "react-use";
+import {DashboardNavbar} from "@/entrypoints/components/dashboard/dashboard-navbar.tsx";
+import {Checklist, Loop, MenuBook, Search} from "@mui/icons-material";
+import {Boxes, Check2Square, GearFill} from "react-bootstrap-icons";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -177,99 +181,6 @@ function NodeConnectionStatusSidebarItem() {
 }
 
 
-/**
- * Renders the navigation bar for the dashboard including account selection,
- * navigation menu, and relevant user actions such as accessing parameters, logging out, and help documentation.
- *
- * @return {JSX.Element} The Dashboard navigation bar component, enabling user interaction for menu toggle, navigation, and actions.
- */
-function DashboardNavbar() {
-	// state to show the navigation
-	const authentication = useAuthenticationContext();
-	const [showMenu, setShowMenu] = useState<boolean>(false);
-
-	// create the navigation
-	const navigate = useNavigate();
-
-
-	function goToParameters() {
-		setShowMenu(false);
-		navigate('/parameters');
-	}
-
-	function logout() {
-		setShowMenu(false);
-		authentication.disconnect();
-	}
-
-	function goToHelp() {
-		setShowMenu(false);
-		window.open('https://docs.carmentis.io', '_blank');
-	}
-
-
-	return <>
-		<div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 h-full">
-			<div
-				className="flex items-center rtl:space-x-reverse h-4 border-gray-100">
-
-				<DropdownAccountSelection allowAccountCreation={true} large={true}></DropdownAccountSelection>
-			</div>
-
-
-			<div className="relative inline-block text-left">
-				<div className={"flex flex-row justify-center items-center space-x-4"}>
-					<ClickableAppNotifications/>
-					<ClickableThreeDots onClick={() => setShowMenu(!showMenu)}/>
-				</div>
-
-
-				<div hidden={!showMenu} onMouseLeave={() => setShowMenu(false)}
-					 className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-					 role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
-					<div className="py-1" role="none">
-						<div
-							className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-							id="menu-item-0" onClick={goToParameters}>Parameters
-						</div>
-						<div
-							className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-							id="menu-item-1" onClick={logout}>Logout
-						</div>
-						<div
-							className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-							id="menu-item-0" onClick={goToHelp}>
-							Get help
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</>;
-}
-
-function ClickableAppNotifications() {
-	const actions = useMainInterfaceActions();
-	const {notifications, isLoading} = useApplicationNotificationHook();
-
-	const badgeContent = isLoading ? undefined : notifications.length;
-	return <Badge onClick={() => actions.showNotifications()} badgeContent={badgeContent} color={"primary"}>
-		<i className={"bi bi-envelope text-xl"}></i>
-	</Badge>
-}
-
-function ClickableThreeDots(input: {onClick: () => void}) {
-	return <button onClick={input.onClick}
-				   className="inline-flex w-full justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-				   id="menu-button" aria-expanded="true" aria-haspopup="true">
-		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-			 strokeWidth="1.5"
-			 stroke="currentColor" className="size-6">
-			<path strokeLinecap="round" strokeLinejoin="round"
-				  d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-		</svg>
-	</button>
-}
 
 
 /**
@@ -286,12 +197,130 @@ function ClickableThreeDots(input: {onClick: () => void}) {
 function DashboardHome() {
 	return <>
 		<div className="container mx-auto px-4">
-			<DashboardWelcomeCards />
+			<DashboardOverview/>
 		</div>
 
 	</>;
 }
 
+
+/**
+ *
+ * @constructor
+ */
+function DashboardOverview() {
+	const activeAccount = useAuthenticatedAccount();
+	const balance = useAccountBalanceHook();
+	const numberVb = useAsync(async () => {
+		const db = await  AccountDataStorage.connectDatabase(activeAccount);
+		return db.getNumberOfApplicationVirtualBlockchainId();
+	})
+
+	function renderWelcomeTitle() {
+		return <Typography variant={"h4"}>Welcome, {activeAccount.firstname}!</Typography>
+	}
+
+
+	function renderNumberOfApplicationsContent() {
+		const title = "Number of activities"
+		if (numberVb.loading) return <InfoCard title={title} value={<Skeleton/>}/>
+		if (numberVb.error || typeof numberVb.value !== 'number') {
+			console.error(numberVb.error)
+			return <InfoCard title={title} value={"--"}/>
+		}
+		return <InfoCard title={title} value={numberVb.value}/>
+	}
+
+	function renderBalanceContent() {
+		if (balance.isLoading) return <InfoCard title={"Balance"} value={<Skeleton/>}/>
+		if (balance.error || typeof balance.data !== 'number') {
+			return  <InfoCard title={"Balance"} value={"--"}/>
+		}
+		return <InfoCard title={"Balance"} value={`${balance.data} CMTS`}/>
+	}
+	
+
+
+
+
+
+	return <Box display={"flex"} flexDirection={"column"} gap={2} pt={10}>
+		<Box mb={4}>
+			{renderWelcomeTitle()}
+		</Box>
+		<Box display="flex" flexWrap={"wrap"} gap={2}>
+			{renderNumberOfApplicationsContent()}
+			{renderBalanceContent()}
+		</Box>
+
+		<DashboardLinks/>
+	</Box>
+}
+
+
+function InfoCard({title, value}: { title: string, value: string | number | JSX.Element }) {
+	return (
+		<Card className="flex-1">
+			<CardContent className="flex flex-col items-start">
+				<Typography  className="mb-2 text-gray-800">
+					{title}
+				</Typography>
+				<Typography variant="h6" className="text-gray-900 font-semibold">
+					{value}
+				</Typography>
+			</CardContent>
+		</Card>
+	);
+}
+
+
+function DashboardLinks() {
+	const navigate = useNavigate();
+	const wallet = useWallet();
+	const explorerUrl = wallet.explorerEndpoint;
+	const open = (link: string) => window.open(link, "_blank");
+
+	const items = [
+		{title: 'Documentation', icon: <MenuBook/>, description: "Read the documentation to get help.", onClick: () => open('https://docs.carmentis.io')},
+		{title: 'Activity', icon: <MenuBook/>, description: "Check your activity.", onClick: () => navigate('/activity')},
+		{title: 'Check Proof', icon: <Checklist/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
+		{title: 'Explorer', icon: <Search/>, description: "Explore the chain.", onClick: () => open(explorerUrl)},
+		{title: 'Parameters', icon: <GearFill/>, description: "Change parameters of your wallet.", onClick: () => navigate("/parameters")},
+
+
+	]
+
+	return <Box display={"flex"} flexDirection={"column"} gap={2} mt={10}>
+		<Typography variant={"h6"}>Useful Links</Typography>
+		<Box display={"flex"} flexWrap={"wrap"} gap={2}>
+			{items.map(i => <SmallInfoCard icon={i.icon} title={i.title} description={i.description} onClick={() => i.onClick()} />
+			)}
+		</Box>
+	</Box>
+}
+function SmallInfoCard({icon, title, description, onClick}: {
+	icon: JSX.Element,
+	title: string,
+	description: string,
+	onClick: () => void
+}) {
+	return (
+		<Card className="flex-1 cursor-pointer hover:shadow-lg transition-shadow min-w-72 w-72"
+			  onClick={() => onClick()}>
+			<CardContent className="flex flex-col items-center">
+				<div className="mb-2 text-primary">
+					{icon}
+				</div>
+				<Typography variant="h6" className="text-gray-900 font-semibold">
+					{title}
+				</Typography>
+				<Typography variant="body2" className="text-gray-600 text-center">
+					{description}
+				</Typography>
+			</CardContent>
+		</Card>
+	);
+}
 
 function AccountBalanceCard() {
 
@@ -333,21 +362,7 @@ function AccountBalanceCard() {
  * updated based on retrieved data from the IndexedStorage database.
  */
 function DashboardWelcomeCards() {
-	const activeAccount = useAuthenticatedAccount();
-	const [numberOfApplications, setNumberOfApplications] = useState<number | undefined>();
-	const [numberOfFlows, setNumberOfFlows] = useState<number | undefined>();
-	const [spentGaz, setSpentGaz] = useState<number | undefined>();
 
-	useEffect(() => {
-		AccountDataStorage.connectDatabase(activeAccount)
-			.then(async (db: AccountDataStorage) => {
-				/*
-				db.getNumberOfApplications().then(setNumberOfApplications);
-				db.getFlowsNumberOfAccount().then(setNumberOfFlows);
-				db.getSpentGaz().then(setSpentGaz);
-				 */
-			});
-	}, []);
 
 	return <div className="mb-5">
 		<h3>Overview</h3>

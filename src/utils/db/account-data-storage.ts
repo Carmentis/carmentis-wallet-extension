@@ -63,12 +63,33 @@ export class AccountDataStorage {
         return new AccountDataStorage(db, account);
     }
 
-
-
+    /**
+     * Retrieves a list of application virtual blockchain IDs with pagination.
+     *
+     * @param {number} offset - The starting position of the records to retrieve.
+     * @param {number} limit - The maximum number of records to retrieve.
+     * @return {Promise<Array>} A promise that resolves to an array of application virtual blockchain IDs.
+     */
     async getAllApplicationVirtualBlockchainId(offset: number, limit: number, ) {
         return this.db.applicationsVirtualBlockchains.limit(limit).offset(offset).toArray()
     }
 
+    /**
+     * Retrieves the total count of application virtual blockchain identifiers from the database.
+     *
+     * @return {Promise<number>} A promise that resolves to the number of application virtual blockchain IDs.
+     */
+    async getNumberOfApplicationVirtualBlockchainId() {
+        return this.db.applicationsVirtualBlockchains.count()
+    }
+
+
+    /**
+     * Stores the provided virtual blockchain ID in the database.
+     *
+     * @param {string} virtualBlockchainId - The unique identifier for the virtual blockchain to be stored.
+     * @return {Promise<void>} A promise that resolves when the virtual blockchain ID has been successfully stored.
+     */
     async storeApplicationVirtualBlockchainId(virtualBlockchainId: string) {
         await this.db.transaction('rw', [this.db.applicationsVirtualBlockchains], async () => {
             await this.db.applicationsVirtualBlockchains.put({
