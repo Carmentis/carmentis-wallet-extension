@@ -89,7 +89,7 @@ function TableOfChains() {
             <Typography>{application.getName()}</Typography>,
             <Typography>{organisationDescription.getName()}</Typography>,
             <Typography>{height}</Typography>,
-            <Typography>{new Date(min * 1000).toISOString()} <ArrowRight/> {new Date(max * 1000).toISOString()}</Typography>
+            <Typography>{new Date(min * 1000).toLocaleString()} <ArrowRight/> {new Date(max * 1000).toLocaleString()}</Typography>
         ]
     }
 
