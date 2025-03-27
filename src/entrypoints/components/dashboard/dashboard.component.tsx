@@ -280,11 +280,14 @@ function DashboardLinks() {
 	const explorerUrl = wallet.explorerEndpoint;
 	const open = (link: string) => window.open(link, "_blank");
 
+	const isBeta = typeof explorerUrl === 'string' && explorerUrl.includes("beta")
+	const exchangeLink = isBeta ? "https://exchange.beta.carmentis.io" : "https://exchange.alpha.carmentis.io"
+
 	const items = [
 		{title: 'Documentation', icon: <MenuBook/>, description: "Read the documentation to get help.", onClick: () => open('https://docs.carmentis.io')},
 		{title: 'Activity', icon: <MenuBook/>, description: "Check your activity.", onClick: () => navigate('/activity')},
 		{title: 'Explorer', icon: <Search/>, description: "Explore the chain.", onClick: () => open(explorerUrl)},
-		{title: 'Purchase Tokens', icon: <AddCard/>, description: "Purchase Carmentis Tokens", onClick: () => open(`https://exchange.beta.carmentis.io`)},
+		{title: 'Purchase Tokens', icon: <AddCard/>, description: "Purchase Carmentis Tokens", onClick: () => open(exchangeLink)},
 		{title: 'Check Proof', icon: <Checklist/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
 		{title: 'Parameters', icon: <GearFill/>, description: "Change parameters of your wallet.", onClick: () => navigate("/parameters")},
 
