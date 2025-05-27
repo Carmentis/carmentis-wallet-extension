@@ -2,6 +2,14 @@
 
 This repository contains the source code of the Carmentis Wallet Extension (CWE).
 
+## Launch the extension in development mode
+
+To run the extension in development, run `npm install` and use one of the following command:
+```shell
+npm run dev # for chrome
+npm run dev:firefox # for firefox
+```
+
 ## Build the extension
 Building the extension produces a zip archive file that can be directly installed on your browser.
 ```shell
