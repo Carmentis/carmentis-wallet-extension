@@ -100,7 +100,8 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
     if (value === undefined) return <span className="text-gray-400">undefined</span>;
 
     if (typeof value === 'string') {
-      return <span className="text-blue-600 font-mono">{value.length > 30 ? `${value.substring(0, 30)}...` : value}</span>;
+      // Don't truncate values anymore since they're displayed below with more space
+      return <span className="text-blue-600 font-mono">{value}</span>;
     }
 
     if (typeof value === 'number') {
@@ -165,41 +166,49 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
         className={`border border-gray-100 rounded-md mb-1.5 overflow-hidden ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
       >
         <Box 
-          className={`flex items-center justify-between p-2 ${isExpandable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
-          onClick={isExpandable ? () => toggleExpand(key) : undefined}
+          className={`p-2 ${isExpandable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
         >
-          <Box className="flex items-center space-x-1.5 overflow-hidden">
-            {getTypeIcon(value)}
-            <Typography className="font-medium text-gray-700 truncate text-sm">
-              {key}
-            </Typography>
-          </Box>
-
-          <Box className="flex items-center">
-            <Box className="text-gray-600 mr-1.5 max-w-[120px] truncate text-xs">
-              {formatValue(value)}
+          {/* Header with field name and icons */}
+          <Box 
+            className="flex items-center justify-between"
+            onClick={isExpandable ? () => toggleExpand(key) : undefined}
+          >
+            <Box className="flex items-center space-x-1.5 overflow-hidden">
+              {getTypeIcon(value)}
+              <Typography className="font-medium text-gray-700 truncate text-sm">
+                {key}
+              </Typography>
             </Box>
 
-            {isExpandable && (
-              isExpanded ? (
-                <KeyboardArrowUp fontSize="small" className="text-gray-500" />
-              ) : (
-                <KeyboardArrowDown fontSize="small" className="text-gray-500" />
-              )
-            )}
+            <Box className="flex items-center">
+              {isExpandable && (
+                isExpanded ? (
+                  <KeyboardArrowUp fontSize="small" className="text-gray-500" />
+                ) : (
+                  <KeyboardArrowDown fontSize="small" className="text-gray-500" />
+                )
+              )}
 
-            {isObject && !isArray && !isExpanded && (
-              <IconButton 
-                size="small" 
-                className="ml-0.5 text-blue-600 p-0.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigateToPath(key);
-                }}
-              >
-                <KeyboardArrowRight fontSize="small" />
-              </IconButton>
-            )}
+              {isObject && !isArray && !isExpanded && (
+                <IconButton 
+                  size="small" 
+                  className="ml-0.5 text-blue-600 p-0.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToPath(key);
+                  }}
+                >
+                  <KeyboardArrowRight fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+          </Box>
+
+          {/* Value displayed below */}
+          <Box className="mt-1 pl-6">
+            <Box className="text-gray-600 text-xs break-words">
+              {formatValue(value)}
+            </Box>
           </Box>
         </Box>
 
@@ -210,7 +219,7 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
                 {value.slice(0, 5).map((item: any, i: number) => (
                   <Box key={i} className="flex items-start p-1.5 border-b border-gray-100 last:border-0 text-xs">
                     <span className="text-gray-500 mr-1.5">{i}:</span>
-                    <Box>{formatValue(item)}</Box>
+                    <Box className="break-words">{formatValue(item)}</Box>
                   </Box>
                 ))}
                 {value.length > 5 && (
@@ -223,8 +232,8 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
               <Box className="space-y-1">
                 {Object.entries(value).slice(0, 5).map(([subKey, subValue], i) => (
                   <Box key={i} className="flex items-start p-1.5 border-b border-gray-100 last:border-0 text-xs">
-                    <span className="text-gray-700 font-medium mr-1.5 min-w-[80px] truncate">{subKey}:</span>
-                    <Box className="truncate">{formatValue(subValue)}</Box>
+                    <span className="text-gray-700 font-medium mr-1.5 min-w-[80px]">{subKey}:</span>
+                    <Box className="break-words">{formatValue(subValue)}</Box>
                   </Box>
                 ))}
                 {Object.keys(value).length > 5 && (
