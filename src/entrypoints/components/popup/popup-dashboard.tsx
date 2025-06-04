@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {PropsWithChildren, ReactElement} from "react";
+import React, {PropsWithChildren, ReactElement, useState} from "react";
 import {PopupNavbar} from "@/entrypoints/components/popup/PopupNavbar.tsx";
 import "react-loading-skeleton/dist/skeleton.css";
 import {activeAccountState, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
@@ -31,6 +31,8 @@ import PopupEventApproval from "@/entrypoints/components/popup/popup-event-appro
 import {errorState} from "@/entrypoints/components/popup/popup-even-approval.state.ts";
 import Skeleton from "react-loading-skeleton";
 import image from '~/assets/success.png';
+import { motion } from "framer-motion";
+import { CheckCircle } from "react-bootstrap-icons";
 
 
 
@@ -102,14 +104,16 @@ export function PopupDashboard() {
 }
 
 function  PopupLayout({children}: PropsWithChildren) {
-    return <>
-        <div className={"h-[74px] w-full"}>
-            <PopupNavbar/>
+    return (
+        <div className="flex flex-col h-full bg-gray-50">
+            <div className="h-[74px] w-full shadow-sm bg-white z-10">
+                <PopupNavbar/>
+            </div>
+            <div className="w-full h-[calc(100%-74px)] p-4 overflow-auto">
+                {children}
+            </div>
         </div>
-        <div className={"w-full h-[calc(100%-74px)] p-4"}>
-            {children}
-        </div>
-    </>
+    );
 }
 
 
@@ -119,17 +123,19 @@ export type PopupNotificationProps = {
     footer: ReactElement,
 };
 export function PopupNotificationLayout({header, body, footer}: PopupNotificationProps) {
-    return <div className={"h-full w-full flex flex-col justify-between space-y-2"}>
-        <div id="header">
-            {header}
+    return (
+        <div className="h-full w-full flex flex-col justify-between space-y-4 bg-white rounded-lg shadow-sm p-4">
+            <div id="header" className="border-b border-gray-100 pb-3">
+                {header}
+            </div>
+            <div id="body" className="flex-1 overflow-y-auto py-2">
+                {body}
+            </div>
+            <div id="footer" className="pt-3 border-t border-gray-100">
+                {footer}
+            </div>
         </div>
-        <div id="body" className={"h-full max-h-full overflow-y-auto"}>
-            {body}
-        </div>
-        <div id="footer" className={"w-full flex flex-row space-x-2"}>
-            {footer}
-        </div>
-    </div>
+    );
 }
 
 export type AcceptDeclineButtonsFooterProps = {
@@ -138,36 +144,76 @@ export type AcceptDeclineButtonsFooterProps = {
 }
 export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProps) {
     const clearRequest = useClearClientRequest();
+    const [isAccepting, setIsAccepting] = useState(false);
+
+    function handleAccept() {
+        setIsAccepting(true);
+        try {
+            props.accept();
+        } catch (error) {
+            console.error("Error accepting request:", error);
+            setIsAccepting(false);
+        }
+    }
 
     function decline() {
-        if (props.decline) { props.decline() }
-        else {
+        if (props.decline) { 
+            props.decline();
+        } else {
             clearRequest();
         }
     }
 
-    return <div className={"w-full flex  space-x-2"}>
-        <div className={"w-1/2"} onClick={props.accept}>
-            <Button className={"uppercase w-full"} variant={"contained"}>Accept</Button>
+    return (
+        <div className="w-full flex space-x-3">
+            <div className="w-1/2">
+                <Button 
+                    onClick={handleAccept}
+                    disabled={isAccepting}
+                    className="uppercase w-full py-2 bg-green-500 hover:bg-green-600 text-white transition-all duration-200"
+                    variant="contained"
+                    startIcon={isAccepting ? (
+                        <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : <CheckCircle className="h-4 w-4" />}
+                >
+                    {isAccepting ? "Processing..." : "Accept"}
+                </Button>
+            </div>
+            <div className="w-1/2">
+                <Button 
+                    onClick={decline}
+                    disabled={isAccepting}
+                    className="uppercase w-full py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                    variant="outlined"
+                >
+                    Decline
+                </Button>
+            </div>
         </div>
-        <div className={"w-1/2"} onClick={decline}>
-            <Button className={"uppercase w-full"} variant={"outlined"}>decline</Button>
-        </div>
-    </div>
+    );
 }
 
 
-function NotificationDataField( value: {value: string} ) {
-    return <p className="w-full max-w-full  overflow-x-auto p-2 bg-gray-100 rounded-md">
-        {value.value}
-    </p>
+function NotificationDataField({ value }: { value: string }) {
+    return (
+        <div className="w-full max-w-full overflow-hidden rounded-md bg-gray-50 border border-gray-100">
+            <div className="p-2.5 overflow-x-auto font-mono text-sm text-gray-700 break-all">
+                {value}
+            </div>
+        </div>
+    );
 }
 
-function ValueWithLabel({label, value}: { label: string, value: string }) {
-    return <div>
-        <p className="font-bold">{label}</p>
-        <NotificationDataField value={value}/>
-    </div>
+function ValueWithLabel({ label, value }: { label: string, value: string }) {
+    return (
+        <div className="mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>
+            <NotificationDataField value={value} />
+        </div>
+    );
 }
 
 export function OriginAndDateOfCurrentRequest() {
@@ -199,47 +245,121 @@ function PopupBody() {
 }
 
 function PopupSuccess() {
-    return <Box width={'100%'} height={"100%"} display={"flex"} justifyContent={"center"} alignItems={"center"} >
-        <img width={"100px"} src={image}/>
-    </Box>
+    return (
+        <Box 
+            width={'100%'} 
+            height={"100%"} 
+            display={"flex"} 
+            flexDirection={"column"}
+            justifyContent={"center"} 
+            alignItems={"center"}
+            className="p-6"
+        >
+            <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20 
+                }}
+                className="bg-green-100 rounded-full p-4 mb-4"
+            >
+                <CheckCircle className="text-green-600 h-12 w-12" />
+            </motion.div>
+
+            <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-center"
+            >
+                <Typography variant="h6" className="text-gray-800 mb-2">
+                    Success!
+                </Typography>
+                <Typography variant="body2" className="text-gray-600">
+                    Your request has been processed
+                </Typography>
+            </motion.div>
+        </Box>
+    );
 }
 
 function PopupError() {
     const wallet = useWallet();
     const [error, setError] = useRecoilState(errorState);
 
-    function renderNotificationError( error: unknown ) {
+    function renderNotificationError(error: unknown) {
         if (typeof error === 'string') {
-            return <NotificationDataField value={error}/>
+            return error;
         } else if (Array.isArray(error) && error.every(v => typeof v === 'string')) {
-            return  <NotificationDataField value={error.join(", ")}/>
-        } else if ( 'message' in error && typeof error.message === 'string' ) {
-            return  <NotificationDataField value={error.message}/>
+            return error.join(", ");
+        } else if ('message' in error && typeof error.message === 'string') {
+            return error.message;
         } else if (typeof error !== 'undefined' && 'toString' in error && typeof error.toString === 'function') {
-            return  <NotificationDataField value={error.toString()}/>
+            return error.toString();
         } else {
-            return <NotificationDataField value={`${error}`}/>
+            return `${error}`;
         }
     }
 
-    const header = <Typography variant={"h6"}>Error</Typography>
-    const body = <>
-        <p>
-            An error occurred:
-        </p>
-        {renderNotificationError(error)}
-        <p>
+    const errorMessage = renderNotificationError(error);
 
-            The error might be caused by an invalid configuration of the server or an incorrect setup of your
-            wallet.
-            Please ensure that the application and your wallet are connected to the same network to avoid
-            compatibility issues. You are currently connected to the following node:
-        </p>
-        <NotificationDataField value={wallet?.nodeEndpoint!}/>
-    </>
-    const footer = <Button className={"uppercase w-full"} onClick={() => setError(undefined)} variant={"contained"}>Close</Button>
+    const header = (
+        <div className="flex items-center">
+            <div className="bg-red-100 p-2 rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+            </div>
+            <Typography variant="h6" className="text-gray-800">
+                Error Occurred
+            </Typography>
+        </div>
+    );
 
-    return <PopupNotificationLayout header={header} body={body} footer={footer}/>
+    const body = (
+        <div className="space-y-4">
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-red-700">
+                            {errorMessage}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <p className="text-sm text-gray-700 mb-2">
+                    The error might be caused by an invalid configuration of the server or an incorrect setup of your wallet.
+                </p>
+                <p className="text-sm text-gray-700 mb-4">
+                    Please ensure that the application and your wallet are connected to the same network to avoid compatibility issues.
+                </p>
+
+                <div className="mb-2 text-sm font-medium text-gray-700">Current node:</div>
+                <NotificationDataField value={wallet?.nodeEndpoint!} />
+            </div>
+        </div>
+    );
+
+    const footer = (
+        <Button 
+            className="uppercase w-full py-2 bg-red-500 hover:bg-red-600 text-white transition-all duration-200" 
+            onClick={() => setError(undefined)} 
+            variant="contained"
+        >
+            Dismiss
+        </Button>
+    );
+
+    return <PopupNotificationLayout header={header} body={body} footer={footer} />;
 }
 
 
@@ -335,11 +455,39 @@ function PopupGetEmail() {
 }
 
 function PopupIdleBody() {
-    return <div className={"h-full w-full"}>
-        <div id="popup-dashboard-main-container" className="h-full w-full flex justify-center items-center">
-            <img src="/assets/img/logo.svg" className="w-20 h-20" alt=""/>
+    return (
+        <div className="h-full w-full">
+            <div className="h-full w-full flex flex-col justify-center items-center">
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 20,
+                        duration: 0.5
+                    }}
+                >
+                    <img 
+                        src="/assets/img/logo.svg" 
+                        className="w-24 h-24 mb-6" 
+                        alt="Carmentis Logo"
+                    />
+                </motion.div>
+                <motion.div
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-center"
+                >
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Carmentis Wallet</h2>
+                    <p className="text-sm text-gray-600 max-w-xs">
+                        Your secure gateway to the Carmentis ecosystem
+                    </p>
+                </motion.div>
+            </div>
         </div>
-    </div>
+    );
 }
 
 

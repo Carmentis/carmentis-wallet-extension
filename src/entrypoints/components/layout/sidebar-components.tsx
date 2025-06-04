@@ -1,27 +1,38 @@
-import {Tooltip} from '@mui/material';
-import {useLocation, useNavigate} from 'react-router';
+import { Tooltip } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router';
+import { ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 export interface SidebarLinkProps {
-	icon: string,
+	icon: ReactNode,
 	text: string,
 	link: string,
 	activeRegex: RegExp,
 }
 
-export function SidebarItem({icon,text, link, activeRegex}: SidebarLinkProps) {
+export function SidebarItem({icon, text, link, activeRegex}: SidebarLinkProps) {
 	const navigate = useNavigate();
-
+	const location = useLocation();
+	const isActive = activeRegex.test(location.pathname);
 
 	function go() {
-		navigate(link)
+		navigate(link);
 	}
 
-	const location = useLocation();
-	const activeItemClasses = activeRegex.test(location.pathname) && "bg-blue-50 text-blue-500";
-
-	return <Tooltip title={text} placement={"right"} onClick={go}>
-		<div className={`flex w-full justify-center items-center h-11 cursor-pointer ${activeItemClasses}`}>
-			<i className={`bi ${icon} text-lg`} />
-		</div>
-	</Tooltip>
+	return (
+		<Tooltip title={text} placement="right">
+			<motion.div 
+				onClick={go}
+				whileHover={{ scale: 1.05 }}
+				whileTap={{ scale: 0.95 }}
+				className={`flex w-full justify-center items-center h-11 cursor-pointer transition-colors duration-200 ${
+					isActive ? "bg-green-50 text-green-600" : "text-gray-600 hover:text-green-500"
+				}`}
+			>
+				<div className="text-lg">
+					{icon}
+				</div>
+			</motion.div>
+		</Tooltip>
+	);
 }

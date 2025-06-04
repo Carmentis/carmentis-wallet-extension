@@ -24,6 +24,8 @@ import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state
 import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
 import {Badge, Chip, Typography} from "@mui/material";
 import {useAccountBalanceHook} from "@/entrypoints/components/hooks/sdk.hook.tsx";
+import {Email, MoreVert} from "@mui/icons-material";
+import {motion} from "framer-motion";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -109,20 +111,34 @@ function ClickableAppNotifications() {
     const {notifications, isLoading} = useApplicationNotificationHook();
 
     const badgeContent = isLoading ? undefined : notifications.length;
-    return <Badge onClick={() => actions.showNotifications()} badgeContent={badgeContent} color={"primary"}>
-        <i className={"bi bi-envelope text-xl"}></i>
-    </Badge>
+    return (
+        <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+        >
+            <Badge 
+                onClick={() => actions.showNotifications()} 
+                badgeContent={badgeContent} 
+                color="primary"
+                className="cursor-pointer"
+            >
+                <Email className="text-gray-600" fontSize="medium" />
+            </Badge>
+        </motion.div>
+    );
 }
 
 function ClickableThreeDots(input: {onClick: () => void}) {
-    return <button onClick={input.onClick}
-                   className="inline-flex w-full justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                   id="menu-button" aria-expanded="true" aria-haspopup="true">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-             strokeWidth="1.5"
-             stroke="currentColor" className="size-6">
-            <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-        </svg>
-    </button>
+    return (
+        <motion.button 
+            onClick={input.onClick}
+            className="inline-flex justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            aria-expanded="true" 
+            aria-haspopup="true"
+        >
+            <MoreVert fontSize="medium" />
+        </motion.button>
+    );
 }

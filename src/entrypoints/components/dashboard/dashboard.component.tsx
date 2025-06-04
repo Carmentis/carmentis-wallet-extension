@@ -23,7 +23,7 @@ import Parameters from '@/entrypoints/components/dashboard/parameters.component.
 import {DropdownAccountSelection} from '@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx';
 import Skeleton from 'react-loading-skeleton';
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
-
+import { motion } from "framer-motion";
 import 'react-loading-skeleton/dist/skeleton.css';
 import {
 	activeAccountState,
@@ -52,8 +52,19 @@ import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/virtual-
 import ProofChecker from "@/entrypoints/components/dashboard/proof-checker.tsx";
 import {useAsync, useAsyncFn} from "react-use";
 import {DashboardNavbar} from "@/entrypoints/components/dashboard/dashboard-navbar.tsx";
-import {AddCard, Checklist, Loop, MenuBook, Search} from "@mui/icons-material";
-import {Boxes, Check2Square, Coin, GearFill} from "react-bootstrap-icons";
+import {
+	AddCard, 
+	Checklist, 
+	Home, 
+	MenuBook, 
+	Search, 
+	History, 
+	SwapHoriz, 
+	Settings, 
+	Storage, 
+	CheckCircle, 
+	NetworkCheck
+} from "@mui/icons-material";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -125,12 +136,12 @@ export function Dashboard(): ReactElement {
 
 function DashboardSidebar() {
 	return <>
-		<SidebarItem icon={'bi-house'} text={'Home'} activeRegex={/\/$/} link={'/'} />
-		<SidebarItem icon={'bi-box-fill'} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
-		<SidebarItem icon={'bi-arrows'} text={'Token transfer'} activeRegex={/transfer$/} link={'/transfer'} />
-		<SidebarItem icon={'bi-clock'} text={'History'} activeRegex={/history$/} link={'/history'} />
-		<SidebarItem icon={'bi-check'} text={'Proof checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
-		<SidebarItem icon={'bi-gear'} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
+		<SidebarItem icon={<Home />} text={'Home'} activeRegex={/\/$/} link={'/'} />
+		<SidebarItem icon={<Storage />} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
+		<SidebarItem icon={<SwapHoriz />} text={'Token transfer'} activeRegex={/transfer$/} link={'/transfer'} />
+		<SidebarItem icon={<History />} text={'History'} activeRegex={/history$/} link={'/history'} />
+		<SidebarItem icon={<CheckCircle />} text={'Proof checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
+		<SidebarItem icon={<Settings />} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
 		<NodeConnectionStatusSidebarItem/>
 	</>;
 }
@@ -158,26 +169,34 @@ function NodeConnectionStatusSidebarItem() {
 		sendPing()
 	}, [node]);
 
-
-
-	if (loaded) return <Tooltip title={`Connecting to ${node}...`} placement={"right"}>
-		<div className={"flex w-full justify-center items-center h-11"}>
-			<div className="w-5">
-				<SpinningWheel/>
+	if (loaded) return (
+		<Tooltip title={`Connecting to ${node}...`} placement="right">
+			<div className="flex w-full justify-center items-center h-11">
+				<div className="w-5">
+					<SpinningWheel/>
+				</div>
 			</div>
-		</div>
-	</Tooltip>
+		</Tooltip>
+	);
 
 	const tooltipMessage = success ?
 		`Connected to node ${node}` :
 		`Connection failure at ${node}`;
-	return <Tooltip title={tooltipMessage} placement={"right"}>
-		<div className={"flex w-full justify-center items-center h-11"} onClick={sendPing}>
-			<Badge color={success ? "success" : "error"} variant="dot" invisible={false}>
-				<i className={"bi bi-hdd-network text-lg"}></i>
-			</Badge>
-		</div>
-	</Tooltip>
+
+	return (
+		<Tooltip title={tooltipMessage} placement="right">
+			<motion.div 
+				className="flex w-full justify-center items-center h-11 cursor-pointer"
+				onClick={sendPing}
+				whileHover={{ scale: 1.05 }}
+				whileTap={{ scale: 0.95 }}
+			>
+				<Badge color={success ? "success" : "error"} variant="dot" invisible={false}>
+					<NetworkCheck className="text-lg" />
+				</Badge>
+			</motion.div>
+		</Tooltip>
+	);
 }
 
 
@@ -195,12 +214,16 @@ function NodeConnectionStatusSidebarItem() {
  * welcome cards, notification card, and virtual blockchains list.
  */
 function DashboardHome() {
-	return <>
-		<div className="container mx-auto px-4">
-			<DashboardOverview/>
-		</div>
-
-	</>;
+	return (
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			transition={{ duration: 0.5 }}
+			className="container mx-auto px-4"
+		>
+			<DashboardOverview />
+		</motion.div>
+	);
 }
 
 
@@ -212,64 +235,81 @@ function DashboardOverview() {
 	const activeAccount = useAuthenticatedAccount();
 	const balance = useAccountBalanceHook();
 	const numberVb = useAsync(async () => {
-		const db = await  AccountDataStorage.connectDatabase(activeAccount);
+		const db = await AccountDataStorage.connectDatabase(activeAccount);
 		return db.getNumberOfApplicationVirtualBlockchainId();
-	})
+	});
 
 	function renderWelcomeTitle() {
-		return <Typography variant={"h4"}>Welcome, {activeAccount.firstname}!</Typography>
+		return (
+			<motion.div
+				initial={{ opacity: 0, y: -20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.5 }}
+			>
+				<Typography variant="h4" className="font-bold text-gray-800">
+					Welcome, {activeAccount.firstname}!
+				</Typography>
+				<Typography variant="body1" className="text-gray-600 mt-2">
+					Here's an overview of your wallet activity
+				</Typography>
+			</motion.div>
+		);
 	}
 
-
 	function renderNumberOfApplicationsContent() {
-		const title = "Number of activities"
-		if (numberVb.loading) return <InfoCard title={title} value={<Skeleton/>}/>
+		const title = "Activities";
+		if (numberVb.loading) return <InfoCard title={title} value={<Skeleton height={32} width={80} />} />;
 		if (numberVb.error || typeof numberVb.value !== 'number') {
-			console.error(numberVb.error)
-			return <InfoCard title={title} value={"--"}/>
+			console.error(numberVb.error);
+			return <InfoCard title={title} value={"--"} />;
 		}
-		return <InfoCard title={title} value={numberVb.value}/>
+		return <InfoCard title={title} value={numberVb.value} />;
 	}
 
 	function renderBalanceContent() {
-		if (balance.isLoading) return <InfoCard title={"Balance"} value={<Skeleton/>}/>
+		if (balance.isLoading) return <InfoCard title={"Balance"} value={<Skeleton height={32} width={120} />} />;
 		if (balance.error || typeof balance.data !== 'number') {
-			return  <InfoCard title={"Balance"} value={"--"}/>
+			return <InfoCard title={"Balance"} value={"--"} />;
 		}
-		return <InfoCard title={"Balance"} value={`${balance.data} CMTS`}/>
+		return <InfoCard title={"Balance"} value={`${balance.data} CMTS`} />;
 	}
-	
 
+	return (
+		<Box display="flex" flexDirection="column" gap={4} pt={8}>
+			<Box mb={6}>
+				{renderWelcomeTitle()}
+			</Box>
 
+			<Box display="flex" flexWrap="wrap" gap={4}>
+				{renderNumberOfApplicationsContent()}
+				{renderBalanceContent()}
+			</Box>
 
-
-
-	return <Box display={"flex"} flexDirection={"column"} gap={2} pt={10}>
-		<Box mb={4}>
-			{renderWelcomeTitle()}
+			<DashboardLinks />
 		</Box>
-		<Box display="flex" flexWrap={"wrap"} gap={2}>
-			{renderNumberOfApplicationsContent()}
-			{renderBalanceContent()}
-		</Box>
-
-		<DashboardLinks/>
-	</Box>
+	);
 }
 
 
 function InfoCard({title, value}: { title: string, value: string | number | JSX.Element }) {
 	return (
-		<Card className="flex-1">
-			<CardContent className="flex flex-col items-start">
-				<Typography  className="mb-2 text-gray-800">
-					{title}
-				</Typography>
-				<Typography variant="h6" className="text-gray-900 font-semibold">
-					{value}
-				</Typography>
-			</CardContent>
-		</Card>
+		<motion.div
+			initial={{ opacity: 0, y: 10 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.3 }}
+			className="flex-1"
+		>
+			<Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+				<CardContent className="flex flex-col items-start p-6">
+					<Typography className="mb-2 text-gray-600 font-medium">
+						{title}
+					</Typography>
+					<Typography variant="h5" className="text-gray-800 font-semibold">
+						{value}
+					</Typography>
+				</CardContent>
+			</Card>
+		</motion.div>
 	);
 }
 
@@ -285,22 +325,41 @@ function DashboardLinks() {
 
 	const items = [
 		{title: 'Documentation', icon: <MenuBook/>, description: "Read the documentation to get help.", onClick: () => open('https://docs.carmentis.io')},
-		{title: 'Activity', icon: <MenuBook/>, description: "Check your activity.", onClick: () => navigate('/activity')},
+		{title: 'Activity', icon: <Storage/>, description: "Check your activity.", onClick: () => navigate('/activity')},
 		{title: 'Explorer', icon: <Search/>, description: "Explore the chain.", onClick: () => open(explorerUrl)},
 		{title: 'Purchase Tokens', icon: <AddCard/>, description: "Purchase Carmentis Tokens", onClick: () => open(exchangeLink)},
-		{title: 'Check Proof', icon: <Checklist/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
-		{title: 'Parameters', icon: <GearFill/>, description: "Change parameters of your wallet.", onClick: () => navigate("/parameters")},
+		{title: 'Check Proof', icon: <CheckCircle/>, description: "Verify a proof", onClick: () => open(`${explorerUrl}/proofChecker`)},
+		{title: 'Parameters', icon: <Settings/>, description: "Change parameters of your wallet.", onClick: () => navigate("/parameters")},
+	];
 
-
-	]
-
-	return <Box display={"flex"} flexDirection={"column"} gap={2} mt={10}>
-		<Typography variant={"h6"}>Useful Links</Typography>
-		<Box display={"flex"} flexWrap={"wrap"} gap={2}>
-			{items.map(i => <SmallInfoCard icon={i.icon} title={i.title} description={i.description} onClick={() => i.onClick()} />
-			)}
+	return (
+		<Box display="flex" flexDirection="column" gap={3} mt={10}>
+			<Typography variant="h6" className="font-semibold text-gray-800">
+				Useful Links
+			</Typography>
+			<Box display="flex" flexWrap="wrap" gap={3}>
+				{items.map((item, index) => (
+					<motion.div
+						key={item.title}
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ 
+							delay: index * 0.1,
+							duration: 0.3,
+							ease: "easeOut"
+						}}
+					>
+						<SmallInfoCard 
+							icon={item.icon} 
+							title={item.title} 
+							description={item.description} 
+							onClick={() => item.onClick()} 
+						/>
+					</motion.div>
+				))}
+			</Box>
 		</Box>
-	</Box>
+	);
 }
 function SmallInfoCard({icon, title, description, onClick}: {
 	icon: JSX.Element,
@@ -309,20 +368,28 @@ function SmallInfoCard({icon, title, description, onClick}: {
 	onClick: () => void
 }) {
 	return (
-		<Card className="flex-1 cursor-pointer hover:shadow-lg transition-shadow min-w-72 w-72"
-			  onClick={() => onClick()}>
-			<CardContent className="flex flex-col items-center">
-				<div className="mb-2 text-primary">
-					{icon}
-				</div>
-				<Typography variant="h6" className="text-gray-900 font-semibold">
-					{title}
-				</Typography>
-				<Typography variant="body2" className="text-gray-600 text-center">
-					{description}
-				</Typography>
-			</CardContent>
-		</Card>
+		<motion.div
+			whileHover={{ scale: 1.03 }}
+			whileTap={{ scale: 0.97 }}
+			className="flex-1"
+		>
+			<Card 
+				className="cursor-pointer min-w-72 w-72 overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+				onClick={() => onClick()}
+			>
+				<CardContent className="flex flex-col items-center p-6">
+					<div className="mb-4 text-green-500 bg-green-50 p-3 rounded-full">
+						{icon}
+					</div>
+					<Typography variant="h6" className="text-gray-800 font-semibold mb-2">
+						{title}
+					</Typography>
+					<Typography variant="body2" className="text-gray-600 text-center">
+						{description}
+					</Typography>
+				</CardContent>
+			</Card>
+		</motion.div>
 	);
 }
 
