@@ -67,13 +67,29 @@ export default function ProofChecker() {
             variants={pageVariants}
             className="max-w-6xl mx-auto"
         >
-            <Box className="mb-6">
-                <Typography variant="h4" className="font-bold text-gray-800 mt-4 mb-2">
-                    Blockchain Proof Verification
-                </Typography>
-                <Typography variant="body1" className="text-gray-600">
-                    Upload and verify blockchain proofs to validate data integrity and authenticity
-                </Typography>
+            <Box className="mb-8">
+                <Paper elevation={0} className="bg-gradient-to-r from-blue-50 to-green-50 border border-gray-100 rounded-lg p-6 mb-6">
+                    <Box className="flex flex-col md:flex-row md:items-center justify-between">
+                        <Box>
+                            <Breadcrumbs className="mb-3">
+                                <Typography className="text-blue-600 hover:text-blue-800 cursor-pointer">Dashboard</Typography>
+                                <Typography className="font-medium">Proof Checker</Typography>
+                            </Breadcrumbs>
+                            <Typography variant="h4" className="font-bold text-gray-800 mb-2">
+                                Blockchain Proof Verification
+                            </Typography>
+                            <Typography variant="body1" className="text-gray-600 max-w-2xl">
+                                Upload and verify blockchain proofs to validate data integrity and authenticity on the Carmentis network
+                            </Typography>
+                        </Box>
+                        <Avatar 
+                            className="hidden md:flex bg-blue-100 text-blue-600 mt-4 md:mt-0 w-16 h-16"
+                            sx={{ width: 64, height: 64 }}
+                        >
+                            <VerifiedUser fontSize="large" />
+                        </Avatar>
+                    </Box>
+                </Paper>
             </Box>
 
             <ErrorBoundary fallback={<ProofCheckerFailure error={"Test"} />}>
@@ -114,18 +130,18 @@ function ProofCheckerFailure({ error }: { error: string }) {
             variants={errorVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col items-center justify-center py-12"
+            className="flex flex-col items-center justify-center py-16"
         >
-            <Paper elevation={0} className="border border-red-100 rounded-lg p-8 max-w-md mx-auto text-center">
-                <Avatar className="mx-auto mb-4 bg-red-50 text-red-500 w-20 h-20">
-                    <ErrorIcon fontSize="large" />
+            <Paper elevation={0} className="border border-red-100 rounded-lg p-10 max-w-md mx-auto text-center shadow-sm">
+                <Avatar className="mx-auto mb-6 bg-red-50 text-red-500 w-24 h-24">
+                    <ErrorIcon sx={{ fontSize: 40 }} />
                 </Avatar>
 
-                <Typography variant="h5" className="font-bold text-gray-800 mb-2">
+                <Typography variant="h5" className="font-bold text-gray-800 mb-3">
                     Verification Failed
                 </Typography>
 
-                <Typography variant="body1" className="text-gray-600 mb-6">
+                <Typography variant="body1" className="text-gray-600 mb-8">
                     We couldn't verify this proof. The file might be malformed or corrupted.
                 </Typography>
 
@@ -134,6 +150,8 @@ function ProofCheckerFailure({ error }: { error: string }) {
                     color="error"
                     startIcon={<Refresh />}
                     onClick={() => window.location.reload()}
+                    size="large"
+                    className="px-6 py-2"
                 >
                     Try Again
                 </Button>
@@ -211,11 +229,11 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
             animate="visible"
             className="max-w-3xl mx-auto"
         >
-            <Grid container spacing={4}>
+            <Grid container spacing={6}>
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden h-full">
-                        <Box className="p-4 bg-blue-50 border-b border-gray-100 flex items-center">
-                            <Avatar className="bg-blue-100 text-blue-600 mr-3">
+                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <Box className="p-5 bg-blue-50 border-b border-gray-100 flex items-center">
+                            <Avatar className="bg-blue-100 text-blue-600 mr-4">
                                 <FileUpload />
                             </Avatar>
                             <Typography variant="h6" className="font-semibold text-gray-800">
@@ -223,7 +241,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                             </Typography>
                         </Box>
 
-                        <CardContent className="p-6 flex flex-col items-center">
+                        <CardContent className="p-8 flex flex-col items-center">
                             <input
                                 type="file"
                                 accept="application/json"
@@ -233,7 +251,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                             />
 
                             <Box 
-                                className={`w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
+                                className={`w-full border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors duration-200 ${
                                     isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
                                 }`}
                                 onClick={() => fileInputRef.current?.click()}
@@ -242,27 +260,29 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                                 onDrop={handleDrop}
                             >
                                 <Avatar 
-                                    className="mx-auto mb-4 bg-blue-50 text-blue-500 w-16 h-16"
-                                    sx={{ width: 64, height: 64 }}
+                                    className="mx-auto mb-6 bg-blue-50 text-blue-500 w-20 h-20"
+                                    sx={{ width: 80, height: 80 }}
                                 >
                                     <UploadFile fontSize="large" />
                                 </Avatar>
 
-                                <Typography variant="h6" className="font-medium text-gray-800 mb-1">
+                                <Typography variant="h6" className="font-medium text-gray-800 mb-3">
                                     {fileName ? fileName : 'Drag & Drop or Click to Upload'}
                                 </Typography>
 
-                                <Typography variant="body2" color="text.secondary" className="mb-4">
+                                <Typography variant="body2" color="text.secondary" className="mb-6">
                                     Upload a JSON proof file to verify
                                 </Typography>
 
                                 <Button
                                     variant="outlined"
+                                    size="large"
                                     startIcon={<FileUpload />}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         fileInputRef.current?.click();
                                     }}
+                                    className="px-6 py-2"
                                 >
                                     Select File
                                 </Button>
@@ -272,9 +292,9 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden h-full">
-                        <Box className="p-4 bg-green-50 border-b border-gray-100 flex items-center">
-                            <Avatar className="bg-green-100 text-green-600 mr-3">
+                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <Box className="p-5 bg-green-50 border-b border-gray-100 flex items-center">
+                            <Avatar className="bg-green-100 text-green-600 mr-4">
                                 <Info />
                             </Avatar>
                             <Typography variant="h6" className="font-semibold text-gray-800">
@@ -282,15 +302,15 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                             </Typography>
                         </Box>
 
-                        <CardContent className="p-6">
-                            <Typography variant="body1" className="mb-4">
+                        <CardContent className="p-8">
+                            <Typography variant="body1" className="mb-6">
                                 Blockchain proofs provide cryptographic verification of data integrity and authenticity.
                             </Typography>
 
-                            <Stepper orientation="vertical" className="mt-4">
+                            <Stepper orientation="vertical" className="mt-6">
                                 <Step active={true} completed={true}>
                                     <StepLabel>Upload Proof File</StepLabel>
-                                    <StepContent>
+                                    <StepContent className="pb-4 pt-2">
                                         <Typography variant="body2" color="text.secondary">
                                             Upload a JSON proof file exported from a Carmentis application.
                                         </Typography>
@@ -299,7 +319,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
 
                                 <Step active={true} completed={false}>
                                     <StepLabel>Verification Process</StepLabel>
-                                    <StepContent>
+                                    <StepContent className="pb-4 pt-2">
                                         <Typography variant="body2" color="text.secondary">
                                             Our system will cryptographically verify the proof against the blockchain.
                                         </Typography>
@@ -308,7 +328,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
 
                                 <Step active={true} completed={false}>
                                     <StepLabel>View Results</StepLabel>
-                                    <StepContent>
+                                    <StepContent className="pb-4 pt-2">
                                         <Typography variant="body2" color="text.secondary">
                                             See detailed verification results and proof data visualization.
                                         </Typography>
@@ -411,33 +431,37 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-6"
+            className="space-y-8"
         >
             <motion.div variants={itemVariants}>
-                <Box className="flex justify-between items-center mb-6">
-                    <Box>
-                        <Typography variant="h5" className="font-bold text-gray-800 mb-1">
-                            Proof Verification Results
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            {header.title}
-                        </Typography>
-                    </Box>
+                <Paper elevation={0} className="border border-gray-100 rounded-lg p-6 mb-2 shadow-sm">
+                    <Box className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <Box>
+                            <Typography variant="h5" className="font-bold text-gray-800 mb-2">
+                                Proof Verification Results
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                {header.title}
+                            </Typography>
+                        </Box>
 
-                    <Button 
-                        variant="outlined" 
-                        startIcon={<Refresh />}
-                        onClick={() => resetProof()}
-                    >
-                        Verify Another Proof
-                    </Button>
-                </Box>
+                        <Button 
+                            variant="outlined" 
+                            startIcon={<Refresh />}
+                            onClick={() => resetProof()}
+                            size="large"
+                            className="px-4"
+                        >
+                            Verify Another Proof
+                        </Button>
+                    </Box>
+                </Paper>
             </motion.div>
 
             <motion.div variants={itemVariants}>
-                <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-                    <Box className={`p-4 ${data.verified ? 'bg-green-50' : 'bg-red-50'} border-b border-gray-100 flex items-center`}>
-                        <Avatar className={`${data.verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} mr-3`}>
+                <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <Box className={`p-5 ${data.verified ? 'bg-green-50' : 'bg-red-50'} border-b border-gray-100 flex items-center`}>
+                        <Avatar className={`${data.verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} mr-4`} sx={{ width: 40, height: 40 }}>
                             {data.verified ? <VerifiedUser /> : <ErrorIcon />}
                         </Avatar>
                         <Typography variant="h6" className="font-semibold text-gray-800">
@@ -450,10 +474,10 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
                             <tbody>
                                 {rows.map((row, index) => (
                                     <TableRow key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                                        <TableCell className="font-medium text-gray-700 w-1/3">
+                                        <TableCell className="font-medium text-gray-700 w-1/3 py-4 px-6">
                                             {row.header}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="py-4 px-6">
                                             {row.value}
                                         </TableCell>
                                     </TableRow>
@@ -466,9 +490,9 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
 
             {data.records && (
                 <motion.div variants={itemVariants}>
-                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-                        <Box className="p-4 bg-blue-50 border-b border-gray-100 flex items-center">
-                            <Avatar className="bg-blue-100 text-blue-600 mr-3">
+                    <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <Box className="p-5 bg-blue-50 border-b border-gray-100 flex items-center">
+                            <Avatar className="bg-blue-100 text-blue-600 mr-4" sx={{ width: 40, height: 40 }}>
                                 <DataObject />
                             </Avatar>
                             <Typography variant="h6" className="font-semibold text-gray-800">
@@ -476,7 +500,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
                             </Typography>
                         </Box>
 
-                        <CardContent className="p-6">
+                        <CardContent className="p-8">
                             <ProofRecordViewer records={data.records} />
                         </CardContent>
                     </Paper>
@@ -512,11 +536,15 @@ function ProofRecordViewer({ records }: { records: { height: number, record: Rec
         }
     };
 
+    // Import Block icon
+    const Block = DataObject;
+
     return (
         <motion.div
             variants={timelineVariants}
             initial="hidden"
             animate="visible"
+            className="mt-2"
         >
             <Timeline
                 sx={{
@@ -524,22 +552,41 @@ function ProofRecordViewer({ records }: { records: { height: number, record: Rec
                         flex: 0,
                         padding: 0,
                     },
+                    padding: '12px 0',
                 }}
             >
                 {records.map((record, i) => (
                     <motion.div key={i} variants={itemVariants}>
                         <TimelineItem>
                             <TimelineSeparator>
-                                <TimelineDot color="primary" />
-                                {i < records.length - 1 && <TimelineConnector />}
+                                <TimelineDot 
+                                    color="primary" 
+                                    sx={{ 
+                                        width: 16, 
+                                        height: 16,
+                                        margin: '8px 0'
+                                    }} 
+                                />
+                                {i < records.length - 1 && (
+                                    <TimelineConnector sx={{ minHeight: 40 }} />
+                                )}
                             </TimelineSeparator>
-                            <TimelineContent>
-                                <Card className="border border-gray-100 shadow-sm mb-4">
-                                    <CardContent>
-                                        <Typography variant="h6" className="font-medium text-gray-800 mb-3">
+                            <TimelineContent sx={{ py: '12px', px: 2 }}>
+                                <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 mb-6 overflow-hidden">
+                                    <Box className="p-4 bg-blue-50 border-b border-gray-100 flex items-center">
+                                        <Avatar className="bg-blue-100 text-blue-600 mr-3" sx={{ width: 32, height: 32 }}>
+                                            <Block fontSize="small" />
+                                        </Avatar>
+                                        <Typography variant="h6" className="font-medium text-gray-800">
                                             Block {record.height}
                                         </Typography>
-                                        <Divider className="mb-3" />
+                                        <Chip 
+                                            label={`#${record.height}`} 
+                                            size="small"
+                                            className="ml-auto bg-blue-100 text-blue-700"
+                                        />
+                                    </Box>
+                                    <CardContent className="p-6">
                                         <BlockViewer initialPath={[]} data={record.record} />
                                     </CardContent>
                                 </Card>
