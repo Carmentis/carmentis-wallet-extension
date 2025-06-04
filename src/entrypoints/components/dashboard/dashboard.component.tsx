@@ -53,7 +53,7 @@ import {
 import { SpinningWheel } from '@/entrypoints/components/SpinningWheel.tsx';
 import axios from 'axios';
 import { useRecoilValue } from 'recoil';
-import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
+//import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
 import { AccountDataStorage } from "@/utils/db/account-data-storage.ts";
 import NotificationRightBar from "@/entrypoints/components/notification-rightbar.component.tsx";
 import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
@@ -84,6 +84,7 @@ import {
     BarChart,
     AccountBalance
 } from "@mui/icons-material";
+import TokenTransferPage from "@/entrypoints/components/dashboard/token-transfer.component.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 

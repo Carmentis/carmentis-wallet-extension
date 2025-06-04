@@ -128,7 +128,7 @@ export function DashboardNavbar() {
       animate="visible"
       className="w-full"
     >
-      <AppBar position="static" elevation={0} className="bg-white border-b border-gray-200">
+      <AppBar position="static" elevation={0} color={"transparent"} className="bg-white border-b border-gray-200">
         <Toolbar className="flex justify-between items-center">
           {/* Left side - Logo and Account Selection */}
           <motion.div variants={itemVariants} className="flex items-center">
