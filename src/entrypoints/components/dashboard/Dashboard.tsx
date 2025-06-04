@@ -19,8 +19,8 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import '../../main/global.css';
 
 import { Route, Routes, useNavigate } from 'react-router';
-import Parameters from '@/entrypoints/components/dashboard/parameters.component.tsx';
-import { DropdownAccountSelection } from '@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx';
+import Parameters from '@/entrypoints/components/dashboard/Parameters.tsx';
+import { DropdownAccountSelection } from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
 import Skeleton from 'react-loading-skeleton';
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,16 +55,15 @@ import axios from 'axios';
 import { useRecoilValue } from 'recoil';
 //import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
 import { AccountDataStorage } from "@/utils/db/account-data-storage.ts";
-import NotificationRightBar from "@/entrypoints/components/notification-rightbar.component.tsx";
+import NotificationRightBar from "@/entrypoints/components/NotificationRightBar.tsx";
 import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
 import { useApplicationNotificationHook } from "@/entrypoints/states/application-nofications.state.tsx";
 import { getUserKeyPair } from "@/entrypoints/main/wallet.tsx";
-import { BlockViewer } from "@/entrypoints/components/popup/popup-event-approval.tsx";
-import ActivityPage from "@/entrypoints/components/dashboard/activity.tsx";
-import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/virtual-blockchain-viewer.tsx";
-import ProofChecker from "@/entrypoints/components/dashboard/proof-checker.tsx";
+import ActivityPage from "@/entrypoints/components/dashboard/Activity.tsx";
+import VirtualBlockchainViewer from "@/entrypoints/components/dashboard/VirtualBlockchainViewer.tsx";
+import ProofChecker from "@/entrypoints/components/dashboard/ProofChecker.tsx";
 import { useAsync, useAsyncFn } from "react-use";
-import { DashboardNavbar } from "@/entrypoints/components/dashboard/dashboard-navbar.tsx";
+import { DashboardNavbar } from "@/entrypoints/components/dashboard/DashboardNavbar.tsx";
 import {
     AddCard,
     Checklist,
@@ -84,7 +83,7 @@ import {
     BarChart,
     AccountBalance
 } from "@mui/icons-material";
-import TokenTransferPage from "@/entrypoints/components/dashboard/token-transfer.component.tsx";
+import TokenTransferPage from "@/entrypoints/components/dashboard/TokenTransfer.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 

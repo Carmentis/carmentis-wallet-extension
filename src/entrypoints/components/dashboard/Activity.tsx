@@ -35,7 +35,7 @@ import {
     Button
 } from "@mui/material";
 import Skeleton from "react-loading-skeleton";
-import { BlockViewer } from "@/entrypoints/components/popup/popup-event-approval.tsx";
+
 import { useNavigate } from "react-router";
 import { DynamicTableComponent } from "@/entrypoints/components/async-row-table.tsx";
 import { motion, AnimatePresence } from "framer-motion";

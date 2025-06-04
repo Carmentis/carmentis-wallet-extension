@@ -40,7 +40,7 @@ import {
 } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { getUserKeyPair, Wallet } from '@/entrypoints/main/wallet.tsx';
-import { useToast } from "@/entrypoints/components/authentication-manager.tsx";
+import { useToast } from "@/entrypoints/components/AuthenticationManager.tsx";
 import Skeleton from "react-loading-skeleton";
 import {
     AccountCircle,

@@ -16,7 +16,7 @@
  */
 
 
-import {AuthenticationManager} from '@/entrypoints/components/authentication-manager.tsx';
+import {AuthenticationManager} from '@/entrypoints/components/AuthenticationManager.tsx';
 import {ClientRequestStateWriter} from '@/entrypoints/components/client-request-state-writer.tsx';
 import {useApplicationStatus} from '@/entrypoints/contexts/application-status.context.tsx';
 import {
@@ -28,10 +28,10 @@ import {Splashscreen} from '@/entrypoints/components/Splashscreen.tsx';
 import {NoWalletDetected} from '@/entrypoints/components/popup/NoWalletDetected.tsx';
 import Login from '@/entrypoints/components/Login.tsx';
 import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
-import {PopupDashboard} from '@/entrypoints/components/popup/popup-dashboard.tsx';
+import {PopupDashboard} from '@/entrypoints/components/popup/PopupDashboard.tsx';
 import {useRecoilValue} from "recoil";
 import OnBoarding from "@/entrypoints/components/onboarding/OnBoarding.tsx";
-import Dashboard from "@/entrypoints/components/dashboard/dashboard.component.tsx";
+import Dashboard from "@/entrypoints/components/dashboard/Dashboard.tsx";
 import {PropsWithChildren} from "react";
 
 export function PopupAppEntrypoint() {

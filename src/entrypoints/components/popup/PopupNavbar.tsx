@@ -16,7 +16,7 @@
  */
 
 import React, {useState} from "react";
-import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
+import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/DropdownAccountSelection.tsx";
 import {useAuthenticationContext, walletState} from '@/entrypoints/contexts/authentication.context.tsx';
 import {useRecoilValue} from "recoil";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";

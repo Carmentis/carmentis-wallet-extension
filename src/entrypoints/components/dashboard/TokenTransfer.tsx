@@ -42,7 +42,7 @@ import { Formatter } from '@/entrypoints/main/Formatter.tsx';
 import { transferTokensToPublicKey } from '@/entrypoints/components/hooks/sdk.hook.tsx';
 import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
 import { Encoders } from '@/entrypoints/main/Encoders.tsx';
-import { useToast } from "@/entrypoints/components/authentication-manager.tsx";
+import { useToast } from "@/entrypoints/components/AuthenticationManager.tsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

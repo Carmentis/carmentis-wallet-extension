@@ -27,7 +27,7 @@ import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
 import * as sdk from '@cmts-dev/carmentis-sdk/client';
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse,} from "@/entrypoints/background.ts";
 import {Account} from "@/entrypoints/main/Account.tsx";
-import PopupEventApproval from "@/entrypoints/components/popup/popup-event-approval.tsx";
+import PopupEventApproval from "@/entrypoints/components/popup/PopupEventApproval.tsx";
 import {errorState} from "@/entrypoints/components/popup/popup-even-approval.state.ts";
 import Skeleton from "react-loading-skeleton";
 import image from '~/assets/success.png';
@@ -103,13 +103,10 @@ export function PopupDashboard() {
     </PopupLayout>
 }
 
-function  PopupLayout({children}: PropsWithChildren) {
+function PopupLayout({children}: PropsWithChildren) {
     return (
         <div className="flex flex-col h-full bg-gray-50">
-            <div className="h-[74px] w-full shadow-sm bg-white z-10">
-                <PopupNavbar/>
-            </div>
-            <div className="w-full h-[calc(100%-74px)] p-4 overflow-auto">
+            <div className="w-full h-full p-3 overflow-auto">
                 {children}
             </div>
         </div>
@@ -124,17 +121,36 @@ export type PopupNotificationProps = {
 };
 export function PopupNotificationLayout({header, body, footer}: PopupNotificationProps) {
     return (
-        <div className="h-full w-full flex flex-col justify-between space-y-4 bg-white rounded-lg shadow-sm p-4">
-            <div id="header" className="border-b border-gray-100 pb-3">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="h-full w-full flex flex-col justify-between space-y-2 bg-white rounded-lg shadow-sm p-3"
+        >
+            <motion.div 
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="border-b border-gray-50 pb-2"
+            >
                 {header}
-            </div>
-            <div id="body" className="flex-1 overflow-y-auto py-2">
+            </motion.div>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex-1 overflow-y-auto py-1"
+            >
                 {body}
-            </div>
-            <div id="footer" className="pt-3 border-t border-gray-100">
+            </motion.div>
+            <motion.div 
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="pt-2 border-t border-gray-50"
+            >
                 {footer}
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
 
@@ -165,33 +181,43 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
     }
 
     return (
-        <div className="w-full flex space-x-3">
-            <div className="w-1/2">
+        <div className="w-full flex space-x-2">
+            <motion.div 
+                className="w-1/2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
                 <Button 
                     onClick={handleAccept}
                     disabled={isAccepting}
-                    className="uppercase w-full py-2 bg-green-500 hover:bg-green-600 text-white transition-all duration-200"
+                    className="w-full py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm transition-all duration-200 rounded-md"
                     variant="contained"
+                    size="small"
                     startIcon={isAccepting ? (
-                        <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                    ) : <CheckCircle className="h-4 w-4" />}
+                    ) : <CheckCircle className="h-3.5 w-3.5" />}
                 >
                     {isAccepting ? "Processing..." : "Accept"}
                 </Button>
-            </div>
-            <div className="w-1/2">
+            </motion.div>
+            <motion.div 
+                className="w-1/2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
                 <Button 
                     onClick={decline}
                     disabled={isAccepting}
-                    className="uppercase w-full py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                    className="w-full py-1.5 border-gray-200 text-gray-700 hover:bg-gray-50 text-sm transition-all duration-200 rounded-md"
                     variant="outlined"
+                    size="small"
                 >
                     Decline
                 </Button>
-            </div>
+            </motion.div>
         </div>
     );
 }
@@ -401,22 +427,43 @@ function PopupGetUserData() {
         markAsAccepted();
     }
 
-    const header = <>
-        <Typography variant={"h6"}>Personal Data Access</Typography>
-        <p>
-            An application wants to access your personal data.
-        </p>
-    </>
-    const body = <>
-        <OriginAndDateOfCurrentRequest/>
-        <p className="font-bold">Shared Information</p>
-        <p>
-            The application wants the following information:
-        </p>
-        <ul>
-            {requiredData.map(d => <li>- {d}</li>)}
-        </ul>
-    </>
+    const header = (
+        <Box className="flex items-center">
+            <Box className="bg-green-50 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
+                Personal Data Request
+            </Typography>
+        </Box>
+    );
+
+    const body = (
+        <Box className="space-y-3">
+            <Box className="bg-green-50 border-l-2 border-green-400 p-2 rounded-r-md text-xs text-green-700">
+                An application is requesting access to your personal information. Please review the details below.
+            </Box>
+            <OriginAndDateOfCurrentRequest/>
+
+            <Box className="mt-2">
+                <Typography variant="body2" className="font-medium text-gray-700 mb-1.5 text-xs">
+                    Requested Information:
+                </Typography>
+                <Box className="bg-gray-50 p-2 rounded-md border border-gray-100">
+                    {requiredData.map((d, i) => (
+                        <Box key={i} className="flex items-center mb-1 last:mb-0">
+                            <Box className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></Box>
+                            <Typography variant="body2" className="text-xs text-gray-700">
+                                {d}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+            </Box>
+        </Box>
+    )
     const footer = <AcceptDeclineButtonsFooter accept={accept} />
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
@@ -443,34 +490,49 @@ function PopupGetEmail() {
         markAsAccepted();
     }
 
-    const header =  <Typography variant={"h6"}>Email Access</Typography>;
-    const body = <>
-        <p>
-            An application wants to access the email stored in your wallet.
-        </p>
-        <OriginAndDateOfCurrentRequest/>
-    </>
+    const header = (
+        <Box className="flex items-center">
+            <Box className="bg-purple-50 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
+                Email Access Request
+            </Typography>
+        </Box>
+    );
+
+    const body = (
+        <Box className="space-y-3">
+            <Box className="bg-purple-50 border-l-2 border-purple-400 p-2 rounded-r-md text-xs text-purple-700">
+                An application is requesting access to your email address. Please review the details below.
+            </Box>
+            <OriginAndDateOfCurrentRequest/>
+        </Box>
+    )
     const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
 
 function PopupIdleBody() {
     return (
-        <div className="h-full w-full">
-            <div className="h-full w-full flex flex-col justify-center items-center">
+        <div className="h-full w-full bg-gradient-to-b from-gray-50 to-white">
+            <div className="h-full w-full flex flex-col justify-center items-center p-4">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ 
                         type: "spring",
                         stiffness: 260,
-                        damping: 20,
-                        duration: 0.5
+                        damping: 20
                     }}
+                    className="bg-white p-4 rounded-full shadow-sm mb-4"
                 >
                     <img 
                         src="/assets/img/logo.svg" 
-                        className="w-24 h-24 mb-6" 
+                        className="w-16 h-16" 
                         alt="Carmentis Logo"
                     />
                 </motion.div>
@@ -480,10 +542,32 @@ function PopupIdleBody() {
                     transition={{ delay: 0.2 }}
                     className="text-center"
                 >
-                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Carmentis Wallet</h2>
-                    <p className="text-sm text-gray-600 max-w-xs">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-1">Carmentis Wallet</h2>
+                    <p className="text-xs text-gray-600 max-w-xs mb-4">
                         Your secure gateway to the Carmentis ecosystem
                     </p>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="flex justify-center space-x-2 mt-2"
+                    >
+                        <Button 
+                            variant="outlined" 
+                            size="small"
+                            className="text-xs py-1 px-3 text-blue-600 border-blue-200"
+                            onClick={() => {
+                                const openMainRequest = {
+                                    backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
+                                    payload: { location: "main" }
+                                };
+                                browser.runtime.sendMessage(openMainRequest);
+                            }}
+                        >
+                            Open Dashboard
+                        </Button>
+                    </motion.div>
                 </motion.div>
             </div>
         </div>
@@ -515,16 +599,27 @@ function PopupAuthByPublicKeyBody() {
         maskAsAccepted()
     }
 
-    const header = <Typography variant={"h6"}>Authentication request</Typography>;
-    const body = <>
-        <p>
-            An application wants you to authenticate. You need to
-            approve the authentication or decline if
-            it is a mistake.
-        </p>
+    const header = (
+        <Box className="flex items-center">
+            <Box className="bg-blue-50 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v-1l1-1 1-1-.257-.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
+                </svg>
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
+                Authentication Request
+            </Typography>
+        </Box>
+    );
 
-        <OriginAndDateOfCurrentRequest/>
-    </>
+    const body = (
+        <Box className="space-y-3">
+            <Box className="bg-blue-50 border-l-2 border-blue-400 p-2 rounded-r-md text-xs text-blue-700">
+                An application wants you to authenticate. Please review the details below before approving.
+            </Box>
+            <OriginAndDateOfCurrentRequest/>
+        </Box>
+    )
     const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }

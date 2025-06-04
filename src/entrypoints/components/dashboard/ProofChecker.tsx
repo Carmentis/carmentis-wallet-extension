@@ -1,4 +1,4 @@
-import { useToast } from "@/entrypoints/components/authentication-manager.tsx";
+import { useToast } from "@/entrypoints/components/AuthenticationManager.tsx";
 import {
     Box,
     Breadcrumbs,
@@ -41,7 +41,7 @@ import {
 import { useAsync } from "react-use";
 import { proofLoader } from "@cmts-dev/carmentis-sdk/client";
 import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
-import { BlockViewer } from "@/entrypoints/components/popup/popup-event-approval.tsx";
+import { BlockViewer } from "@/entrypoints/components/dashboard/BlockViewer.tsx";
 import { useWallet } from "@/entrypoints/contexts/authentication.context.tsx";
 import { ErrorBoundary } from "react-error-boundary";
 import { motion, AnimatePresence } from "framer-motion";

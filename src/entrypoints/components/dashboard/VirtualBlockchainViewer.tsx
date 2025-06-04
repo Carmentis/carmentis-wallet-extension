@@ -34,7 +34,6 @@ import {
 import React, {useEffect, useState, useTransition} from "react";
 import * as sdk from "@cmts-dev/carmentis-sdk/client";
 import Skeleton from "react-loading-skeleton";
-import {BlockViewer} from "@/entrypoints/components/popup/popup-event-approval.tsx";
 import {useParams} from "react-router";
 import {Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator} from "@mui/lab";
 import { timelineItemClasses } from '@mui/lab/TimelineItem';
@@ -52,6 +51,7 @@ import {
     Error as ErrorIcon,
     Dns
 } from "@mui/icons-material";
+import {BlockViewer} from "@/entrypoints/components/dashboard/BlockViewer.tsx";
 
 export default function VirtualBlockchainViewer() {
     const params = useParams<{hash: string}>();

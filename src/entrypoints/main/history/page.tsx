@@ -25,7 +25,7 @@ import {
     useAccountTransactionHistoryHook,
 } from '@/entrypoints/components/hooks/sdk.hook.tsx';
 import React, { useState, useEffect } from 'react';
-import NoTokenAccount from '@/entrypoints/components/no-token-account.tsx';
+import NoTokenAccount from '@/entrypoints/components/NoTokenAccount.tsx';
 import { SparkLineChart } from "@mui/x-charts";
 import Skeleton from "react-loading-skeleton";
 import { Splashscreen } from "@/entrypoints/components/Splashscreen.tsx";
