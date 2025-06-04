@@ -16,16 +16,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {useAuthenticationContext} from "@/entrypoints/contexts/authentication.context.tsx";
-import React, {useState} from "react";
-import {useNavigate} from "react-router";
-import {DropdownAccountSelection} from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
-import {useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
-import {useApplicationNotificationHook} from "@/entrypoints/states/application-nofications.state.tsx";
-import {Badge, Chip, Typography} from "@mui/material";
-import {useAccountBalanceHook} from "@/entrypoints/components/hooks/sdk.hook.tsx";
-import {Email, MoreVert} from "@mui/icons-material";
-import {motion} from "framer-motion";
+import { useAuthenticationContext } from "@/entrypoints/contexts/authentication.context.tsx";
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { DropdownAccountSelection } from "@/entrypoints/components/dashboard/dropdown-account-selection.component.tsx";
+import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
+import { useApplicationNotificationHook } from "@/entrypoints/states/application-nofications.state.tsx";
+import { 
+  Badge, 
+  Chip, 
+  Typography, 
+  AppBar, 
+  Toolbar, 
+  Box, 
+  IconButton, 
+  Menu, 
+  MenuItem, 
+  ListItemIcon, 
+  ListItemText, 
+  Divider,
+  Avatar,
+  Tooltip as MuiTooltip
+} from "@mui/material";
+import { useAccountBalanceHook } from "@/entrypoints/components/hooks/sdk.hook.tsx";
+import { 
+  Email, 
+  MoreVert, 
+  Settings, 
+  Logout, 
+  Help, 
+  AccountBalance as AccountBalanceIcon,
+  Notifications
+} from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRecoilValue } from "recoil";
+import { activeAccountState } from "@/entrypoints/contexts/authentication.context.tsx";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -34,111 +59,234 @@ import {motion} from "framer-motion";
  * @return {JSX.Element} The Dashboard navigation bar component, enabling user interaction for menu toggle, navigation, and actions.
  */
 export function DashboardNavbar() {
-    // state to show the navigation
-    const authentication = useAuthenticationContext();
-    const [showMenu, setShowMenu] = useState<boolean>(false);
+  // State for menu
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(menuAnchorEl);
 
-    // create the navigation
-    const navigate = useNavigate();
+  // Authentication and navigation
+  const authentication = useAuthenticationContext();
+  const navigate = useNavigate();
 
+  // Active account
+  const activeAccount = useRecoilValue(activeAccountState);
 
-    function goToParameters() {
-        setShowMenu(false);
-        navigate('/parameters');
+  // Menu handlers
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  // Navigation functions
+  function goToParameters() {
+    handleMenuClose();
+    navigate('/parameters');
+  }
+
+  function logout() {
+    handleMenuClose();
+    authentication.disconnect();
+  }
+
+  function goToHelp() {
+    handleMenuClose();
+    window.open('https://docs.carmentis.io', '_blank');
+  }
+
+  // Animation variants
+  const navbarVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.3,
+        staggerChildren: 0.1
+      }
     }
+  };
 
-    function logout() {
-        setShowMenu(false);
-        authentication.disconnect();
+  const itemVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 24 
+      }
     }
+  };
 
-    function goToHelp() {
-        setShowMenu(false);
-        window.open('https://docs.carmentis.io', '_blank');
-    }
+  return (
+    <motion.div
+      variants={navbarVariants}
+      initial="hidden"
+      animate="visible"
+      className="w-full"
+    >
+      <AppBar position="static" elevation={0} className="bg-white border-b border-gray-200">
+        <Toolbar className="flex justify-between items-center">
+          {/* Left side - Logo and Account Selection */}
+          <motion.div variants={itemVariants} className="flex items-center">
+            <Box className="mr-4">
+              <img 
+                src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg" 
+                alt="Carmentis" 
+                className="h-8"
+              />
+            </Box>
+            <DropdownAccountSelection allowAccountCreation={true} large={true} />
+          </motion.div>
 
+          {/* Right side - Actions */}
+          <motion.div variants={itemVariants} className="flex items-center space-x-3">
+            <BalanceChip />
+            <NotificationsButton />
 
-    return <>
-        <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 h-full">
-            <div
-                className="flex items-center rtl:space-x-reverse h-4 border-gray-100">
+            {/* Menu Button */}
+            <MuiTooltip title="Account menu">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <IconButton
+                  onClick={handleMenuClick}
+                  size="small"
+                  edge="end"
+                  aria-label="account menu"
+                  aria-controls={menuOpen ? 'account-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen ? 'true' : undefined}
+                  className="ml-1"
+                >
+                  <Avatar 
+                    className="bg-green-100 text-green-600"
+                    sx={{ width: 32, height: 32 }}
+                  >
+                    {activeAccount?.firstname?.charAt(0) || ''}
+                  </Avatar>
+                </IconButton>
+              </motion.div>
+            </MuiTooltip>
 
-                <DropdownAccountSelection allowAccountCreation={true} large={true}></DropdownAccountSelection>
-            </div>
-
-
-            <div className="relative inline-block text-left">
-                <div className={"flex flex-row justify-center items-center space-x-4"}>
-                    <AccountBalance/>
-                    <ClickableAppNotifications/>
-                    <ClickableThreeDots onClick={() => setShowMenu(!showMenu)}/>
-                </div>
-
-
-                <div hidden={!showMenu} onMouseLeave={() => setShowMenu(false)}
-                     className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                     role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
-                    <div className="py-1" role="none">
-                        <div
-                            className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-                            id="menu-item-0" onClick={goToParameters}>Parameters
-                        </div>
-                        <div
-                            className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-                            id="menu-item-1" onClick={logout}>Logout
-                        </div>
-                        <div
-                            className="block px-4 py-2 text-sm text-gray-700 hover:text-green-400 hover:cursor-pointer"
-                            id="menu-item-0" onClick={goToHelp}>
-                            Get help
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </>;
-}
-
-
-function AccountBalance() {
-    const balance = useAccountBalanceHook();
-    if (typeof balance.data === 'number')
-        return  <Chip variant={"outlined"} label={<Typography fontSize={"small"}>{balance.data} CMTS</Typography>}/>;
-    return <></>
-}
-function ClickableAppNotifications() {
-    const actions = useMainInterfaceActions();
-    const {notifications, isLoading} = useApplicationNotificationHook();
-
-    const badgeContent = isLoading ? undefined : notifications.length;
-    return (
-        <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-        >
-            <Badge 
-                onClick={() => actions.showNotifications()} 
-                badgeContent={badgeContent} 
-                color="primary"
-                className="cursor-pointer"
+            {/* Dropdown Menu */}
+            <Menu
+              id="account-menu"
+              anchorEl={menuAnchorEl}
+              open={menuOpen}
+              onClose={handleMenuClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              PaperProps={{
+                elevation: 2,
+                className: "mt-1.5 rounded-md border border-gray-100"
+              }}
             >
-                <Email className="text-gray-600" fontSize="medium" />
-            </Badge>
-        </motion.div>
-    );
+              <MenuItem onClick={goToParameters} className="py-2">
+                <ListItemIcon>
+                  <Settings fontSize="small" className="text-gray-600" />
+                </ListItemIcon>
+                <ListItemText primary="Settings" />
+              </MenuItem>
+
+              <MenuItem onClick={goToHelp} className="py-2">
+                <ListItemIcon>
+                  <Help fontSize="small" className="text-gray-600" />
+                </ListItemIcon>
+                <ListItemText primary="Help & Documentation" />
+              </MenuItem>
+
+              <Divider />
+
+              <MenuItem onClick={logout} className="py-2 text-red-600">
+                <ListItemIcon>
+                  <Logout fontSize="small" className="text-red-600" />
+                </ListItemIcon>
+                <ListItemText primary="Logout" className="text-red-600" />
+              </MenuItem>
+            </Menu>
+          </motion.div>
+        </Toolbar>
+      </AppBar>
+    </motion.div>
+  );
 }
 
-function ClickableThreeDots(input: {onClick: () => void}) {
+/**
+ * Balance chip component showing the user's token balance
+ */
+function BalanceChip() {
+  const balance = useAccountBalanceHook();
+
+  if (balance.isLoading) {
     return (
-        <motion.button 
-            onClick={input.onClick}
-            className="inline-flex justify-center rounded-full bg-white p-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors duration-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            aria-expanded="true" 
-            aria-haspopup="true"
-        >
-            <MoreVert fontSize="medium" />
-        </motion.button>
+      <Chip
+        variant="outlined"
+        className="bg-gray-50 border border-gray-200"
+        label={
+          <Box className="w-16 h-4 bg-gray-200 animate-pulse rounded"></Box>
+        }
+        icon={<AccountBalanceIcon className="text-gray-400" />}
+      />
     );
+  }
+
+  if (typeof balance.data !== 'number') {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Chip
+        variant="outlined"
+        className="bg-green-50 border border-green-200 px-1"
+        label={
+          <Typography variant="body2" className="font-medium text-green-700">
+            {balance.data} CMTS
+          </Typography>
+        }
+        icon={<AccountBalanceIcon className="text-green-600" />}
+      />
+    </motion.div>
+  );
+}
+
+/**
+ * Notifications button component
+ */
+function NotificationsButton() {
+  const actions = useMainInterfaceActions();
+  const { notifications, isLoading } = useApplicationNotificationHook();
+  const badgeContent = isLoading ? undefined : notifications.length;
+
+  return (
+    <MuiTooltip title="Notifications">
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <IconButton 
+          onClick={() => actions.showNotifications()}
+          size="medium"
+          className="text-gray-600"
+        >
+          <Badge 
+            badgeContent={badgeContent} 
+            color="primary"
+            overlap="circular"
+          >
+            <Notifications />
+          </Badge>
+        </IconButton>
+      </motion.div>
+    </MuiTooltip>
+  );
 }

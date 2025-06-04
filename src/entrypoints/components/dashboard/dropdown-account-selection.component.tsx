@@ -15,156 +15,257 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, {useEffect, useState} from "react";
-import {Wallet} from "@/entrypoints/main/wallet.tsx";
-import {Account, CreateFromPseudoAndNonce} from '@/entrypoints/main/Account.tsx';
-import {IllegalStateError} from "@/entrypoints/main/errors.tsx";
-import {AccountCreationModal} from "@/entrypoints/components/dashboard/account-creation-modal.component.tsx";
-import {activeAccountState, useWallet, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
-import {useRecoilValue, useSetRecoilState} from 'recoil';
-import Avatar from "boring-avatars";
+import React, { useEffect, useState, useRef } from "react";
+import { Wallet } from "@/entrypoints/main/wallet.tsx";
+import { Account, CreateFromPseudoAndNonce } from '@/entrypoints/main/Account.tsx';
+import { IllegalStateError } from "@/entrypoints/main/errors.tsx";
+import { AccountCreationModal } from "@/entrypoints/components/dashboard/account-creation-modal.component.tsx";
+import { activeAccountState, useWallet, walletState } from '@/entrypoints/contexts/authentication.context.tsx';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import AvatarUser from "@/entrypoints/components/avatar-user.tsx";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Box, 
+  Button, 
+  Chip, 
+  Typography, 
+  Avatar, 
+  Divider, 
+  Paper, 
+  ClickAwayListener,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  ListItemButton
+} from "@mui/material";
+import { 
+  KeyboardArrowDown, 
+  PersonAdd, 
+  Check 
+} from "@mui/icons-material";
 
-export function DropdownAccountSelection( input : {allowAccountCreation : boolean, large : boolean } ) {
+/**
+ * Account selection dropdown component
+ * 
+ * @param input Configuration options for the dropdown
+ * @returns Account selection dropdown component
+ */
+export function DropdownAccountSelection(input: { allowAccountCreation: boolean, large: boolean }) {
+  // By default the account creation is enabled
+  const allowAccountCreation = typeof input.allowAccountCreation === "boolean" ?
+    input.allowAccountCreation : true;
 
-    // by default the account creation is enabled
-    const allowAccountCreation = typeof input.allowAccountCreation === "boolean" ?
-        input.allowAccountCreation : true;
+  // References and state
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [showAccountCreation, setShowAccountCreation] = useState<boolean>(false);
 
-    const wallet: Wallet = useWallet();
-    const activeAccount = useRecoilValue(activeAccountState);
+  // Recoil state
+  const wallet: Wallet = useWallet();
+  const activeAccount = useRecoilValue(activeAccountState);
+  const setWallet = useSetRecoilState(walletState);
 
+  // Load inactive accounts
+  const allAccounts: Account[] = wallet.accounts;
+  const inactiveAccounts: Account[] = allAccounts.filter(account => account.id !== activeAccount?.id);
 
-    const setWallet = useSetRecoilState(walletState);
-
-    // load inactive accounts
-    const allAccounts : Account[] = wallet.accounts;
-    const inactiveAccounts : Account[] = allAccounts.filter(account => account.id != activeAccount?.id);
-
-    const [showAccountSelectionMenu, setShowAccountSelectionMenu] = useState<boolean>(false);
-    const [showAccountCreation, setShowAccountCreation] = useState<boolean>(false);
-
-    const dropdownClass = showAccountSelectionMenu ? "rounded-t-lg" : "rounded-lg";
-
-    // close the account creation content and clear the pseudo value when the account creation is closed
-    useEffect(() => {
-        if ( !showAccountSelectionMenu ) {
-            setShowAccountCreation(false);
-        }
-    }, [showAccountSelectionMenu]);
-
-    function onLeavePopup() {
-        if (!showAccountCreation) {
-            setShowAccountSelectionMenu(false)
-        }
-
+  // Close account creation when dropdown is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setShowAccountCreation(false);
     }
+  }, [isOpen]);
 
+  /**
+   * Creates and activates a new account
+   * 
+   * @param firstname First name for the new account
+   * @param lastname Last name for the new account
+   */
+  function createAndActivateNewAccount(firstname: string, lastname: string) {
+    console.log(`[popup] create a new account for ${firstname} ${lastname}`);
 
+    setWallet(wallet => {
+      if (!wallet) return undefined;
+      const nonce = wallet.counter + 1;
+      const createdAccount = CreateFromPseudoAndNonce(firstname, lastname, nonce);
 
-    function createAndActiveNewAccount(firstname: string, lastname: string) {
-        console.log(`[popup] create a new account for ${firstname} ${lastname}`)
+      return {
+        ...wallet,
+        counter: nonce,
+        accounts: [...wallet.accounts, createdAccount],
+        activeAccountId: createdAccount.id
+      };
+    });
+  }
 
+  /**
+   * Selects an inactive account by ID
+   * 
+   * @param accountId The ID of the account to select
+   */
+  function selectInactiveAccount(accountId: string) {
+    console.log(`[popup] select the account having the id ${accountId}`);
 
-        setWallet(wallet => {
-            if (!wallet) return undefined;
-            const nonce = wallet.counter + 1;
-            const createdAccount = CreateFromPseudoAndNonce(firstname, lastname, nonce);
-
-            return {
-                ...wallet,
-                counter: nonce,
-                accounts: [...wallet.accounts, createdAccount],
-                activeAccountId: createdAccount.id
-            }
-        })
+    // Search the account based on its ID and fail if the account doesn't exist
+    const selectedAccount = wallet.accounts.find(a => a.id === accountId);
+    if (!selectedAccount) {
+      throw new IllegalStateError(`The account with id ${accountId} cannot be found in the wallet`);
+    } else {
+      setWallet(wallet => {
+        return {
+          ...wallet,
+          activeAccountId: accountId
+        } as Wallet;
+      });
+      setIsOpen(false);
     }
+  }
 
-
-    /**
-     * Selects the (inactive) account based on the account id.
-     *
-     * @param accountId The id of the selected account.
-     */
-    function selectInactiveAccount( accountId : string ) {
-        console.log(`[popup] select the account having the id  ${accountId}`)
-
-        // search the account based on its id and fails if the account do not exist
-        const selectedAccount = wallet.accounts.find(a => a.id === accountId);
-        if ( !selectedAccount ) {
-            throw new IllegalStateError(`The account with id ${accountId} cannot be found in the wallet`)
-        } else {
-            setWallet(wallet => {
-                return {
-                    ...wallet,
-                    activeAccountId: accountId
-                } as Wallet
-            })
-            setShowAccountSelectionMenu(false)
-        }
+  // Animation variants
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: -5, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { 
+        duration: 0.2,
+        ease: "easeOut"
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -5, 
+      scale: 0.95,
+      transition: { 
+        duration: 0.2,
+        ease: "easeIn"
+      }
     }
+  };
 
+  return (
+    <ClickAwayListener onClickAway={() => setIsOpen(false)}>
+      <Box ref={dropdownRef} className="relative">
+        {/* Selected account button */}
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          variant="text"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors duration-200 ${
+            input.large ? "min-w-48" : "min-w-36"
+          }`}
+          endIcon={
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <KeyboardArrowDown />
+            </motion.div>
+          }
+        >
+          <Box className="flex items-center">
+            <Avatar 
+              className="bg-green-100 text-green-600 mr-2"
+              sx={{ width: 28, height: 28 }}
+            >
+              {activeAccount?.firstname?.charAt(0) || ''}
+            </Avatar>
+            <Typography 
+              variant="body2" 
+              className="font-medium text-gray-800 truncate"
+              sx={{ maxWidth: input.large ? 120 : 80 }}
+            >
+              {activeAccount?.firstname} {activeAccount?.lastname?.charAt(0) || ''}
+            </Typography>
+          </Box>
+        </Button>
 
-    return <>
-        <div id="dropdownUsers" onMouseLeave={onLeavePopup}
-             className={
-            `bg-white dark:bg-gray-700 border-2 border-gray-100 z-20` + dropdownClass +
-                 (input.large ? " account-selection-large" : " account-selection-small")
-            }>
-            <div onClick={() => setShowAccountSelectionMenu(true)}
-                 className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                <AvatarUser className={"w-6 h-6 mr-2"} user={activeAccount as Account}/>
+        {/* Dropdown menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              variants={dropdownVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="absolute left-0 mt-1 z-50 min-w-48"
+            >
+              <Paper 
+                elevation={2} 
+                className="border border-gray-100 rounded-md overflow-hidden"
+              >
+                {/* Account list */}
+                <List className="py-0">
+                  {inactiveAccounts.map(account => (
+                    <ListItemButton 
+                      key={account.id} 
+                      onClick={() => selectInactiveAccount(account.id)}
+                      className="py-1.5 px-3 hover:bg-gray-50"
+                    >
+                      <ListItemAvatar className="min-w-0 mr-2">
+                        <Avatar 
+                          className="bg-blue-100 text-blue-600"
+                          sx={{ width: 28, height: 28 }}
+                        >
+                          {account.firstname?.charAt(0) || ''}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText 
+                        primary={
+                          <Typography variant="body2" className="font-medium text-gray-800">
+                            {account.firstname} {account.lastname?.charAt(0) || ''}
+                          </Typography>
+                        }
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
 
-                <span
-                    className="self-center text-md font-semibold  text-black">
-                                {activeAccount?.firstname}
-                            </span>
-            </div>
-            {showAccountSelectionMenu &&
-                <div className={`border-t-2  z-40 border-gray-100 absolute bg-white rounded-b-lg ` +  (input.large ? "account-selection-large" : "account-selection-small")} hidden={!showAccountSelectionMenu}>
-                    <ul className="overflow-y-auto text-gray-700 dark:text-gray-200"
-                        aria-labelledby="dropdownUsersButton">
-                        { inactiveAccounts.map( account => {
-                            return <li key={account.id} onClick={() => selectInactiveAccount(account.id)}>
-                                <div
-                                    className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <AvatarUser className="w-6 h-6 me-2 rounded-full" user={account}/>
-                                    {account.firstname}
+                {/* Add new account button */}
+                {allowAccountCreation && (
+                  <>
+                    <Divider />
+                    <ListItemButton
+                      onClick={() => setShowAccountCreation(true)}
+                      className="py-2 px-3 text-green-600 hover:bg-green-50"
+                    >
+                      <ListItemAvatar className="min-w-0 mr-2">
+                        <Avatar className="bg-green-100 text-green-600" sx={{ width: 28, height: 28 }}>
+                          <PersonAdd fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" className="font-medium text-green-600">
+                            Add new account
+                          </Typography>
+                        }
+                      />
+                    </ListItemButton>
+                  </>
+                )}
+              </Paper>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                                </div>
-                            </li>
-                        })}
-                    </ul>
-
-                    {allowAccountCreation &&
-                        <div onClick={() => setShowAccountCreation(true)}
-                             className="flex items-center p-3 text-sm font-medium text-blue-600 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:border-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-500 hover:underline">
-                            <svg className="w-4 h-4 me-2" aria-hidden="true"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 fill="currentColor" viewBox="0 0 20 18">
-                                <path
-                                    d="M6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Zm11-3h-2V5a1 1 0 0 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 0 0 2 0V9h2a1 1 0 1 0 0-2Z"/>
-                            </svg>
-                            Add new user
-                        </div>
-                    }
-
-
-                </div>
-            }
-        </div>
-
-        {showAccountCreation && <AccountCreationModal
+        {/* Account creation modal */}
+        {showAccountCreation && (
+          <AccountCreationModal
             onClose={() => {
-                setShowAccountCreation(false);
-                setShowAccountSelectionMenu(false);
+              setShowAccountCreation(false);
+              setIsOpen(false);
             }}
             onCreate={(firstname, lastname) => {
-                setShowAccountCreation(false);
-                setShowAccountSelectionMenu(false);
-                createAndActiveNewAccount(firstname, lastname)
+              setShowAccountCreation(false);
+              setIsOpen(false);
+              createAndActivateNewAccount(firstname, lastname);
             }}
-        />}
-    </>;
+          />
+        )}
+      </Box>
+    </ClickAwayListener>
+  );
 }
-
