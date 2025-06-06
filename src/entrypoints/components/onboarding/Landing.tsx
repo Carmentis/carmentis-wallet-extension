@@ -32,28 +32,62 @@ export function Landing() {
 
 
 
-    /*
     if (import.meta.env.MODE === "development") {
-       async function populateWithDevWallet() {
-           // we create a default wallet
-           const setFirstname = useSetRecoilState(onboardingFirstnameAtom);
-           const setLastname = useSetRecoilState(onboardingLastnameAtom);
-           const setPassword = useSetRecoilState(onboardingPasswordAtom);
-           const setSeed = useSetRecoilState(onboardingSeedAtom);
+        /*
+        async function test() {
+            const usedWordLists = new Set<string>();
+            const usedSeeds = new Set<string>();
+            const usedDerivedSeeds = new Set<string>();
+            const provider = new CarmentisProvider();
 
-           setFirstname("Dev")
-           setLastname("Dev")
-           setPassword("aaa")
-           const provider = new CarmentisProvider();
-           let seed = await provider.generateSeed("cushion shield urge essence fire stable pond minimum monkey quality exit present".split(" "));
-           setSeed(seed);
-           navigate("/setup-wallet")
-       }
+            for (let i = 0; i < 1000000; i++) {
+                if (i % 10000 == 0) console.log(`Iteration ${i}`)
+                const words = provider.generateWords();
+                const wordsKey = words.join(',');
 
-       populateWithDevWallet()
+                if (usedWordLists.has(wordsKey)) {
+                    throw new Error('Duplicate word list generated');
+                }
+
+                const seed = await provider.generateSeed(words);
+                if (usedSeeds.has(seed)) {
+                    throw new Error('Duplicate seed generated');
+                }
+
+                const derivedSeed = new Uint8Array(seed);
+                if (usedDerivedSeeds.has(derivedSeed.toString())) {
+                    throw new Error('Duplicate derived seed generated');
+                }
+
+                usedWordLists.add(wordsKey);
+                usedSeeds.add(seed);
+                usedDerivedSeeds.add(derivedSeed.toString());
+            }
+        }
+
+        test();
+
+         */
+
+        async function populateWithDevWallet() {
+            // we create a default wallet
+            const setFirstname = useSetRecoilState(onboardingFirstnameAtom);
+            const setLastname = useSetRecoilState(onboardingLastnameAtom);
+            const setPassword = useSetRecoilState(onboardingPasswordAtom);
+            const setSeed = useSetRecoilState(onboardingSeedAtom);
+
+            setFirstname("Dev")
+            setLastname("Dev")
+            setPassword("aaa")
+            const provider = new CarmentisProvider();
+            let seed = await provider.generateSeed("cushion shield urge essence fire stable pond minimum monkey quality exit present".split(" "));
+            setSeed(seed);
+            navigate("/setup-wallet")
+        }
+
+       // populateWithDevWallet()
     }
 
-     */
 
 
 

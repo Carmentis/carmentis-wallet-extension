@@ -19,7 +19,6 @@
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 
 export function NoWalletDetected() {
-
     function goToWalletCreation() {
         const openMainRequest : BackgroundRequest = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
@@ -30,37 +29,33 @@ export function NoWalletDetected() {
         browser.runtime.sendMessage(openMainRequest)
     }
 
-    function goToDocumentation()  {
-        const action = window.open("https://docs.carmentis.io/", '_blank');
-        if (action) {
-            action.focus();
-        }
-    }
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen p-6 max-w-md mx-auto">
+            {/* Logo */}
+            <img 
+                src="https://docs.carmentis.io/img/carmentis-logo-color.png"
+                alt="Carmentis Logo"
+                className="w-20 h-auto mb-6"
+            />
 
-    return <>
-        <div className="content p-4">
-            <h1>Create an account</h1>
-
-            <p>It appears that you do not have a wallet yet. To create your wallet, click on the button
-                below. </p>
-
-            <div className="flex items-center justify-center mt-4">
-
-                <button className="btn-primary btn-highlight" onClick={goToWalletCreation}>Create a wallet</button>
+            {/* Title and description */}
+            <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-3">No Wallet Detected</h1>
+                <p className="text-gray-600">
+                    Secure your digital assets with Carmentis Wallet - a modern, 
+                    secure and user-friendly crypto wallet that puts you in control 
+                    of your digital identity and allows you to provide and verify 
+                    proof of authenticity of events being anchored on-chain.
+                </p>
             </div>
 
-            <hr className="mt-4 mb-4"/>
-
-            <h1>Learn more about wallet</h1>
-
-            <p>You want to learn more about the wallet provided by Carmentis ? Feel free to read our documentation.
-            </p>
-
-            <div className="flex items-center justify-center mt-4">
-
-                <button className="btn-primary" onClick={goToDocumentation}>Learn more</button>
-            </div>
+            {/* Button */}
+            <button 
+                className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center"
+                onClick={goToWalletCreation}
+            >
+                Create Your Wallet
+            </button>
         </div>
-
-    </>;
+    );
 }

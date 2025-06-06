@@ -49,8 +49,6 @@ export function CreateFromIdentityAndSeed(firstname : string, lastname: string, 
     if ( !seed ) {
         throw new Error( "Cannot instantiate a wallet from undefined seed" );
     }
-
-    console.log("[wallet] Creating wallet from seed:", seed)
     const createdAccount = DefaultAccountWithIdentity(firstname, lastname);
     return {
         seed: seed,
