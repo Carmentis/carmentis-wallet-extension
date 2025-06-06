@@ -23,22 +23,21 @@ import {Landing} from "@/entrypoints/components/onboarding/Landing.tsx";
 import {ImportWallet} from "@/entrypoints/components/onboarding/ImportWallet.tsx";
 
 function OnBoarding() {
-
     return (
         <>
-            <div id="app-content" className="flex min-h-full justify-center flex-col">
+            <div id="app-content" className="flex min-h-full justify-center flex-col bg-gradient-to-b from-white to-gray-50">
                 <div className="app-header mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
                     <img
+                        className="h-10"
                         src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg"
-                        alt=""/>
+                        alt="Carmentis Logo"/>
                 </div>
                 <div className="app-body">
-                    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 ">
+                    <div className="flex min-h-full flex-col justify-center px-6 py-8 lg:px-8">
                         <div
-                            className="app-modal mt-10 sm:mx-auto sm:w-full xs:max-w-xs lg:w-6/12 border-solid border-2 rounded-2xl p-4">
+                            className="app-modal sm:mx-auto sm:w-full xs:max-w-xs lg:w-6/12 bg-white shadow-lg rounded-xl p-6 transition-all duration-300">
 
                             <Routes>
-
                                 <Route path="/create-password" element={< PseudoPasswordCreation />}></Route>
                                 <Route path="/recovery-phrase" element={< RecoveryPhrase />}></Route>
                                 <Route path="/setup-wallet" element={< SetupWallet />}></Route>
@@ -47,13 +46,11 @@ function OnBoarding() {
                             </Routes>
 
                         </div>
-
                     </div>
                 </div>
             </div>
         </>
     );
-
 }
 
 

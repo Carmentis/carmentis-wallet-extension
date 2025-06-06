@@ -20,6 +20,7 @@ import {useLocation, useNavigate} from "react-router";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
 import {useRecoilState, useSetRecoilState} from "recoil";
 import {onboardingSeedAtom} from "@/entrypoints/components/onboarding/onboarding.state.ts";
+import {ShieldLock, CheckCircle, ExclamationTriangle} from "react-bootstrap-icons";
 
 export function ImportWallet() {
 
@@ -58,51 +59,97 @@ export function ImportWallet() {
     }
 
     return (
-        <>
-            <h1 className="title justify-center align-content-center align-items-center flex">Import your wallet</h1>
-            <p className="text-justify mb-8">
-                To import your wallet, insert the 12 words you have obtained during the creation of your wallet.
+        <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
+            {/* Left column - Explanation */}
+            <div className="flex flex-col md:w-1/2 md:border-r md:border-gray-100 md:pr-6 pb-6 md:pb-0">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Import your wallet</h1>
+                <p className="text-gray-600 mb-6">
+                    To import your wallet, insert the 12 words you have obtained during the creation of your wallet.
+                    Once imported, your wallet will be restored.
+                </p>
 
-                Once imported, your wallet will be restored.
-            </p>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
+                    <div className="flex items-start">
+                        <ShieldLock className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                        <p className="text-sm text-blue-700">
+                            Make sure you're in a private location before entering your recovery phrase.
+                        </p>
+                    </div>
+                </div>
 
-            <div className="flex  flex-wrap mb-4">
-                <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                    <div className="space-y-6 mb-3">
+                <div className="space-y-4">
+                    <h2 className="text-lg font-medium text-gray-800">Why import a wallet?</h2>
+                    <p className="text-gray-600">
+                        Importing your wallet allows you to access your assets on a new device or after reinstalling the application.
+                    </p>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mt-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Important Notes:</h3>
+                        <ul className="text-sm text-gray-600 space-y-2">
+                            <li className="flex items-start">
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                Your recovery phrase must be entered in the correct order
+                            </li>
+                            <li className="flex items-start">
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                All 12 words must be from the official word list
+                            </li>
+                            <li className="flex items-start">
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                Double-check your spelling before submitting
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right column - Form */}
+            <div className="flex flex-col md:w-1/2 md:pl-2">
+                <div className="w-full max-w-sm mx-auto">
+                    <div className="space-y-6">
                         <div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="words"
-                                       className="block text-sm font-medium leading-6 text-gray-900">Passphrase</label>
-                            </div>
+                            <label htmlFor="words" className="block text-sm font-medium text-gray-700 mb-1">
+                                Recovery Phrase
+                            </label>
                             <div className="mt-2">
-                                <input id="words" type="text"
-                                       value={words}
-                                       onChange={(e) => setWords(e.target.value)}
-                                       required
-                                       className="block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-green-300 sm:text-sm sm:leading-6"/>
-                                <p className="mt-2">
+                                <input 
+                                    id="words" 
+                                    type="text"
+                                    value={words}
+                                    onChange={(e) => setWords(e.target.value)}
+                                    required
+                                    placeholder="Enter your 12-word recovery phrase"
+                                    className="block w-full py-2.5 px-3 rounded-lg border border-gray-200 text-gray-900 shadow-sm 
+                                        placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none 
+                                        sm:text-sm transition-all"
+                                />
+                                <p className="mt-2 text-sm text-gray-500 flex items-center">
+                                    <CheckCircle className="h-3 w-3 mr-1 text-gray-400" />
                                     Separate each word with a whitespace.
                                 </p>
-                                {error !== "" &&
-                                    <p className="mt-2 text-pink-600">
+                                {error !== "" && (
+                                    <p className="mt-2 text-sm text-red-600 flex items-center">
+                                        <ExclamationTriangle className="h-3 w-3 mr-1 text-red-600" />
                                         {error}
                                     </p>
-                                }
+                                )}
                             </div>
                         </div>
 
                         <div>
                             <button
                                 onClick={attemptImportWallet}
-                                className="flex w-full justify-center rounded-md bg-green-400 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-300">
+                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg 
+                                    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 
+                                    focus:outline-none focus:ring-4 focus:ring-blue-200
+                                    transition-all duration-200"
+                            >
                                 Import your wallet
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-
-        </>
+        </div>
     );
 }

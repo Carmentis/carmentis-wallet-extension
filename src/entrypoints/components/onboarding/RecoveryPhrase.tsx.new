@@ -21,7 +21,7 @@ import { useLocation, useNavigate } from "react-router";
 import { useSetRecoilState } from "recoil";
 import { onboardingSeedAtom } from "@/entrypoints/components/onboarding/onboarding.state.ts";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clipboard, ShieldLock, CheckCircle, ExclamationTriangle, ArrowRight } from "react-bootstrap-icons";
+import { Clipboard, ShieldLock, CheckCircle, ExclamationTriangle, ArrowRight, Shield } from "react-bootstrap-icons";
 
 /**
  * Generate a random number included between the two provided (included) bounds.
@@ -203,7 +203,7 @@ export function RecoveryPhrase() {
           <motion.h1 variants={itemVariants} className="text-2xl font-bold text-gray-900 mb-4">
             {challengeStarted ? "Verify your recovery phrase" : "Save your recovery phrase"}
           </motion.h1>
-
+          
           <motion.div variants={itemVariants} className={`p-4 mb-6 rounded-lg border ${challengeStarted ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100'}`}>
             <div className="flex items-start">
               {challengeStarted ? (
@@ -219,13 +219,13 @@ export function RecoveryPhrase() {
               </p>
             </div>
           </motion.div>
-
+          
           <motion.div variants={itemVariants} className="space-y-4">
             <h2 className="text-lg font-medium text-gray-800">Why is this important?</h2>
             <p className="text-gray-600">
               Your recovery phrase is the master key to your wallet. Anyone with access to these words can control your assets, so keeping them secure is critical.
             </p>
-
+            
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Security Tips:</h3>
               <ul className="text-sm text-gray-600 space-y-2">
@@ -243,7 +243,7 @@ export function RecoveryPhrase() {
                 </li>
               </ul>
             </div>
-
+            
             {!challengeStarted && (
               <motion.div variants={itemVariants} className="flex items-start mt-4 bg-gray-50 p-3 rounded-lg">
                 <div className="flex items-center h-5">
@@ -264,7 +264,7 @@ export function RecoveryPhrase() {
             )}
           </motion.div>
         </div>
-
+        
         {/* Right column - Recovery Phrase Display/Verification */}
         <div className="flex flex-col md:w-1/2 md:pl-2">
           <AnimatePresence mode="wait">

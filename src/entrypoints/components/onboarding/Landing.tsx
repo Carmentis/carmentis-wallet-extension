@@ -32,7 +32,7 @@ export function Landing() {
 
 
 
-
+    /*
     if (import.meta.env.MODE === "development") {
        async function populateWithDevWallet() {
            // we create a default wallet
@@ -53,6 +53,8 @@ export function Landing() {
        populateWithDevWallet()
     }
 
+     */
+
 
 
     function moveToWalletCreation() {
@@ -72,25 +74,55 @@ export function Landing() {
     }
 
     return (
-        <>
-            <div className="flex flex-col items-center justify-center">
-                <h1 className="title mb-2">{t("onboarding.create-wallet.title")}</h1>
-                <p>{t("onboarding.create-wallet.subtitle")}</p>
-                <img src="https://docs.carmentis.io/img/carmentis-logo-color.png"/>
-
-                <div className="flex items-center mb-4">
-                    <input id="default-checkbox" type="checkbox" value=""
-                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"/>
-                    <label htmlFor="default-checkbox"
-                           className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">I accept the Usage Conditions of Carmentis.</label>
+        <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
+            {/* Left column - Logo and brand */}
+            <div className="flex flex-col items-center justify-center md:w-1/2 md:border-r md:border-gray-100 md:pr-6 pb-6 md:pb-0">
+                <img 
+                    src="https://docs.carmentis.io/img/carmentis-logo-color.png"
+                    alt="Carmentis Logo"
+                    className="w-20 h-auto mb-4"
+                />
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("onboarding.create-wallet.title")}</h1>
+                    <p className="text-gray-600">{t("onboarding.create-wallet.subtitle")}</p>
                 </div>
-
-                <button id="create-wallet" className="btn-primary btn-highlight min-w-72 mb-3" onClick={moveToWalletCreation}>Create your
-                    wallet
-                </button>
-                <button id="import-wallet" className="btn-primary min-w-72" onClick={moveToWalletImportation}>Import a wallet</button>
             </div>
 
-        </>
+            {/* Right column - Options */}
+            <div className="flex flex-col items-center justify-center md:w-1/2 md:pl-2 space-y-6">
+                <div className="flex items-center mb-2 bg-gray-50 p-3 rounded-lg w-full max-w-sm">
+                    <input 
+                        id="default-checkbox" 
+                        type="checkbox" 
+                        value=""
+                        className="w-4 h-4 text-blue-500 bg-white border-gray-300 rounded focus:ring-blue-400 focus:ring-2"
+                    />
+                    <label 
+                        htmlFor="default-checkbox"
+                        className="ms-2 text-sm text-gray-700"
+                    >
+                        I accept the Usage Conditions of Carmentis.
+                    </label>
+                </div>
+
+                <div className="flex flex-col w-full max-w-sm space-y-3">
+                    <button 
+                        id="create-wallet" 
+                        className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center"
+                        onClick={moveToWalletCreation}
+                    >
+                        Create your wallet
+                    </button>
+
+                    <button 
+                        id="import-wallet" 
+                        className="w-full py-3 px-4 bg-white hover:bg-gray-50 text-blue-500 font-medium rounded-lg border border-gray-200 shadow-sm transition-all duration-200 flex items-center justify-center"
+                        onClick={moveToWalletImportation}
+                    >
+                        Import a wallet
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
