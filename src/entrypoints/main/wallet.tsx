@@ -16,6 +16,8 @@
  */
 
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
+import * as sdk from '@cmts-dev/carmentis-sdk/client';
+
 import {Account, DefaultAccountWithIdentity} from '@/entrypoints/main/Account.tsx';
 
 import {Encoders} from '@/entrypoints/main/Encoders.tsx';
@@ -34,7 +36,7 @@ const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.beta.carmentis.io"
 
 export interface Wallet {
     explorerEndpoint: string;
-    seed?: Uint8Array;
+    seed: string;
     password?: string,
     counter : number;
     accounts : Account[];
@@ -44,9 +46,9 @@ export interface Wallet {
 }
 
 
-export function CreateFromIdentityAndSeed(firstname : string, lastname: string, seed : Uint8Array, password: string) : Wallet {
+export function CreateFromIdentityAndSeed(firstname : string, lastname: string, seed : string, password: string) : Wallet {
 
-    if ( !seed ) {
+    if ( !seed || typeof seed !== 'string') {
         throw new Error( "Cannot instantiate a wallet from undefined seed" );
     }
     const createdAccount = DefaultAccountWithIdentity(firstname, lastname);
@@ -63,30 +65,6 @@ export function CreateFromIdentityAndSeed(firstname : string, lastname: string, 
 
 }
 
-
-
-
-export function getApplicationKeyPair(wallet: Wallet, account : Account, applicationId : string) : Promise<{privateKey: object, publicKey: object}>  {
-
-    return new Promise((resolve, reject) => {
-        const seed = wallet.seed;
-        Carmentis.derivePepperFromSeed(seed, account.nonce).then((pepper: Uint8Array) => {
-            return Carmentis.deriveUserPrivateKey(pepper, Encoders.FromHexa(applicationId)).then((privateKey : Uint8Array) => {
-                return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {
-                    resolve({
-                        privateKey: privateKey,
-                        publicKey: publicKey
-                    })
-                })
-            });
-
-        }).catch((error : Error) => {
-            reject(error);
-        })
-    })
-
-}
-
 export type SignatureKeyPair = {
     privateKey: object;
     publicKey: object;
@@ -96,9 +74,7 @@ export function getUserKeyPair(wallet : Wallet, account : Account) : Promise<Sig
 
     return new Promise((resolve, reject) => {
 
-        let seed = wallet.seed;
-        if (!(seed instanceof Uint8Array))
-            seed = new Uint8Array(seed)
+        let seed = sdk.utils.encoding.fromHexa(wallet.seed);
         Carmentis.derivePepperFromSeed(seed, account.nonce).then((pepper: Uint8Array) => {
             return Carmentis.deriveAccountPrivateKey(pepper).then((privateKey : Uint8Array) => {
                 return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {

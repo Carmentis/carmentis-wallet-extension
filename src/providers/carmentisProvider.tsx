@@ -16,6 +16,7 @@
  */
 
 import {ProviderInterface} from "@/providers/providerInterface.tsx";
+import * as sdk from "@cmts-dev/carmentis-sdk/client";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import { SecretEncryptionKey } from '@/utils/secret-encryption-key.ts';
 
@@ -24,8 +25,9 @@ export class CarmentisProvider implements ProviderInterface{
         return Carmentis.generateWordList(12);
     }
 
-    generateSeed(words: string[]): Promise<string> {
-        return Carmentis.getSeedFromWordList(words);
+    async generateSeed(words: string[]): Promise<string> {
+        const seed = await Carmentis.getSeedFromWordList(words);
+        return sdk.utils.encoding.toHexa(seed);
     }
 
     encryptSeed(password: string, seed : Uint8Array) : Uint8Array {

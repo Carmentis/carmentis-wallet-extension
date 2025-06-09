@@ -116,6 +116,7 @@ export function AuthenticationContextProvider(
 	{children}: PropsWithChildren
 ) {
 	const [wallet, setWallet] = useRecoilState(walletState);
+	console.log("wallet in context provider", wallet)
 
 	const authenticationContainer: AuthenticationContainer = {
         disconnect: () => {
