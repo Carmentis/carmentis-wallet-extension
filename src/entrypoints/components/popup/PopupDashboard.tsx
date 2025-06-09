@@ -105,8 +105,8 @@ export function PopupDashboard() {
 
 function PopupLayout({children}: PropsWithChildren) {
     return (
-        <div className="flex flex-col h-full bg-white">
-            <div className="w-full h-full p-4 overflow-auto">
+        <div className="flex flex-col h-full bg-gray-50">
+            <div className="w-full h-full p-3 overflow-auto">
                 {children}
             </div>
         </div>
@@ -124,13 +124,13 @@ export function PopupNotificationLayout({header, body, footer}: PopupNotificatio
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full w-full flex flex-col justify-between space-y-4 bg-white rounded-lg p-4"
+            className="h-full w-full flex flex-col justify-between space-y-2 bg-white rounded-lg shadow-sm p-3"
         >
             <motion.div 
                 initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="border-b border-gray-100 pb-4"
+                className="border-b border-gray-50 pb-2"
             >
                 {header}
             </motion.div>
@@ -138,7 +138,7 @@ export function PopupNotificationLayout({header, body, footer}: PopupNotificatio
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex-1 overflow-y-auto py-2"
+                className="flex-1 overflow-y-auto py-1"
             >
                 {body}
             </motion.div>
@@ -146,7 +146,7 @@ export function PopupNotificationLayout({header, body, footer}: PopupNotificatio
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="pt-4 border-t border-gray-100"
+                className="pt-2 border-t border-gray-50"
             >
                 {footer}
             </motion.div>
@@ -181,7 +181,7 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
     }
 
     return (
-        <div className="w-full flex space-x-3">
+        <div className="w-full flex space-x-2">
             <motion.div 
                 className="w-1/2"
                 whileHover={{ scale: 1.02 }}
@@ -190,14 +190,15 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
                 <Button 
                     onClick={handleAccept}
                     disabled={isAccepting}
-                    className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-all duration-200 rounded-lg shadow-sm"
+                    className="w-full py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm transition-all duration-200 rounded-md"
                     variant="contained"
+                    size="small"
                     startIcon={isAccepting ? (
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                    ) : <CheckCircle className="h-4 w-4" />}
+                    ) : <CheckCircle className="h-3.5 w-3.5" />}
                 >
                     {isAccepting ? "Processing..." : "Accept"}
                 </Button>
@@ -210,8 +211,9 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
                 <Button 
                     onClick={decline}
                     disabled={isAccepting}
-                    className="w-full py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-all duration-200 rounded-lg"
+                    className="w-full py-1.5 border-gray-200 text-gray-700 hover:bg-gray-50 text-sm transition-all duration-200 rounded-md"
                     variant="outlined"
+                    size="small"
                 >
                     Decline
                 </Button>
@@ -223,8 +225,8 @@ export function AcceptDeclineButtonsFooter(props: AcceptDeclineButtonsFooterProp
 
 function NotificationDataField({ value }: { value: string }) {
     return (
-        <div className="w-full max-w-full overflow-hidden rounded-lg bg-gray-50 border border-gray-100">
-            <div className="p-3 overflow-x-auto font-mono text-sm text-gray-700 break-all">
+        <div className="w-full max-w-full overflow-hidden rounded-md bg-gray-50 border border-gray-100">
+            <div className="p-2.5 overflow-x-auto font-mono text-sm text-gray-700 break-all">
                 {value}
             </div>
         </div>
@@ -234,7 +236,7 @@ function NotificationDataField({ value }: { value: string }) {
 function ValueWithLabel({ label, value }: { label: string, value: string }) {
     return (
         <div className="mb-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+            <p className="text-sm font-medium text-gray-700 mb-1.5">{label}</p>
             <NotificationDataField value={value} />
         </div>
     );
@@ -270,7 +272,15 @@ function PopupBody() {
 
 function PopupSuccess() {
     return (
-        <div className="w-full h-full flex flex-col justify-center items-center p-6">
+        <Box 
+            width={'100%'} 
+            height={"100%"} 
+            display={"flex"} 
+            flexDirection={"column"}
+            justifyContent={"center"} 
+            alignItems={"center"}
+            className="p-6"
+        >
             <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -279,9 +289,9 @@ function PopupSuccess() {
                     stiffness: 260,
                     damping: 20 
                 }}
-                className="bg-blue-100 rounded-full p-4 mb-4"
+                className="bg-green-100 rounded-full p-4 mb-4"
             >
-                <CheckCircle className="text-blue-600 h-12 w-12" />
+                <CheckCircle className="text-green-600 h-12 w-12" />
             </motion.div>
 
             <motion.div
@@ -290,14 +300,14 @@ function PopupSuccess() {
                 transition={{ delay: 0.2 }}
                 className="text-center"
             >
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                <Typography variant="h6" className="text-gray-800 mb-2">
                     Success!
-                </h2>
-                <p className="text-gray-600">
+                </Typography>
+                <Typography variant="body2" className="text-gray-600">
                     Your request has been processed
-                </p>
+                </Typography>
             </motion.div>
-        </div>
+        </Box>
     );
 }
 
@@ -328,15 +338,15 @@ function PopupError() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
             </div>
-            <h2 className="text-lg font-medium text-gray-800">
+            <Typography variant="h6" className="text-gray-800">
                 Error Occurred
-            </h2>
+            </Typography>
         </div>
     );
 
     const body = (
         <div className="space-y-4">
-            <div className="bg-red-50 border-l-2 border-red-400 p-4 rounded-lg">
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
                 <div className="flex">
                     <div className="flex-shrink-0">
                         <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -351,7 +361,7 @@ function PopupError() {
                 </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div>
                 <p className="text-sm text-gray-700 mb-2">
                     The error might be caused by an invalid configuration of the server or an incorrect setup of your wallet.
                 </p>
@@ -366,18 +376,13 @@ function PopupError() {
     );
 
     const footer = (
-        <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        <Button 
+            className="uppercase w-full py-2 bg-red-500 hover:bg-red-600 text-white transition-all duration-200" 
+            onClick={() => setError(undefined)} 
+            variant="contained"
         >
-            <Button 
-                className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-medium transition-all duration-200 rounded-lg shadow-sm" 
-                onClick={() => setError(undefined)} 
-                variant="contained"
-            >
-                Dismiss
-            </Button>
-        </motion.div>
+            Dismiss
+        </Button>
     );
 
     return <PopupNotificationLayout header={header} body={body} footer={footer} />;
@@ -402,11 +407,15 @@ function PopupGetUserData() {
     async function accept() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
 
+
+
         // transform each data
         const userData = requiredData.map(mapRequiredDataItemWithValue)
 
+
         const wiWallet = new sdk.wiExtensionWallet();
         const answer = await wiWallet.approveGetUserDataRequest(userData);
+
 
         const response: BackgroundRequest<ClientResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
@@ -419,41 +428,41 @@ function PopupGetUserData() {
     }
 
     const header = (
-        <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+        <Box className="flex items-center">
+            <Box className="bg-green-50 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
-            </div>
-            <h2 className="text-lg font-medium text-gray-800">
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
                 Personal Data Request
-            </h2>
-        </div>
+            </Typography>
+        </Box>
     );
 
     const body = (
-        <div className="space-y-4">
-            <div className="bg-blue-50 border-l-2 border-blue-400 p-4 rounded-lg text-sm text-blue-700">
+        <Box className="space-y-3">
+            <Box className="bg-green-50 border-l-2 border-green-400 p-2 rounded-r-md text-xs text-green-700">
                 An application is requesting access to your personal information. Please review the details below.
-            </div>
+            </Box>
             <OriginAndDateOfCurrentRequest/>
 
-            <div className="mt-4">
-                <p className="font-medium text-gray-700 mb-2 text-sm">
+            <Box className="mt-2">
+                <Typography variant="body2" className="font-medium text-gray-700 mb-1.5 text-xs">
                     Requested Information:
-                </p>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                </Typography>
+                <Box className="bg-gray-50 p-2 rounded-md border border-gray-100">
                     {requiredData.map((d, i) => (
-                        <div key={i} className="flex items-center mb-2 last:mb-0">
-                            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                            <p className="text-sm text-gray-700">
+                        <Box key={i} className="flex items-center mb-1 last:mb-0">
+                            <Box className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></Box>
+                            <Typography variant="body2" className="text-xs text-gray-700">
                                 {d}
-                            </p>
-                        </div>
+                            </Typography>
+                        </Box>
                     ))}
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     )
     const footer = <AcceptDeclineButtonsFooter accept={accept} />
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
@@ -470,6 +479,7 @@ function PopupGetEmail() {
         const answer = await wiWallet.approveGetEmailRequest(activeAccount?.email as string);
         console.log("[get email] answer:", answer)
 
+
         const response: BackgroundRequest<ClientResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
             payload: answer
@@ -481,26 +491,26 @@ function PopupGetEmail() {
     }
 
     const header = (
-        <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+        <Box className="flex items-center">
+            <Box className="bg-purple-50 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
-            </div>
-            <h2 className="text-lg font-medium text-gray-800">
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
                 Email Access Request
-            </h2>
-        </div>
+            </Typography>
+        </Box>
     );
 
     const body = (
-        <div className="space-y-4">
-            <div className="bg-blue-50 border-l-2 border-blue-400 p-4 rounded-lg text-sm text-blue-700">
+        <Box className="space-y-3">
+            <Box className="bg-purple-50 border-l-2 border-purple-400 p-2 rounded-r-md text-xs text-purple-700">
                 An application is requesting access to your email address. Please review the details below.
-            </div>
+            </Box>
             <OriginAndDateOfCurrentRequest/>
-        </div>
+        </Box>
     )
     const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
@@ -508,7 +518,7 @@ function PopupGetEmail() {
 
 function PopupIdleBody() {
     return (
-        <div className="h-full w-full bg-white">
+        <div className="h-full w-full bg-gradient-to-b from-gray-50 to-white">
             <div className="h-full w-full flex flex-col justify-center items-center p-4">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -518,7 +528,7 @@ function PopupIdleBody() {
                         stiffness: 260,
                         damping: 20
                     }}
-                    className="bg-blue-50 p-5 rounded-full mb-6"
+                    className="bg-white p-4 rounded-full shadow-sm mb-4"
                 >
                     <img 
                         src="/assets/img/logo.svg" 
@@ -532,8 +542,8 @@ function PopupIdleBody() {
                     transition={{ delay: 0.2 }}
                     className="text-center"
                 >
-                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Carmentis Wallet</h2>
-                    <p className="text-sm text-gray-600 max-w-xs mb-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-1">Carmentis Wallet</h2>
+                    <p className="text-xs text-gray-600 max-w-xs mb-4">
                         Your secure gateway to the Carmentis ecosystem
                     </p>
 
@@ -541,12 +551,12 @@ function PopupIdleBody() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        className="flex justify-center space-x-2 mt-2"
                     >
                         <Button 
-                            variant="contained" 
-                            className="py-2.5 px-6 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm transition-all duration-200"
+                            variant="outlined" 
+                            size="small"
+                            className="text-xs py-1 px-3 text-blue-600 border-blue-200"
                             onClick={() => {
                                 const openMainRequest = {
                                     backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
@@ -571,6 +581,7 @@ function PopupAuthByPublicKeyBody() {
     const {clientRequest} = useClientRequest();
     const genKeyPair = useUserKeyPair()
 
+
     async function accept() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
         const wiWallet = new sdk.wiExtensionWallet();
@@ -589,25 +600,25 @@ function PopupAuthByPublicKeyBody() {
     }
 
     const header = (
-        <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-full mr-3">
+        <Box className="flex items-center">
+            <Box className="bg-blue-50 p-1.5 rounded-full mr-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v-1l1-1 1-1-.257-.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
                 </svg>
-            </div>
-            <h2 className="text-lg font-medium text-gray-800">
+            </Box>
+            <Typography variant="subtitle1" className="font-medium text-gray-800">
                 Authentication Request
-            </h2>
-        </div>
+            </Typography>
+        </Box>
     );
 
     const body = (
-        <div className="space-y-4">
-            <div className="bg-blue-50 border-l-2 border-blue-400 p-4 rounded-lg text-sm text-blue-700">
+        <Box className="space-y-3">
+            <Box className="bg-blue-50 border-l-2 border-blue-400 p-2 rounded-r-md text-xs text-blue-700">
                 An application wants you to authenticate. Please review the details below before approving.
-            </div>
+            </Box>
             <OriginAndDateOfCurrentRequest/>
-        </div>
+        </Box>
     )
     const footer = <AcceptDeclineButtonsFooter accept={accept}/>
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>

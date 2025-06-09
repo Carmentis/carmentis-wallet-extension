@@ -46,7 +46,7 @@ export function Landing() {
             const provider = new CarmentisProvider();
             const words = provider.generateWords();
             const defaultWorlds = "cushion shield urge essence fire stable pond minimum monkey quality exit present".split(" ");
-            let seed = await provider.generateSeed(words);
+            let seed = await provider.generateSeed(defaultWorlds);
             setSeed(seed);
             navigate("/setup-wallet")
         }
