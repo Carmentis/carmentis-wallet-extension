@@ -131,8 +131,10 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
       y: 0, 
       scale: 1,
       transition: { 
-        duration: 0.2,
-        ease: "easeOut"
+        duration: 0.25,
+        type: "spring",
+        stiffness: 300,
+        damping: 24
       }
     },
     exit: { 
@@ -153,13 +155,14 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
         <Button
           onClick={() => setIsOpen(!isOpen)}
           variant="text"
-          className={`flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors duration-200 ${
-            input.large ? "min-w-48" : "min-w-36"
+          className={`flex items-center justify-between px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200 border border-gray-100 shadow-sm ${
+            input.large ? "min-w-52" : "min-w-40"
           }`}
           endIcon={
             <motion.div
               animate={{ rotate: isOpen ? 180 : 0 }}
               transition={{ duration: 0.2 }}
+              className="text-blue-500"
             >
               <KeyboardArrowDown />
             </motion.div>
@@ -167,18 +170,26 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
         >
           <Box className="flex items-center">
             <Avatar 
-              className="bg-green-100 text-green-600 mr-2"
-              sx={{ width: 28, height: 28 }}
+              className="bg-blue-50 text-blue-600 mr-2.5 border border-blue-100"
+              sx={{ width: 32, height: 32 }}
             >
               {activeAccount?.firstname?.charAt(0) || ''}
             </Avatar>
-            <Typography 
-              variant="body2" 
-              className="font-medium text-gray-800 truncate"
-              sx={{ maxWidth: input.large ? 120 : 80 }}
-            >
-              {activeAccount?.firstname} {activeAccount?.lastname?.charAt(0) || ''}
-            </Typography>
+            <Box>
+              <Typography 
+                variant="body2" 
+                className="font-medium text-gray-800 truncate"
+                sx={{ maxWidth: input.large ? 120 : 80 }}
+              >
+                {activeAccount?.firstname} {activeAccount?.lastname?.charAt(0) || ''}
+              </Typography>
+              <Typography 
+                variant="caption" 
+                className="text-gray-500 block -mt-0.5"
+              >
+                Active Account
+              </Typography>
+            </Box>
           </Box>
         </Button>
 
@@ -190,24 +201,31 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute left-0 mt-1 z-50 min-w-48"
+              className="absolute left-0 mt-2 z-50 min-w-56"
             >
               <Paper 
-                elevation={2} 
-                className="border border-gray-100 rounded-md overflow-hidden"
+                elevation={0} 
+                className="border border-gray-100 rounded-xl overflow-hidden shadow-md"
               >
+                {/* Header */}
+                <Box className="py-3 px-4 bg-gray-50 border-b border-gray-100">
+                  <Typography variant="subtitle2" className="text-gray-700 font-medium">
+                    Select Account
+                  </Typography>
+                </Box>
+
                 {/* Account list */}
-                <List className="py-0">
+                <List className="py-1">
                   {inactiveAccounts.map(account => (
                     <ListItemButton 
                       key={account.id} 
                       onClick={() => selectInactiveAccount(account.id)}
-                      className="py-1.5 px-3 hover:bg-gray-50"
+                      className="py-2 px-4 hover:bg-blue-50 transition-colors"
                     >
                       <ListItemAvatar className="min-w-0 mr-2">
                         <Avatar 
-                          className="bg-blue-100 text-blue-600"
-                          sx={{ width: 28, height: 28 }}
+                          className="bg-blue-50 text-blue-600 border border-blue-100"
+                          sx={{ width: 32, height: 32 }}
                         >
                           {account.firstname?.charAt(0) || ''}
                         </Avatar>
@@ -218,6 +236,11 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
                             {account.firstname} {account.lastname?.charAt(0) || ''}
                           </Typography>
                         }
+                        secondary={
+                          <Typography variant="caption" className="text-gray-500">
+                            Switch to this account
+                          </Typography>
+                        }
                       />
                     </ListItemButton>
                   ))}
@@ -226,20 +249,28 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
                 {/* Add new account button */}
                 {allowAccountCreation && (
                   <>
-                    <Divider />
+                    <Divider className="my-1" />
                     <ListItemButton
                       onClick={() => setShowAccountCreation(true)}
-                      className="py-2 px-3 text-green-600 hover:bg-green-50"
+                      className="py-2.5 px-4 text-blue-600 hover:bg-blue-50 transition-colors"
                     >
                       <ListItemAvatar className="min-w-0 mr-2">
-                        <Avatar className="bg-green-100 text-green-600" sx={{ width: 28, height: 28 }}>
+                        <Avatar 
+                          className="bg-blue-50 text-blue-600 border border-blue-100" 
+                          sx={{ width: 32, height: 32 }}
+                        >
                           <PersonAdd fontSize="small" />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
-                          <Typography variant="body2" className="font-medium text-green-600">
+                          <Typography variant="body2" className="font-medium text-blue-600">
                             Add new account
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" className="text-blue-400">
+                            Create a new identity
                           </Typography>
                         }
                       />

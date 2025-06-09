@@ -146,19 +146,22 @@ export function Dashboard(): ReactElement {
 function DashboardSidebar() {
     return (
         <motion.div
-            className="flex flex-col h-full py-4"
+            className="flex flex-col h-full py-6 bg-white border-r border-gray-100"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, staggerChildren: 0.05 }}
         >
+
+
             <SidebarItem icon={<Home />} text={'Home'} activeRegex={/\/$/} link={'/'} />
             <SidebarItem icon={<Storage />} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
-            <SidebarItem icon={<SwapHoriz />} text={'Token transfer'} activeRegex={/transfer$/} link={'/transfer'} />
+            <SidebarItem icon={<SwapHoriz />} text={'Token Transfer'} activeRegex={/transfer$/} link={'/transfer'} />
             <SidebarItem icon={<History />} text={'History'} activeRegex={/history$/} link={'/history'} />
-            <SidebarItem icon={<CheckCircle />} text={'Proof checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
+
+            <SidebarItem icon={<CheckCircle />} text={'Proof Checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
             <SidebarItem icon={<Settings />} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
 
-            <div className="mt-auto">
+            <div className="mt-auto border-t border-gray-100 pt-4">
                 <NodeConnectionStatusSidebarItem />
             </div>
         </motion.div>
@@ -192,10 +195,13 @@ function NodeConnectionStatusSidebarItem() {
 
     if (loaded) return (
         <Tooltip title={`Connecting to ${node}...`} placement="right">
-            <div className="flex w-full justify-center items-center h-11 px-3 py-2">
-                <div className="w-5">
+            <div className="flex items-center px-4 py-3 mx-2 rounded-lg">
+                <div className="w-5 mr-3">
                     <SpinningWheel />
                 </div>
+                <Typography variant="body2" className="text-gray-600 font-medium">
+                    Connecting...
+                </Typography>
             </div>
         </Tooltip>
     );
@@ -204,17 +210,29 @@ function NodeConnectionStatusSidebarItem() {
         `Connected to node ${node}` :
         `Connection failure at ${node}`;
 
+    const statusColor = success ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50";
+    const statusText = success ? "Connected" : "Connection Error";
+    const statusBorder = success ? "border-green-100" : "border-red-100";
+
     return (
         <Tooltip title={tooltipMessage} placement="right">
             <motion.div
-                className="flex w-full justify-center items-center h-11 px-3 py-2 cursor-pointer"
+                className={`flex items-center px-4 py-3 mx-2 rounded-lg cursor-pointer border ${statusBorder} ${statusColor}`}
                 onClick={sendPing}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
             >
-                <Badge color={success ? "success" : "error"} variant="dot" invisible={false}>
+                <Badge 
+                    color={success ? "success" : "error"} 
+                    variant="dot" 
+                    invisible={false}
+                    className="mr-3"
+                >
                     <NetworkCheck className="text-lg" />
                 </Badge>
+                <Typography variant="body2" className="font-medium">
+                    {statusText}
+                </Typography>
             </motion.div>
         </Tooltip>
     );
@@ -276,24 +294,28 @@ function DashboardOverview() {
         >
             {/* Welcome Section */}
             <motion.div variants={itemVariants} className="mb-8">
-                <Box className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <Grid container spacing={3} alignItems="center">
+                <Box className="bg-gradient-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-8 shadow-sm">
+                    <Grid container spacing={4} alignItems="center">
                         <Grid item xs={12} md={8}>
-                            <Typography variant="h4" className="font-bold text-gray-800 mb-2">
+                            <Typography variant="h4" className="font-bold text-gray-800 mb-3">
                                 Welcome, {activeAccount.firstname}!
                             </Typography>
-                            <Typography variant="body1" className="text-gray-600">
+                            <Typography variant="body1" className="text-gray-600 mb-4">
                                 Here's an overview of your Carmentis wallet activity and balance
                             </Typography>
+
                         </Grid>
                         <Grid item xs={12} md={4} className="flex justify-end">
-                            <Avatar
-                                className="bg-green-100 text-green-600 w-16 h-16 text-2xl font-bold"
-                                sx={{ width: 64, height: 64 }}
-                            >
-                                {activeAccount?.firstname?.charAt(0) || ''}
-                                {activeAccount?.lastname?.charAt(0) || ''}
-                            </Avatar>
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
+                                <Avatar
+                                    className="bg-blue-50 text-blue-600 w-20 h-20 text-3xl font-bold border-2 border-blue-100 relative shadow-md"
+                                    sx={{ width: 80, height: 80 }}
+                                >
+                                    {activeAccount?.firstname?.charAt(0) || ''}
+                                    {activeAccount?.lastname?.charAt(0) || ''}
+                                </Avatar>
+                            </div>
                         </Grid>
                     </Grid>
                 </Box>
@@ -305,11 +327,10 @@ function DashboardOverview() {
                     <Grid item xs={12} md={6}>
                         <StatsCard
                             title="Balance"
-                            icon={<AccountBalance className="text-green-500" />}
+                            icon={<AccountBalance className="text-blue-500" />}
                             value={balance.isLoading ? <Skeleton height={40} width={120} /> :
                                 balance.error || typeof balance.data !== 'number' ? "--" : `${balance.data} CMTS`}
                             subtitle="Your current token balance"
-                            color="green"
                         />
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -319,7 +340,6 @@ function DashboardOverview() {
                             value={numberVb.loading ? <Skeleton height={40} width={80} /> :
                                 numberVb.error || typeof numberVb.value !== 'number' ? "--" : numberVb.value}
                             subtitle="Total blockchain activities"
-                            color="blue"
                         />
                     </Grid>
                 </Grid>
@@ -337,7 +357,6 @@ function DashboardOverview() {
                             icon={<SwapHoriz />}
                             description="Send tokens to another account"
                             link="/transfer"
-                            color="purple"
                         />
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -346,7 +365,6 @@ function DashboardOverview() {
                             icon={<Storage />}
                             description="Check your recent blockchain activity"
                             link="/activity"
-                            color="blue"
                         />
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -355,7 +373,6 @@ function DashboardOverview() {
                             icon={<Settings />}
                             description="Manage your account preferences"
                             link="/parameters"
-                            color="green"
                         />
                     </Grid>
                 </Grid>
@@ -376,22 +393,18 @@ function DashboardOverview() {
  * Stats card component for displaying metrics
  */
 function StatsCard({ title, icon, value, subtitle, color = "blue" }) {
-    const colorClasses = {
-        blue: "bg-blue-50 text-blue-700",
-        green: "bg-green-50 text-green-700",
-        purple: "bg-purple-50 text-purple-700",
-        orange: "bg-orange-50 text-orange-700",
-    };
+    // Always use blue for consistency with onboarding style
+    const iconClass = "bg-blue-50 text-blue-600";
 
     return (
         <motion.div
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2 } }}
             className="h-full"
         >
-            <Card className="border border-gray-100 shadow-sm h-full overflow-hidden">
+            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm">
                 <CardContent className="p-6">
-                    <Box display="flex" alignItems="center" mb={2}>
-                        <Box className={`p-2 rounded-full mr-3 ${colorClasses[color]}`}>
+                    <Box display="flex" alignItems="center" mb={3}>
+                        <Box className={`p-2.5 rounded-full mr-3 ${iconClass} border border-blue-100`}>
                             {icon}
                         </Box>
                         <Typography variant="h6" className="font-medium text-gray-700">
@@ -399,11 +412,13 @@ function StatsCard({ title, icon, value, subtitle, color = "blue" }) {
                         </Typography>
                     </Box>
 
-                    <Typography variant="h4" className="font-bold text-gray-800 mb-1">
-                        {value}
-                    </Typography>
+                    <Box className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-3">
+                        <Typography variant="h4" className="font-bold text-gray-800">
+                            {value}
+                        </Typography>
+                    </Box>
 
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" className="text-gray-500">
                         {subtitle}
                     </Typography>
                 </CardContent>
@@ -418,37 +433,38 @@ function StatsCard({ title, icon, value, subtitle, color = "blue" }) {
 function QuickActionCard({ title, icon, description, link, color = "blue" }) {
     const navigate = useNavigate();
 
-    const colorClasses = {
-        blue: "bg-blue-50 text-blue-600 hover:bg-blue-100",
-        green: "bg-green-50 text-green-600 hover:bg-green-100",
-        purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
-        orange: "bg-orange-50 text-orange-600 hover:bg-orange-100",
-    };
+    // Always use blue for consistency with onboarding style
+    const iconClass = "bg-blue-50 text-blue-600";
 
     return (
         <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate(link)}
             className="cursor-pointer h-full"
         >
-            <Card className="border border-gray-100 shadow-sm h-full overflow-hidden">
-                <CardContent className="p-5">
-                    <Box className={`p-2 rounded-full w-fit mb-3 ${colorClasses[color]}`}>
+            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-200">
+                <CardContent className="p-6">
+                    <Box className={`p-3 rounded-full w-fit mb-4 ${iconClass} border border-blue-100`}>
                         {icon}
                     </Box>
 
-                    <Typography variant="h6" className="font-semibold text-gray-800 mb-1">
+                    <Typography variant="h6" className="font-semibold text-gray-800 mb-2">
                         {title}
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary" className="mb-3">
+                    <Typography variant="body2" className="text-gray-500 mb-4">
                         {description}
                     </Typography>
 
-                    <Box display="flex" alignItems="center" className="text-sm font-medium text-blue-600">
-                        Get Started <ArrowForward fontSize="small" className="ml-1" />
-                    </Box>
+                    <Button 
+                        variant="outlined" 
+                        size="small" 
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50 normal-case"
+                        endIcon={<ArrowForward fontSize="small" />}
+                    >
+                        Get Started
+                    </Button>
                 </CardContent>
             </Card>
         </motion.div>
@@ -472,29 +488,25 @@ function ResourcesSection() {
             title: 'Documentation',
             icon: <MenuBook />,
             description: "Read the official Carmentis documentation",
-            link: 'https://docs.carmentis.io',
-            color: "blue"
+            link: 'https://docs.carmentis.io'
         },
         {
             title: 'Blockchain Explorer',
             icon: <Search />,
             description: "Explore the Carmentis blockchain",
-            link: explorerUrl,
-            color: "purple"
+            link: explorerUrl
         },
         {
             title: 'Token Exchange',
             icon: <AddCard />,
             description: "Purchase Carmentis tokens",
-            link: exchangeLink,
-            color: "green"
+            link: exchangeLink
         },
         {
             title: 'Proof Checker',
             icon: <CheckCircle />,
             description: "Verify blockchain proofs",
-            link: `${explorerUrl}/proofChecker`,
-            color: "orange"
+            link: `${explorerUrl}/proofChecker`
         }
     ];
 
@@ -512,7 +524,6 @@ function ResourcesSection() {
                             icon={resource.icon}
                             description={resource.description}
                             onClick={() => open(resource.link)}
-                            color={resource.color}
                         />
                     </motion.div>
                 </Grid>
@@ -525,41 +536,36 @@ function ResourcesSection() {
  * Resource card component for external resources
  */
 function ResourceCard({ title, icon, description, onClick, color = "blue" }) {
-    const colorClasses = {
-        blue: "bg-blue-50 text-blue-600",
-        green: "bg-green-50 text-green-600",
-        purple: "bg-purple-50 text-purple-600",
-        orange: "bg-orange-50 text-orange-600",
-    };
+    // Always use blue for consistency with onboarding style
+    const iconClass = "bg-blue-50 text-blue-600";
 
     return (
         <motion.div
-            whileHover={{ scale: 1.03, y: -5 }}
+            whileHover={{ scale: 1.03, y: -5, transition: { duration: 0.2 } }}
             whileTap={{ scale: 0.97 }}
             className="h-full cursor-pointer"
             onClick={onClick}
         >
-            <Card className="border border-gray-100 shadow-sm h-full overflow-hidden">
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                    <Box className={`p-2 rounded-full mb-3 ${colorClasses[color]}`}>
+            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-200">
+                <CardContent className="p-5 flex flex-col items-center text-center">
+                    <Box className={`p-3 rounded-full mb-3 ${iconClass} border border-blue-100`}>
                         {icon}
                     </Box>
 
-                    <Typography variant="h6" className="font-semibold text-gray-800 mb-1">
+                    <Typography variant="h6" className="font-semibold text-gray-800 mb-2">
                         {title}
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary" className="mb-2">
+                    <Typography variant="body2" className="text-gray-500 mb-3">
                         {description}
                     </Typography>
 
                     <Chip
-                        label="Open"
+                        label="Open External Link"
                         size="small"
-                        className="mt-auto"
+                        className="mt-auto bg-blue-50 border border-blue-200 text-blue-600"
                         clickable
-                        color="primary"
-                        variant="outlined"
+                        icon={<ArrowForward fontSize="small" />}
                     />
                 </CardContent>
             </Card>

@@ -51,7 +51,7 @@ export function Landing() {
             navigate("/setup-wallet")
         }
 
-        //populateWithDevWallet()
+        populateWithDevWallet()
     }
 
 

@@ -106,7 +106,7 @@ function Login() {
                 autoComplete="current-password"
                 autoFocus
                 className={`block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset 
-                  ${errors.password || authError ? 'ring-red-300 focus:ring-red-500' : 'ring-gray-300 focus:ring-green-500'} 
+                  ${errors.password || authError ? 'ring-red-300 focus:ring-red-500' : 'ring-gray-300 focus:ring-blue-500'} 
                   placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200`}
                 {...register("password")}
               />
@@ -127,8 +127,8 @@ function Login() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full justify-center items-center rounded-md bg-green-500 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm 
-              hover:bg-green-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600
+            className="flex w-full justify-center items-center rounded-md bg-blue-500 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm 
+              hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
               disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
           >
             {isSubmitting ? (

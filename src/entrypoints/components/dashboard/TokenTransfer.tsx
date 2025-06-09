@@ -93,15 +93,33 @@ export default function TokenTransferPage() {
       initial="hidden"
       animate="visible"
       variants={pageVariants}
-      className="max-w-4xl mx-auto"
+      className="max-w-5xl mx-auto"
     >
       <Box className="mb-8">
-        <Typography variant="h4" className="font-bold text-gray-800 mb-2">
+        <Typography variant="h4" className="font-bold text-gray-800 mb-3">
           Transfer Tokens
         </Typography>
-        <Typography variant="body1" className="text-gray-600">
-          Send tokens to another account on the Carmentis network
+        <Typography variant="body1" className="text-gray-600 max-w-2xl">
+          Send tokens to another account on the Carmentis network. Enter the recipient's public key and the amount you want to transfer.
         </Typography>
+      </Box>
+
+      <Box className="bg-gradient-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-6 mb-8 shadow-sm">
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={8}>
+            <Typography variant="h6" className="font-semibold text-gray-800 mb-2">
+              Secure Token Transfers
+            </Typography>
+            <Typography variant="body2" className="text-gray-600">
+              All transfers are securely processed on the Carmentis blockchain. Once confirmed, transactions cannot be reversed.
+            </Typography>
+          </Grid>
+          <Grid item xs={12} md={4} className="flex justify-center md:justify-end">
+            <Avatar className="bg-blue-100 text-blue-600 border border-blue-200 shadow-sm" sx={{ width: 56, height: 56 }}>
+              <SwapHoriz sx={{ fontSize: 32 }} />
+            </Avatar>
+          </Grid>
+        </Grid>
       </Box>
 
       <Grid container spacing={4}>
@@ -154,23 +172,23 @@ function TransferForm() {
   // Form submission handler
   const onSubmit = async (data: TransferFormData) => {
     if (!wallet || !activeAccount) return;
-    
+
     setIsTransferring(true);
-    
+
     try {
       const userKeyPair = await getUserKeyPair(wallet, activeAccount);
       console.log("user key pair (pk):", userKeyPair.publicKey);
-      
+
       const response = await transferTokensToPublicKey(
         Encoders.ToHexa(userKeyPair.privateKey),
         Encoders.ToHexa(userKeyPair.publicKey),
         data.publicKey,
         data.amount
       );
-      
+
       console.log(response);
       toast.success("Tokens successfully transferred");
-      
+
       // Reset form after successful transfer
       setValue("amount", 0);
     } catch (e) {
@@ -196,38 +214,61 @@ function TransferForm() {
 
   return (
     <motion.div variants={cardVariants}>
-      <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-        <Box className="p-4 bg-blue-50 border-b border-gray-100 flex items-center">
-          <Avatar className="bg-blue-100 text-blue-600 mr-3">
+      <Paper elevation={0} className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+        <Box className="p-5  border-gray-100 flex items-center">
+          <Avatar className="bg-white text-blue-600 mr-3 border border-blue-100 shadow-sm">
             <SwapHoriz />
           </Avatar>
           <Typography variant="h6" className="font-semibold text-gray-800">
             Send Tokens
           </Typography>
         </Box>
-        
+
         <CardContent className="p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Controller
               name="publicKey"
               control={control}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Recipient Public Key"
-                  variant="outlined"
-                  fullWidth
-                  error={!!errors.publicKey}
-                  helperText={errors.publicKey?.message}
-                  placeholder="034FCF72080D340A1ED9D10F797A14E6390D3034013D9E1D38D27BF1887BC95EA5"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Key fontSize="small" className="text-gray-400" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                <div className="space-y-1">
+                  <label htmlFor="publicKey" className="block text-sm font-medium text-gray-700 mb-1">
+                    Recipient Public Key
+                  </label>
+                  <TextField
+                    {...field}
+                    id="publicKey"
+                    variant="outlined"
+                    fullWidth
+                    error={!!errors.publicKey}
+                    helperText={errors.publicKey?.message}
+                    placeholder="034FCF72080D340A1ED9D10F797A14E6390D3034013D9E1D38D27BF1887BC95EA5"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Key fontSize="small" className="text-blue-500" />
+                        </InputAdornment>
+                      ),
+                      className: "rounded-lg bg-white shadow-sm border-gray-200 focus-within:border-blue-300 focus-within:ring focus-within:ring-blue-100 transition-all",
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'rgb(147, 197, 253)',
+                          borderWidth: '1px',
+                        },
+                      },
+                      '& .MuiFormHelperText-root': {
+                        marginLeft: '0',
+                      }
+                    }}
+                  />
+                  {!errors.publicKey && (
+                    <Typography variant="caption" className="text-gray-500 flex items-center mt-1">
+                      <CheckCircle className="h-3 w-3 mr-1 text-gray-400" />
+                      Enter the full public key of the recipient
+                    </Typography>
+                  )}
+                </div>
               )}
             />
 
@@ -235,57 +276,92 @@ function TransferForm() {
               name="amount"
               control={control}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Amount"
-                  variant="outlined"
-                  fullWidth
-                  type="number"
-                  error={!!errors.amount}
-                  helperText={errors.amount?.message}
-                  placeholder="0"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <AccountBalance fontSize="small" className="text-gray-400" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Chip 
-                          label="CMTS" 
-                          size="small" 
-                          className="bg-blue-50 text-blue-600"
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    field.onChange(value === '' ? undefined : Number(value));
-                  }}
-                />
+                <div className="space-y-1">
+                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount to Transfer
+                  </label>
+                  <TextField
+                    {...field}
+                    id="amount"
+                    variant="outlined"
+                    fullWidth
+                    type="number"
+                    error={!!errors.amount}
+                    helperText={errors.amount?.message}
+                    placeholder="0"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccountBalance fontSize="small" className="text-blue-500" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Chip 
+                            label="CMTS" 
+                            size="small" 
+                            className="bg-blue-50 text-blue-600 border border-blue-100 font-medium"
+                          />
+                        </InputAdornment>
+                      ),
+                      className: "rounded-lg bg-white shadow-sm border-gray-200 focus-within:border-blue-300 focus-within:ring focus-within:ring-blue-100 transition-all",
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'rgb(147, 197, 253)',
+                          borderWidth: '1px',
+                        },
+                      },
+                      '& .MuiFormHelperText-root': {
+                        marginLeft: '0',
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === '' ? undefined : Number(value));
+                    }}
+                  />
+                  {!errors.amount && (
+                    <Typography variant="caption" className="text-gray-500 flex items-center mt-1">
+                      <CheckCircle className="h-3 w-3 mr-1 text-gray-400" />
+                      Enter the amount of CMTS tokens to send
+                    </Typography>
+                  )}
+                </div>
               )}
             />
 
             {amount > 0 && publicKey && (
-              <Alert severity="info" className="mb-4">
-                You are about to send <strong>{amount} CMTS</strong> to{' '}
-                <strong>{Formatter.cropPublicKey(publicKey)}</strong>
+              <Alert 
+                severity="info" 
+                className="mb-4 rounded-lg border border-blue-100 bg-blue-50/70 shadow-sm"
+                icon={<Send className="text-blue-500" />}
+              >
+                <Typography variant="body2">
+                  You are about to send <strong className="text-blue-700">{amount} CMTS</strong> to{' '}
+                  <strong className="text-blue-700">{Formatter.cropPublicKey(publicKey)}</strong>
+                </Typography>
               </Alert>
             )}
 
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className="pt-2"
             >
               <Button
                 type="submit"
                 variant="contained"
                 fullWidth
                 disabled={!isValid || isTransferring}
-                className="bg-blue-500 hover:bg-blue-600 py-3"
+                className="bg-blue-500 hover:bg-blue-600 py-3 rounded-lg shadow-md disabled:bg-gray-300 transition-all duration-200"
                 startIcon={<Send />}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                }}
               >
                 {isTransferring ? (
                   <>
@@ -353,11 +429,11 @@ function TransferGraphic() {
         <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
           Transfer Preview
         </Typography>
-        
+
         <Box className="flex flex-col items-center space-y-6">
           {/* Sender */}
           <Box className="w-full flex flex-col items-center">
-            <Avatar 
+            <Avatar
               className="bg-green-100 text-green-600 w-16 h-16 mb-2 text-2xl font-bold"
               sx={{ width: 64, height: 64 }}
             >
@@ -371,32 +447,32 @@ function TransferGraphic() {
               Sender
             </Typography>
           </Box>
-          
+
           {/* Arrow */}
-          <motion.div 
+          <motion.div
             variants={arrowVariants}
             className="flex items-center justify-center w-full"
           >
             <Box className="flex flex-col items-center">
               <ArrowForward className="text-blue-500 text-4xl mb-1" />
               {tokenTransfer.tokenAmount > 0 && (
-                <Chip 
-                  label={`${tokenTransfer.tokenAmount} CMTS`} 
+                <Chip
+                  label={`${tokenTransfer.tokenAmount} CMTS`}
                   className="bg-blue-100 text-blue-700"
                 />
               )}
             </Box>
           </motion.div>
-          
+
           {/* Recipient */}
           <Box className="w-full flex flex-col items-center">
-            <Avatar 
+            <Avatar
               className="bg-blue-100 text-blue-600 w-16 h-16 mb-2"
               sx={{ width: 64, height: 64 }}
             >
               <Key />
             </Avatar>
-            
+
             {tokenTransfer.publicKey ? (
               <Box className="flex flex-col items-center">
                 <Box className="flex items-center mb-1">
@@ -404,8 +480,8 @@ function TransferGraphic() {
                     {Formatter.cropPublicKey(tokenTransfer.publicKey)}
                   </Typography>
                   <Tooltip title={copied ? "Copied!" : "Copy public key"}>
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       onClick={handleCopyPublicKey}
                       className="text-gray-500"
                     >
