@@ -26,7 +26,7 @@ export function SidebarItem({icon, text, link, activeRegex}: SidebarLinkProps) {
 				whileHover={{ scale: 1.05 }}
 				whileTap={{ scale: 0.95 }}
 				className={`flex w-full justify-center items-center h-11 cursor-pointer transition-colors duration-200 ${
-					isActive ? "bg-green-50 text-green-600" : "text-gray-600 hover:text-green-500"
+					isActive ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:text-blue-500"
 				}`}
 			>
 				<div className="text-lg">

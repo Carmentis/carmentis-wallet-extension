@@ -224,15 +224,12 @@ function BalanceChip() {
 
   if (balance.isLoading) {
     return (
-      <Chip
-        variant="outlined"
-        className="bg-gray-50 border border-gray-200"
-        label={
-          <Box className="w-16 h-4 bg-gray-200 animate-pulse rounded"></Box>
-        }
-        icon={<AccountBalanceIcon className="text-gray-400" />}
-      />
-    );
+        <div className={"flex animate-pulse items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
+          <Typography variant="body2" className="font-medium text-blue-700">
+            --,-- CMTS
+          </Typography>
+        </div>
+        );
   }
 
   if (typeof balance.data !== 'number') {
@@ -245,16 +242,12 @@ function BalanceChip() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <Chip
-        variant="outlined"
-        className="bg-green-50 border border-green-200 px-1"
-        label={
-          <Typography variant="body2" className="font-medium text-green-700">
-            {balance.data} CMTS
-          </Typography>
-        }
-        icon={<AccountBalanceIcon className="text-green-600" />}
-      />
+      <div className={"flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
+        <Typography variant="body2" className="font-medium text-blue-700">
+          {balance.data} CMTS
+        </Typography>
+      </div>
+
     </motion.div>
   );
 }
