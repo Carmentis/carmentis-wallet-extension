@@ -465,28 +465,12 @@ export default function Parameters() {
                                 className="font-medium"
                             />
                             <Tab
-                                icon={<Key />}
-                                iconPosition="start"
-                                label="Security & Keys"
-                                {...a11yProps(2)}
-                                className="font-medium"
-                            />
-                            <Tab
                                 icon={<Language />}
                                 iconPosition="start"
                                 label="Network"
-                                {...a11yProps(3)}
+                                {...a11yProps(2)}
                                 className="font-medium"
                             />
-                            {wallet?.accounts.length > 1 && (
-                                <Tab
-                                    icon={<DeleteForever />}
-                                    iconPosition="start"
-                                    label="Account Management"
-                                    {...a11yProps(4)}
-                                    className="font-medium text-red-500"
-                                />
-                            )}
                         </Tabs>
                     </Box>
 
@@ -764,106 +748,8 @@ export default function Parameters() {
                             </form>
                         </TabPanel>
 
-                        {/* Security & Keys Tab */}
-                        <TabPanel value={tabValue} index={1}>
-                            <Grid container spacing={4}>
-                                <Grid item xs={12}>
-                                    <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                                        Authentication Keys
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" className="mb-4">
-                                        These keys are used to authenticate your identity on the Carmentis network. Keep your private key secure and never share it with anyone.
-                                    </Typography>
-                                </Grid>
-
-                                <Grid item xs={12}>
-                                    <Typography variant="subtitle1" className="font-medium text-gray-700 mb-2">
-                                        Private Key
-                                    </Typography>
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        type={showPrivateKey ? 'text' : 'password'}
-                                        value={userKeys.privateKey}
-                                        InputProps={{
-                                            readOnly: true,
-                                            className: "font-mono text-sm",
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <Tooltip title={showPrivateKey ? "Hide private key" : "Show private key"}>
-                                                        <IconButton
-                                                            onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                                            edge="end"
-                                                        >
-                                                            {showPrivateKey ? <VisibilityOff /> : <Visibility />}
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                        sx={{
-                                            backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                                        }}
-                                    />
-                                    <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                                        Never share your private key with anyone. It provides full access to your account.
-                                    </Typography>
-                                </Grid>
-
-                                <Grid item xs={12}>
-                                    <Typography variant="subtitle1" className="font-medium text-gray-700 mb-2">
-                                        Public Key
-                                    </Typography>
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        value={userKeys.publicKey}
-                                        InputProps={{
-                                            readOnly: true,
-                                            className: "font-mono text-sm",
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <Tooltip title="Copy to clipboard">
-                                                        <IconButton
-                                                            onClick={handleCopyPublicKey}
-                                                            edge="end"
-                                                            color={copiedPublicKey ? "success" : "default"}
-                                                        >
-                                                            <ContentCopy />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                        sx={{
-                                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                                            cursor: 'pointer'
-                                        }}
-                                        onClick={handleCopyPublicKey}
-                                    />
-
-                                    <Box mt={3}>
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="inline-block"
-                                        >
-                                            <Button
-                                                variant="contained"
-                                                onClick={handleSharePublicKey}
-                                                startIcon={<EmailIcon />}
-                                                className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
-                                            >
-                                                Share public key via email
-                                            </Button>
-                                        </motion.div>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </TabPanel>
-
                         {/* Network Tab */}
-                        <TabPanel value={tabValue} index={2}>
+                        <TabPanel value={tabValue} index={1}>
                             <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
@@ -946,105 +832,7 @@ export default function Parameters() {
                             </form>
                         </TabPanel>
 
-                        {/* Account Management Tab */}
-                        {wallet?.accounts.length > 1 && (
-                            <TabPanel value={tabValue} index={3}>
-                                <Grid container spacing={4}>
-                                    <Grid item xs={12}>
-                                        <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                                            Account Management
-                                        </Typography>
-                                        <Alert
-                                            severity="warning"
-                                            className="mb-6"
-                                            icon={<Warning />}
-                                        >
-                                            <Typography variant="body2">
-                                                Danger Zone: Actions in this section can result in permanent data loss.
-                                            </Typography>
-                                        </Alert>
-                                    </Grid>
 
-                                    <Grid item xs={12}>
-                                        <Paper className="p-6 border border-red-100 bg-red-50">
-                                            <Typography variant="h6" className="text-red-700 font-semibold mb-2">
-                                                Delete Account
-                                            </Typography>
-                                            <Typography variant="body2" className="text-red-600 mb-4">
-                                                This action cannot be undone. This will permanently delete the account "{activeAccount?.pseudo}" and all associated data.
-                                            </Typography>
-
-                                            <AnimatePresence>
-                                                {deleteDialogOpen && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: 'auto' }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                        className="mb-4"
-                                                    >
-                                                        <Alert severity="error" className="mb-4">
-                                                            <Typography variant="body2">
-                                                                To confirm deletion, please type <strong>{activeAccount?.pseudo}</strong> below.
-                                                            </Typography>
-                                                        </Alert>
-
-                                                        <TextField
-                                                            id="confirm-delete-name"
-                                                            label="Confirm account name"
-                                                            variant="outlined"
-                                                            fullWidth
-                                                            className="mb-4"
-                                                            placeholder={`Type "${activeAccount?.pseudo}" to confirm`}
-                                                        />
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-
-                                            <Box display="flex" justifyContent="flex-end">
-                                                {!deleteDialogOpen ? (
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.02 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                    >
-                                                        <Button
-                                                            variant="contained"
-                                                            color="error"
-                                                            startIcon={<DeleteForever />}
-                                                            onClick={() => setDeleteDialogOpen(true)}
-                                                        >
-                                                            Delete Account
-                                                        </Button>
-                                                    </motion.div>
-                                                ) : (
-                                                    <Stack direction="row" spacing={2}>
-                                                        <Button
-                                                            variant="outlined"
-                                                            onClick={() => setDeleteDialogOpen(false)}
-                                                        >
-                                                            Cancel
-                                                        </Button>
-                                                        <motion.div
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                        >
-                                                            <Button
-                                                                variant="contained"
-                                                                color="error"
-                                                                startIcon={<DeleteForever />}
-                                                                onClick={handleDeleteAccount}
-                                                            >
-                                                                Confirm Deletion
-                                                            </Button>
-                                                        </motion.div>
-                                                    </Stack>
-                                                )}
-                                            </Box>
-                                        </Paper>
-                                    </Grid>
-                                </Grid>
-                            </TabPanel>
-                        )}
                     </Box>
                 </Paper>
             </motion.div>
