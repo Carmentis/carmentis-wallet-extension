@@ -55,7 +55,8 @@ import {
     Settings as SettingsIcon,
     Visibility,
     VisibilityOff,
-    Warning
+    Warning,
+    Info
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
@@ -65,7 +66,6 @@ import { z } from "zod";
 // Define schemas for form validation
 const personalInfoSchema = z.object({
   pseudo: z.string().min(1, "Account name is required"),
-  email: z.string().email("Invalid email address").optional(),
   nonce: z.number().int().optional()
 });
 
@@ -73,6 +73,11 @@ const networkSchema = z.object({
     nodeEndpoint: z.string().url("Must be a valid URL"),
     explorerEndpoint: z.string().url("Must be a valid URL")
 });
+
+// Schema for account information form
+const accountInfoSchema = z.record(z.string(), z.object({
+    pseudo: z.string().min(1, "Account name is required")
+}));
 
 const deleteAccountSchema = z.object({
     confirmName: z.string()
@@ -83,6 +88,7 @@ const deleteAccountSchema = z.object({
 
 type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
 type NetworkFormData = z.infer<typeof networkSchema>;
+type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
 
 // Tab panel component
 interface TabPanelProps {
@@ -144,7 +150,6 @@ export default function Parameters() {
         resolver: zodResolver(personalInfoSchema),
         defaultValues: {
             pseudo: activeAccount?.pseudo || '',
-            email: activeAccount?.email || '',
             nonce: activeAccount?.nonce
         }
     });
@@ -157,8 +162,22 @@ export default function Parameters() {
         }
     });
 
+    // Create initial values for account info form
+    const initialAccountInfoValues = wallet?.accounts.reduce((acc, account) => {
+        acc[account.id] = {
+            pseudo: account.pseudo || ''
+        };
+        return acc;
+    }, {} as Record<string, { pseudo: string }>);
+
+    const accountInfoForm = useForm<AccountInfoFormData>({
+        resolver: zodResolver(accountInfoSchema),
+        defaultValues: initialAccountInfoValues || {}
+    });
+
     const { control: personalControl, handleSubmit: handlePersonalSubmit, formState: { errors: personalErrors, isDirty: isPersonalDirty } } = personalInfoForm;
     const { control: networkControl, handleSubmit: handleNetworkSubmit, formState: { errors: networkErrors, isDirty: isNetworkDirty } } = networkForm;
+    const { control: accountInfoControl, handleSubmit: handleAccountInfoSubmit, formState: { errors: accountInfoErrors, isDirty: isAccountInfoDirty } } = accountInfoForm;
 
     // Load user keys
     useEffect(() => {
@@ -189,7 +208,6 @@ export default function Parameters() {
                     return {
                         ...a,
                         pseudo: data.pseudo,
-                        email: data.email,
                         nonce: data.nonce
                     };
                 });
@@ -229,6 +247,36 @@ export default function Parameters() {
         }
     };
 
+    // Save account information for all accounts
+    const onSaveAccountInfo = (data: AccountInfoFormData) => {
+        try {
+            setWallet(wallet => {
+                if (!wallet) return undefined;
+
+                const accounts = wallet.accounts.map(account => {
+                    const accountInfo = data[account.id];
+                    if (!accountInfo) return account;
+
+                    return {
+                        ...account,
+                        pseudo: accountInfo.pseudo
+                    };
+                });
+
+                return {
+                    ...wallet,
+                    accounts
+                } as Wallet;
+            });
+
+            setSuccessMessage("Account information updated successfully");
+            accountInfoForm.reset(data);
+        } catch (error) {
+            toast.error("Failed to update account information");
+            console.error(error);
+        }
+    };
+
     // Copy public key to clipboard
     const handleCopyPublicKey = () => {
         navigator.clipboard.writeText(userKeys.publicKey);
@@ -236,9 +284,12 @@ export default function Parameters() {
         setTimeout(() => setCopiedPublicKey(false), 2000);
     };
 
-    // Share public key via email
+    // Share public key
     const handleSharePublicKey = () => {
-        window.open(`mailto:?subject=My%20Carmentis%20Public%20Key&body=Hello,%0A%0AHere%20is%20my%20Carmentis%20public%20key:%0A%0A${userKeys.publicKey}%0A%0ARegards,%0A${wallet?.firstname}`);
+        navigator.clipboard.writeText(userKeys.publicKey);
+        setCopiedPublicKey(true);
+        setTimeout(() => setCopiedPublicKey(false), 2000);
+        toast.success("Public key copied to clipboard");
     };
 
     // Delete account
@@ -329,17 +380,24 @@ export default function Parameters() {
                                 className="font-medium"
                             />
                             <Tab
+                                icon={<Info />}
+                                iconPosition="start"
+                                label="Information"
+                                {...a11yProps(1)}
+                                className="font-medium"
+                            />
+                            <Tab
                                 icon={<Key />}
                                 iconPosition="start"
                                 label="Security & Keys"
-                                {...a11yProps(1)}
+                                {...a11yProps(2)}
                                 className="font-medium"
                             />
                             <Tab
                                 icon={<Language />}
                                 iconPosition="start"
                                 label="Network"
-                                {...a11yProps(2)}
+                                {...a11yProps(3)}
                                 className="font-medium"
                             />
                             {wallet?.accounts.length > 1 && (
@@ -347,7 +405,7 @@ export default function Parameters() {
                                     icon={<DeleteForever />}
                                     iconPosition="start"
                                     label="Account Management"
-                                    {...a11yProps(3)}
+                                    {...a11yProps(4)}
                                     className="font-medium text-red-500"
                                 />
                             )}
@@ -372,9 +430,6 @@ export default function Parameters() {
                                                 <Typography variant="h5" className="font-semibold text-gray-800">
                                                     {activeAccount?.pseudo}
                                                 </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {activeAccount?.email}
-                                                </Typography>
                                             </Box>
                                         </Box>
                                     </Grid>
@@ -395,30 +450,6 @@ export default function Parameters() {
                                                         startAdornment: (
                                                             <InputAdornment position="start">
                                                                 <Badge fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Controller
-                                            name="email"
-                                            control={personalControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Email Address"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    error={!!personalErrors.email}
-                                                    helperText={personalErrors.email?.message}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <EmailIcon fontSize="small" />
                                                             </InputAdornment>
                                                         ),
                                                     }}
@@ -475,8 +506,95 @@ export default function Parameters() {
                             </form>
                         </TabPanel>
 
-                        {/* Security & Keys Tab */}
+                        {/* Information Tab */}
                         <TabPanel value={tabValue} index={1}>
+                            <form onSubmit={handleAccountInfoSubmit(onSaveAccountInfo)}>
+                                <Grid container spacing={4}>
+                                    <Grid item xs={12}>
+                                        <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
+                                            Account Information
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" className="mb-4">
+                                            Quickly modify information for all your accounts in one place
+                                        </Typography>
+                                    </Grid>
+
+                                    {wallet?.accounts.map((account, index) => (
+                                        <Grid item xs={12} key={account.id}>
+                                            <Paper elevation={0} className="p-6 border border-gray-100 rounded-lg mb-4">
+                                                <Box display="flex" alignItems="center" mb={3}>
+                                                    <Avatar
+                                                        className="bg-blue-100 text-blue-600 mr-4"
+                                                        sx={{ width: 48, height: 48 }}
+                                                    >
+                                                        {account.pseudo?.charAt(0) || ''}
+                                                    </Avatar>
+                                                    <Typography variant="h6" className="font-semibold text-gray-800">
+                                                        Account {index + 1}
+                                                        {account.id === wallet.activeAccountId && (
+                                                            <Chip 
+                                                                label="Active" 
+                                                                size="small" 
+                                                                className="ml-2 bg-green-100 text-green-600 font-medium"
+                                                            />
+                                                        )}
+                                                    </Typography>
+                                                </Box>
+
+                                                <Grid container spacing={3}>
+                                                    <Grid item xs={12} md={6}>
+                                                        <Controller
+                                                            name={`${account.id}.pseudo`}
+                                                            control={accountInfoControl}
+                                                            render={({ field }) => (
+                                                                <TextField
+                                                                    {...field}
+                                                                    label="Account Name"
+                                                                    variant="outlined"
+                                                                    fullWidth
+                                                                    error={!!accountInfoErrors?.[account.id]?.pseudo}
+                                                                    helperText={accountInfoErrors?.[account.id]?.pseudo?.message}
+                                                                    InputProps={{
+                                                                        startAdornment: (
+                                                                            <InputAdornment position="start">
+                                                                                <Badge fontSize="small" />
+                                                                            </InputAdornment>
+                                                                        ),
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        />
+                                                    </Grid>
+                                                </Grid>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+
+                                    <Grid item xs={12}>
+                                        <Box display="flex" justifyContent="flex-end">
+                                            <motion.div
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                            >
+                                                <Button
+                                                    type="submit"
+                                                    variant="contained"
+                                                    color="primary"
+                                                    startIcon={<Save />}
+                                                    disabled={!isAccountInfoDirty}
+                                                    className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
+                                                >
+                                                    Save All Accounts
+                                                </Button>
+                                            </motion.div>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </form>
+                        </TabPanel>
+
+                        {/* Security & Keys Tab */}
+                        <TabPanel value={tabValue} index={2}>
                             <Grid container spacing={4}>
                                 <Grid item xs={12}>
                                     <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
@@ -574,7 +692,7 @@ export default function Parameters() {
                         </TabPanel>
 
                         {/* Network Tab */}
-                        <TabPanel value={tabValue} index={2}>
+                        <TabPanel value={tabValue} index={3}>
                             <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
@@ -659,7 +777,7 @@ export default function Parameters() {
 
                         {/* Account Management Tab */}
                         {wallet?.accounts.length > 1 && (
-                            <TabPanel value={tabValue} index={3}>
+                            <TabPanel value={tabValue} index={4}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
                                         <Typography variant="h6" className="font-semibold text-gray-800 mb-4">

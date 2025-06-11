@@ -21,15 +21,6 @@ import {deprecate} from "node:util";
 const DEFAULT_ACCOUNT_NAME = "Account"
 const DEFAULT_NONCE = 0;
 
-/**
- * Represents the data structure consisting of the email validation proof.
- */
-export interface EmailValidationProofData {
-    ts: number,
-    email: string,
-    publicKey: string,
-    signature: string,
-}
 
 /**
  * Structure representing the application.
@@ -87,8 +78,6 @@ export interface Account {
     id : string;
     nonce : number;
     pseudo: string;
-    email?: string;
-    emailValidationProof?: EmailValidationProofData;
     accountVirtualBlockchainId?:  string;
 }
 
