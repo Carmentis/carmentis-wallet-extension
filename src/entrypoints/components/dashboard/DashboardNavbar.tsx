@@ -46,11 +46,16 @@ import {
   Logout, 
   Help, 
   AccountBalance as AccountBalanceIcon,
-  Notifications
+  Notifications,
+  NetworkCheck,
+  Search
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRecoilValue } from "recoil";
-import { activeAccountState } from "@/entrypoints/contexts/authentication.context.tsx";
+import { activeAccountState, walletState } from "@/entrypoints/contexts/authentication.context.tsx";
+import axios from 'axios';
+import { useEffect, useState } from "react";
+import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -144,6 +149,8 @@ export function DashboardNavbar() {
 
           {/* Right side - Actions */}
           <motion.div variants={itemVariants} className="flex items-center space-x-3">
+            <NodeConnectionStatus />
+            <ExplorerConnectionStatus />
             <BalanceChip />
             <NotificationsButton />
 
@@ -213,6 +220,134 @@ export function DashboardNavbar() {
         </Toolbar>
       </AppBar>
     </motion.div>
+  );
+}
+
+/**
+ * Node connection status component
+ */
+function NodeConnectionStatus() {
+  const wallet = useRecoilValue(walletState);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const nodeUrl = wallet?.nodeEndpoint || '';
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      setIsLoading(true);
+      try {
+        await axios.get(nodeUrl);
+        setIsConnected(true);
+      } catch (error) {
+        console.error("Node connection error:", error);
+        setIsConnected(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (nodeUrl) {
+      checkConnection();
+    }
+  }, [nodeUrl]);
+
+  if (isLoading) {
+    return (
+      <MuiTooltip title={`Connecting to ${nodeUrl}...`}>
+        <div className="flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium">
+          <div className="w-4 h-4 mr-1">
+            <SpinningWheel />
+          </div>
+          <Typography variant="body2" className="font-medium text-blue-700">
+            Node
+          </Typography>
+        </div>
+      </MuiTooltip>
+    );
+  }
+
+  const statusColor = isConnected ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]";
+  const tooltipText = isConnected ? `Connected to node: ${nodeUrl}` : `Failed to connect to node: ${nodeUrl}`;
+
+  return (
+    <MuiTooltip title={tooltipText}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className={`flex items-center gap-1.5 rounded-full ${statusColor} py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium`}>
+          <NetworkCheck fontSize="small" />
+          <Typography variant="body2" className="font-medium">
+            Node
+          </Typography>
+        </div>
+      </motion.div>
+    </MuiTooltip>
+  );
+}
+
+/**
+ * Explorer connection status component
+ */
+function ExplorerConnectionStatus() {
+  const wallet = useRecoilValue(walletState);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const explorerUrl = wallet?.explorerEndpoint || '';
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      setIsLoading(true);
+      try {
+        await axios.get(explorerUrl);
+        setIsConnected(true);
+      } catch (error) {
+        console.error("Explorer connection error:", error);
+        setIsConnected(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (explorerUrl) {
+      checkConnection();
+    }
+  }, [explorerUrl]);
+
+  if (isLoading) {
+    return (
+      <MuiTooltip title={`Connecting to ${explorerUrl}...`}>
+        <div className="flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium">
+          <div className="w-4 h-4 mr-1">
+            <SpinningWheel />
+          </div>
+          <Typography variant="body2" className="font-medium text-blue-700">
+            Explorer
+          </Typography>
+        </div>
+      </MuiTooltip>
+    );
+  }
+
+  const statusColor = isConnected ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]";
+  const tooltipText = isConnected ? `Connected to explorer: ${explorerUrl}` : `Failed to connect to explorer: ${explorerUrl}`;
+
+  return (
+    <MuiTooltip title={tooltipText}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className={`flex items-center gap-1.5 rounded-full ${statusColor} py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium`}>
+          <Search fontSize="small" />
+          <Typography variant="body2" className="font-medium">
+            Explorer
+          </Typography>
+        </div>
+      </motion.div>
+    </MuiTooltip>
   );
 }
 
