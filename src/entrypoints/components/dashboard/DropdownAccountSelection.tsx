@@ -182,12 +182,7 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
               >
                 {activeAccount?.pseudo || ''}
               </Typography>
-              <Typography 
-                variant="caption" 
-                className="text-gray-500 block -mt-0.5"
-              >
-                Active Account
-              </Typography>
+
             </Box>
           </Box>
         </Button>

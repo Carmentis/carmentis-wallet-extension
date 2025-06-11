@@ -76,7 +76,8 @@ const networkSchema = z.object({
 
 // Schema for account information form
 const accountInfoSchema = z.record(z.string(), z.object({
-    pseudo: z.string().min(1, "Account name is required")
+    pseudo: z.string().min(1, "Account name is required"),
+    nonce: z.number().int().optional()
 }));
 
 const deleteAccountSchema = z.object({
@@ -141,6 +142,7 @@ export default function Parameters() {
     const [tabValue, setTabValue] = useState(0);
     const [showPrivateKey, setShowPrivateKey] = useState(false);
     const [userKeys, setUserKeys] = useState<{ privateKey: string, publicKey: string }>({ privateKey: '', publicKey: '' });
+    const [accountPublicKeys, setAccountPublicKeys] = useState<Record<string, string>>({});
     const [copiedPublicKey, setCopiedPublicKey] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -165,10 +167,11 @@ export default function Parameters() {
     // Create initial values for account info form
     const initialAccountInfoValues = wallet?.accounts.reduce((acc, account) => {
         acc[account.id] = {
-            pseudo: account.pseudo || ''
+            pseudo: account.pseudo || '',
+            nonce: account.nonce
         };
         return acc;
-    }, {} as Record<string, { pseudo: string }>);
+    }, {} as Record<string, { pseudo: string, nonce?: number }>);
 
     const accountInfoForm = useForm<AccountInfoFormData>({
         resolver: zodResolver(accountInfoSchema),
@@ -191,6 +194,28 @@ export default function Parameters() {
                 });
             });
     }, [wallet, activeAccount]);
+
+    // Load public keys for all accounts
+    useEffect(() => {
+        if (!wallet) return;
+
+        const loadPublicKeys = async () => {
+            const keys: Record<string, string> = {};
+
+            for (const account of wallet.accounts) {
+                try {
+                    const keyPair = await getUserKeyPair(wallet, account);
+                    keys[account.id] = Encoders.ToHexa(keyPair.publicKey);
+                } catch (error) {
+                    console.error(`Failed to load public key for account ${account.id}:`, error);
+                }
+            }
+
+            setAccountPublicKeys(keys);
+        };
+
+        loadPublicKeys();
+    }, [wallet, tabValue]);
 
     // Handle tab change
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -259,7 +284,8 @@ export default function Parameters() {
 
                     return {
                         ...account,
-                        pseudo: accountInfo.pseudo
+                        pseudo: accountInfo.pseudo,
+                        nonce: accountInfo.nonce !== undefined ? accountInfo.nonce : account.nonce
                     };
                 });
 
@@ -372,17 +398,19 @@ export default function Parameters() {
                             indicatorColor="primary"
                             textColor="primary"
                         >
-                            <Tab
+                            {/*
+                                  <Tab
                                 icon={<AccountCircle />}
                                 iconPosition="start"
                                 label="Personal Info"
                                 {...a11yProps(0)}
                                 className="font-medium"
                             />
+                            */}
                             <Tab
                                 icon={<Info />}
                                 iconPosition="start"
-                                label="Information"
+                                label="Accounts"
                                 {...a11yProps(1)}
                                 className="font-medium"
                             />
@@ -414,100 +442,9 @@ export default function Parameters() {
 
                     {/* Tab panels */}
                     <Box className="p-6">
-                        {/* Personal Info Tab */}
-                        <TabPanel value={tabValue} index={0}>
-                            <form onSubmit={handlePersonalSubmit(onSavePersonalInfo)}>
-                                <Grid container spacing={4}>
-                                    <Grid item xs={12}>
-                                        <Box display="flex" alignItems="center" mb={3}>
-                                            <Avatar
-                                                className="bg-green-100 text-green-600 mr-4"
-                                                sx={{ width: 64, height: 64 }}
-                                            >
-                                                {activeAccount?.pseudo?.charAt(0) || ''}
-                                            </Avatar>
-                                            <Box>
-                                                <Typography variant="h5" className="font-semibold text-gray-800">
-                                                    {activeAccount?.pseudo}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Controller
-                                            name="pseudo"
-                                            control={personalControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Account Name"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    error={!!personalErrors.pseudo}
-                                                    helperText={personalErrors.pseudo?.message}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Badge fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Controller
-                                            name="nonce"
-                                            control={personalControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Account Nonce"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    type="number"
-                                                    error={!!personalErrors.nonce}
-                                                    helperText={personalErrors.nonce?.message || "Used to derive different keys"}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <LockReset fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12}>
-                                        <Box display="flex" justifyContent="flex-end">
-                                            <motion.div
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                <Button
-                                                    type="submit"
-                                                    variant="contained"
-                                                    color="primary"
-                                                    startIcon={<Save />}
-                                                    disabled={!isPersonalDirty}
-                                                    className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
-                                                >
-                                                    Save Changes
-                                                </Button>
-                                            </motion.div>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                            </form>
-                        </TabPanel>
 
                         {/* Information Tab */}
-                        <TabPanel value={tabValue} index={1}>
+                        <TabPanel value={tabValue} index={0}>
                             <form onSubmit={handleAccountInfoSubmit(onSaveAccountInfo)}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
@@ -565,6 +502,72 @@ export default function Parameters() {
                                                             )}
                                                         />
                                                     </Grid>
+                                                    <Grid item xs={12} md={6}>
+                                                        <Controller
+                                                            name={`${account.id}.nonce`}
+                                                            control={accountInfoControl}
+                                                            render={({ field }) => (
+                                                                <TextField
+                                                                    {...field}
+                                                                    label="Account Nonce"
+                                                                    variant="outlined"
+                                                                    fullWidth
+                                                                    type="number"
+                                                                    error={!!accountInfoErrors?.[account.id]?.nonce}
+                                                                    helperText={accountInfoErrors?.[account.id]?.nonce?.message || "Used to derive different keys"}
+                                                                    InputProps={{
+                                                                        startAdornment: (
+                                                                            <InputAdornment position="start">
+                                                                                <LockReset fontSize="small" />
+                                                                            </InputAdornment>
+                                                                        ),
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        field.onChange(value === '' ? undefined : Number(value));
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        />
+                                                    </Grid>
+
+                                                    {accountPublicKeys[account.id] && (
+                                                        <Grid item xs={12}>
+                                                            <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
+                                                                Public Key
+                                                            </Typography>
+                                                            <TextField
+                                                                fullWidth
+                                                                variant="outlined"
+                                                                value={accountPublicKeys[account.id]}
+                                                                InputProps={{
+                                                                    readOnly: true,
+                                                                    className: "font-mono text-sm",
+                                                                    endAdornment: (
+                                                                        <InputAdornment position="end">
+                                                                            <Tooltip title="Copy to clipboard">
+                                                                                <IconButton
+                                                                                    onClick={() => {
+                                                                                        navigator.clipboard.writeText(accountPublicKeys[account.id]);
+                                                                                        toast.success("Public key copied to clipboard");
+                                                                                    }}
+                                                                                    edge="end"
+                                                                                >
+                                                                                    <ContentCopy />
+                                                                                </IconButton>
+                                                                            </Tooltip>
+                                                                        </InputAdornment>
+                                                                    ),
+                                                                }}
+                                                                sx={{
+                                                                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                                                                }}
+                                                            />
+                                                            <Typography variant="caption" color="text.secondary" className="mt-1 block">
+                                                                This is the public key associated with this account and its current nonce.
+                                                            </Typography>
+                                                        </Grid>
+                                                    )}
                                                 </Grid>
                                             </Paper>
                                         </Grid>
@@ -594,7 +597,7 @@ export default function Parameters() {
                         </TabPanel>
 
                         {/* Security & Keys Tab */}
-                        <TabPanel value={tabValue} index={2}>
+                        <TabPanel value={tabValue} index={1}>
                             <Grid container spacing={4}>
                                 <Grid item xs={12}>
                                     <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
@@ -692,7 +695,7 @@ export default function Parameters() {
                         </TabPanel>
 
                         {/* Network Tab */}
-                        <TabPanel value={tabValue} index={3}>
+                        <TabPanel value={tabValue} index={2}>
                             <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
@@ -777,7 +780,7 @@ export default function Parameters() {
 
                         {/* Account Management Tab */}
                         {wallet?.accounts.length > 1 && (
-                            <TabPanel value={tabValue} index={4}>
+                            <TabPanel value={tabValue} index={3}>
                                 <Grid container spacing={4}>
                                     <Grid item xs={12}>
                                         <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
