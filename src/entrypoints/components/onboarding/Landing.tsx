@@ -20,8 +20,7 @@ import {useTranslation} from "react-i18next";
 import {CarmentisProvider} from "@/providers/carmentisProvider.tsx";
 import {useRecoilValue, useSetRecoilState} from "recoil";
 import {
-    onboardingFirstnameAtom,
-    onboardingLastnameAtom,
+    onboardingAccountNameAtom,
     onboardingPasswordAtom, onboardingSeedAtom
 } from "@/entrypoints/components/onboarding/onboarding.state.ts";
 
@@ -35,13 +34,11 @@ export function Landing() {
 
         async function populateWithDevWallet() {
             // we create a default wallet
-            const setFirstname = useSetRecoilState(onboardingFirstnameAtom);
-            const setLastname = useSetRecoilState(onboardingLastnameAtom);
+            const setAccountName = useSetRecoilState(onboardingAccountNameAtom);
             const setPassword = useSetRecoilState(onboardingPasswordAtom);
             const setSeed = useSetRecoilState(onboardingSeedAtom);
 
-            setFirstname("Dev")
-            setLastname("Dev")
+            setAccountName("Dev")
             setPassword("aaa")
             const provider = new CarmentisProvider();
             const words = provider.generateWords();

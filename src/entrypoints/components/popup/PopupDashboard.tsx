@@ -398,8 +398,6 @@ function PopupGetUserData() {
     const requiredData : string[] = req.object.requiredData!
 
     function mapRequiredDataItemWithValue(requiredItem: string) {
-        if (requiredItem === 'firstname') return activeAccount?.firstname || '';
-        if (requiredItem === 'lastname' ) return activeAccount?.lastname || '';
         if (requiredItem === 'email') return activeAccount?.email || '';
         return ''
     }

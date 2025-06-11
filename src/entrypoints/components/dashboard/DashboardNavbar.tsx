@@ -167,7 +167,7 @@ export function DashboardNavbar() {
                     className="bg-green-100 text-green-600"
                     sx={{ width: 32, height: 32 }}
                   >
-                    {activeAccount?.firstname?.charAt(0) || ''}
+                    {activeAccount?.pseudo?.charAt(0) || ''}
                   </Avatar>
                 </IconButton>
               </motion.div>

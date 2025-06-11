@@ -86,8 +86,7 @@ export interface MicroBlock {
 export interface Account {
     id : string;
     nonce : number;
-    firstname: string;
-    lastname: string;
+    pseudo: string;
     email?: string;
     emailValidationProof?: EmailValidationProofData;
     accountVirtualBlockchainId?:  string;
@@ -99,27 +98,24 @@ export interface Account {
  *
  * The created account contains the strictly minimal information to create a valid account.
  *
- * @param firstname The firstname of the wallet user.
- * @param lastname The lastname of the wallet user.
+ * @param pseudo The pseudo identifying the account
  * @param nonce The nonce associated with the account
  *
  * @constructor
  */
-export function CreateFromPseudoAndNonce(firstname: string, lastname: string, nonce : number) : Account {
+export function CreateFromPseudoAndNonce(pseudo: string, nonce : number) : Account {
     return {
         id: generateAccountId(),
         nonce,
-        firstname,
-        lastname
+        pseudo
     }
 }
 
 
-export function  DefaultAccountWithIdentity(firstname : string, lastname: string ) : Account {
+export function  DefaultAccountWithIdentity(pseudo: string) : Account {
     return {
         id: generateAccountId(),
-        firstname,
-        lastname,
+        pseudo,
         nonce: DEFAULT_NONCE,
     }
 }

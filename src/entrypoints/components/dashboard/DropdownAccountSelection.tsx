@@ -80,16 +80,15 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
   /**
    * Creates and activates a new account
    * 
-   * @param firstname First name for the new account
-   * @param lastname Last name for the new account
+   * @param pseudo Pseudo for the new account
    */
-  function createAndActivateNewAccount(firstname: string, lastname: string) {
-    console.log(`[popup] create a new account for ${firstname} ${lastname}`);
+  function createAndActivateNewAccount(pseudo: string) {
+    console.log(`[popup] create a new account with pseudo ${pseudo}`);
 
     setWallet(wallet => {
       if (!wallet) return undefined;
       const nonce = wallet.counter + 1;
-      const createdAccount = CreateFromPseudoAndNonce(firstname, lastname, nonce);
+      const createdAccount = CreateFromPseudoAndNonce(pseudo, nonce);
 
       return {
         ...wallet,
@@ -173,7 +172,7 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
               className="bg-blue-50 text-blue-600 mr-2.5 border border-blue-100"
               sx={{ width: 32, height: 32 }}
             >
-              {activeAccount?.firstname?.charAt(0) || ''}
+              {activeAccount?.pseudo?.charAt(0) || ''}
             </Avatar>
             <Box>
               <Typography 
@@ -181,7 +180,7 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
                 className="font-medium text-gray-800 truncate"
                 sx={{ maxWidth: input.large ? 120 : 80 }}
               >
-                {activeAccount?.firstname} {activeAccount?.lastname?.charAt(0) || ''}
+                {activeAccount?.pseudo || ''}
               </Typography>
               <Typography 
                 variant="caption" 
@@ -227,13 +226,13 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
                           className="bg-blue-50 text-blue-600 border border-blue-100"
                           sx={{ width: 32, height: 32 }}
                         >
-                          {account.firstname?.charAt(0) || ''}
+                          {account.pseudo?.charAt(0) || ''}
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText 
                         primary={
                           <Typography variant="body2" className="font-medium text-gray-800">
-                            {account.firstname} {account.lastname?.charAt(0) || ''}
+                            {account.pseudo || ''}
                           </Typography>
                         }
                         secondary={
@@ -289,10 +288,10 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
               setShowAccountCreation(false);
               setIsOpen(false);
             }}
-            onCreate={(firstname, lastname) => {
+            onCreate={(pseudo) => {
               setShowAccountCreation(false);
               setIsOpen(false);
-              createAndActivateNewAccount(firstname, lastname);
+              createAndActivateNewAccount(pseudo);
             }}
           />
         )}

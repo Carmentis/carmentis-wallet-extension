@@ -19,5 +19,6 @@ import {atom} from "recoil";
 
 export const onboardingFirstnameAtom = atom({ key: 'onboarding-firstname', default: '' });
 export const onboardingLastnameAtom = atom({ key: 'onboarding-lastname', default: '' });
+export const onboardingAccountNameAtom = atom({ key: 'onboarding-account-name', default: '' });
 export const onboardingPasswordAtom = atom({ key: 'onboarding-password', default: '' });
 export const onboardingSeedAtom = atom({ key: 'onboarding-seed', default: '' });

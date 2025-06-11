@@ -64,8 +64,7 @@ import { z } from "zod";
 
 // Define schemas for form validation
 const personalInfoSchema = z.object({
-  firstname: z.string().min(1, "First name is required"),
-  lastname: z.string().min(1, "Last name is required"),
+  pseudo: z.string().min(1, "Account name is required"),
   email: z.string().email("Invalid email address").optional(),
   nonce: z.number().int().optional()
 });
@@ -144,8 +143,7 @@ export default function Parameters() {
     const personalInfoForm = useForm<PersonalInfoFormData>({
         resolver: zodResolver(personalInfoSchema),
         defaultValues: {
-            firstname: activeAccount?.firstname || '',
-            lastname: activeAccount?.lastname || '',
+            pseudo: activeAccount?.pseudo || '',
             email: activeAccount?.email || '',
             nonce: activeAccount?.nonce
         }
@@ -190,8 +188,7 @@ export default function Parameters() {
                     if (a.id !== wallet.activeAccountId) return a;
                     return {
                         ...a,
-                        firstname: data.firstname,
-                        lastname: data.lastname,
+                        pseudo: data.pseudo,
                         email: data.email,
                         nonce: data.nonce
                     };
@@ -241,7 +238,7 @@ export default function Parameters() {
 
     // Share public key via email
     const handleSharePublicKey = () => {
-        window.open(`mailto:?subject=My%20Carmentis%20Public%20Key&body=Hello,%0A%0AHere%20is%20my%20Carmentis%20public%20key:%0A%0A${userKeys.publicKey}%0A%0ARegards,%0A${activeAccount?.firstname}`);
+        window.open(`mailto:?subject=My%20Carmentis%20Public%20Key&body=Hello,%0A%0AHere%20is%20my%20Carmentis%20public%20key:%0A%0A${userKeys.publicKey}%0A%0ARegards,%0A${wallet?.firstname}`);
     };
 
     // Delete account
@@ -250,7 +247,7 @@ export default function Parameters() {
 
         if (!activeAccount || !confirmName) return;
 
-        if (confirmName.value !== activeAccount.firstname) {
+        if (confirmName.value !== activeAccount.pseudo) {
             toast.error("Account name doesn't match. Please enter the exact account name to confirm deletion.");
             return;
         }
@@ -369,12 +366,11 @@ export default function Parameters() {
                                                 className="bg-green-100 text-green-600 mr-4"
                                                 sx={{ width: 64, height: 64 }}
                                             >
-                                                {activeAccount?.firstname?.charAt(0) || ''}
-                                                {activeAccount?.lastname?.charAt(0) || ''}
+                                                {activeAccount?.pseudo?.charAt(0) || ''}
                                             </Avatar>
                                             <Box>
                                                 <Typography variant="h5" className="font-semibold text-gray-800">
-                                                    {activeAccount?.firstname} {activeAccount?.lastname}
+                                                    {activeAccount?.pseudo}
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary">
                                                     {activeAccount?.email}
@@ -385,40 +381,16 @@ export default function Parameters() {
 
                                     <Grid item xs={12} md={6}>
                                         <Controller
-                                            name="firstname"
+                                            name="pseudo"
                                             control={personalControl}
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
-                                                    label="First Name"
+                                                    label="Account Name"
                                                     variant="outlined"
                                                     fullWidth
-                                                    error={!!personalErrors.firstname}
-                                                    helperText={personalErrors.firstname?.message}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Badge fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Controller
-                                            name="lastname"
-                                            control={personalControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Last Name"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    error={!!personalErrors.lastname}
-                                                    helperText={personalErrors.lastname?.message}
+                                                    error={!!personalErrors.pseudo}
+                                                    helperText={personalErrors.pseudo?.message}
                                                     InputProps={{
                                                         startAdornment: (
                                                             <InputAdornment position="start">
@@ -710,7 +682,7 @@ export default function Parameters() {
                                                 Delete Account
                                             </Typography>
                                             <Typography variant="body2" className="text-red-600 mb-4">
-                                                This action cannot be undone. This will permanently delete the account "{activeAccount?.firstname} {activeAccount?.lastname}" and all associated data.
+                                                This action cannot be undone. This will permanently delete the account "{activeAccount?.pseudo}" and all associated data.
                                             </Typography>
 
                                             <AnimatePresence>
@@ -724,7 +696,7 @@ export default function Parameters() {
                                                     >
                                                         <Alert severity="error" className="mb-4">
                                                             <Typography variant="body2">
-                                                                To confirm deletion, please type <strong>{activeAccount?.firstname}</strong> below.
+                                                                To confirm deletion, please type <strong>{activeAccount?.pseudo}</strong> below.
                                                             </Typography>
                                                         </Alert>
 
@@ -734,7 +706,7 @@ export default function Parameters() {
                                                             variant="outlined"
                                                             fullWidth
                                                             className="mb-4"
-                                                            placeholder={`Type "${activeAccount?.firstname}" to confirm`}
+                                                            placeholder={`Type "${activeAccount?.pseudo}" to confirm`}
                                                         />
                                                     </motion.div>
                                                 )}

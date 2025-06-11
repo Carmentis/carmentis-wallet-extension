@@ -437,11 +437,10 @@ function TransferGraphic() {
               className="bg-green-100 text-green-600 w-16 h-16 mb-2 text-2xl font-bold"
               sx={{ width: 64, height: 64 }}
             >
-              {activeAccount?.firstname?.charAt(0) || ''}
-              {activeAccount?.lastname?.charAt(0) || ''}
+              {activeAccount?.pseudo?.charAt(0) || ''}
             </Avatar>
             <Typography variant="body1" className="font-medium text-gray-800">
-              {activeAccount?.firstname} {activeAccount?.lastname}
+              {activeAccount?.pseudo}
             </Typography>
             <Typography variant="body2" className="text-gray-500">
               Sender

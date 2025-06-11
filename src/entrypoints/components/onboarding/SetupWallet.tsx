@@ -24,8 +24,7 @@ import {useAppNotification} from "@/entrypoints/contexts/application-notificatio
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 import {useRecoilValue} from "recoil";
 import {
-    onboardingFirstnameAtom,
-    onboardingLastnameAtom,
+    onboardingAccountNameAtom,
     onboardingPasswordAtom, onboardingSeedAtom
 } from "@/entrypoints/components/onboarding/onboarding.state.ts";
 import {useAuthenticationContext} from "@/entrypoints/contexts/authentication.context.tsx";
@@ -48,14 +47,13 @@ export function SetupWallet() {
     const notificationSystem = useAppNotification();
     const authentication = useAuthenticationContext();
 
-    // recover the firstname, lastname, password and seed
-    const firstname = useRecoilValue(onboardingFirstnameAtom);
-    const lastname = useRecoilValue(onboardingLastnameAtom);
+    // recover the account name, password and seed
+    const accountName = useRecoilValue(onboardingAccountNameAtom);
     const password = useRecoilValue(onboardingPasswordAtom);
     const seed = useRecoilValue(onboardingSeedAtom);
 
     // create the wallet
-    const walletContext = CreateFromIdentityAndSeed(firstname, lastname, seed, password);
+    const walletContext = CreateFromIdentityAndSeed(accountName, seed, password);
 
 
     function redirectToMainPage() {

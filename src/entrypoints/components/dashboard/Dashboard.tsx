@@ -298,7 +298,7 @@ function DashboardOverview() {
                     <Grid container spacing={4} alignItems="center">
                         <Grid item xs={12} md={8}>
                             <Typography variant="h4" className="font-bold text-gray-800 mb-3">
-                                Welcome, {activeAccount.firstname}!
+                                Welcome, {activeAccount.pseudo}!
                             </Typography>
                             <Typography variant="body1" className="text-gray-600 mb-4">
                                 Here's an overview of your Carmentis wallet activity and balance
@@ -312,8 +312,7 @@ function DashboardOverview() {
                                     className="bg-blue-50 text-blue-600 w-20 h-20 text-3xl font-bold border-2 border-blue-100 relative shadow-md"
                                     sx={{ width: 80, height: 80 }}
                                 >
-                                    {activeAccount?.firstname?.charAt(0) || ''}
-                                    {activeAccount?.lastname?.charAt(0) || ''}
+                                    {activeAccount?.pseudo?.charAt(0) || ''}
                                 </Avatar>
                             </div>
                         </Grid>

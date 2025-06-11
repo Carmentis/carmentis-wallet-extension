@@ -46,12 +46,14 @@ export interface Wallet {
 }
 
 
-export function CreateFromIdentityAndSeed(firstname : string, lastname: string, seed : string, password: string) : Wallet {
+export function CreateFromIdentityAndSeed(accountName : string, seed : string, password: string) : Wallet {
 
     if ( !seed || typeof seed !== 'string') {
         throw new Error( "Cannot instantiate a wallet from undefined seed" );
     }
-    const createdAccount = DefaultAccountWithIdentity(firstname, lastname);
+    // Create a default account
+    const defaultPseudo = accountName;
+    const createdAccount = DefaultAccountWithIdentity(defaultPseudo);
     return {
         seed: seed,
         password: password,

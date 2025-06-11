@@ -20,12 +20,11 @@ import {Box, Button, Modal, Typography} from "@mui/material";
 
 export function AccountCreationModal(input : {
     onClose: () => void,
-    onCreate: (firstname: string, lastname: string) => void,
+    onCreate: (pseudo: string) => void,
 }) {
 
     const [hasSubmitted, setHasSubmitted] = useState(false);
-    const [newAccountFirstname, setnewAccountFirstname] = useState("");
-    const [newAccountLastname, setnewAccountLastname] = useState("");
+    const [newAccountPseudo, setNewAccountPseudo] = useState("");
 
     /**
      * This event is fired when the form is trying to submit. At this point, we prevent the default behaviour of
@@ -38,10 +37,9 @@ export function AccountCreationModal(input : {
     function createAccount(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setHasSubmitted(true);
-        if ( newAccountFirstname !== "" && newAccountFirstname !== "" ) {
-            input.onCreate(newAccountFirstname, newAccountLastname)
+        if (newAccountPseudo !== "") {
+            input.onCreate(newAccountPseudo)
         }
-
     }
 
     const style = {
@@ -55,8 +53,7 @@ export function AccountCreationModal(input : {
     };
 
     const inputs = [
-        { name: "firstname", value: newAccountFirstname, onEmpty: "The firstname cannot be empty", onChange: setnewAccountFirstname  },
-        { name: "lastname", value: newAccountLastname, onEmpty: "The lastname cannot be empty", onChange: setnewAccountLastname  }
+        { name: "pseudo", value: newAccountPseudo, onEmpty: "The account name cannot be empty", onChange: setNewAccountPseudo }
     ]
 
     const formContent = inputs.map(f => <>

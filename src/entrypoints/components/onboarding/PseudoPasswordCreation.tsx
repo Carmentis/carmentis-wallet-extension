@@ -17,7 +17,10 @@
 
 import { useLocation, useNavigate } from "react-router";
 import { useRecoilState } from "recoil";
-import { onboardingFirstnameAtom, onboardingLastnameAtom, onboardingPasswordAtom } from "@/entrypoints/components/onboarding/onboarding.state.ts";
+import {
+  onboardingAccountNameAtom,
+  onboardingPasswordAtom
+} from "@/entrypoints/components/onboarding/onboarding.state.ts";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,8 +29,7 @@ import { Person, Lock, ShieldLock, CheckCircle, ArrowRight } from "react-bootstr
 
 // Define the form schema with Zod
 const formSchema = z.object({
-  firstname: z.string().min(1, "First name is required"),
-  lastname: z.string().min(1, "Last name is required"),
+  accountName: z.string().min(1, "Account name is required"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -47,8 +49,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function PseudoPasswordCreation() {
   // Recoil state
-  const [firstname, setFirstname] = useRecoilState(onboardingFirstnameAtom);
-  const [lastname, setLastname] = useRecoilState(onboardingLastnameAtom);
+  const [accountName, setAccountName] = useRecoilState(onboardingAccountNameAtom);
   const [password, setPassword] = useRecoilState(onboardingPasswordAtom);
 
   // Navigation
@@ -67,8 +68,7 @@ export function PseudoPasswordCreation() {
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      firstname: firstname,
-      lastname: lastname,
+      accountName: accountName,
       password: password,
       confirmPassword: "",
       consent: false,
@@ -111,8 +111,7 @@ export function PseudoPasswordCreation() {
   // Form submission handler
   const onSubmit = (data: FormData) => {
     // Update Recoil state
-    setFirstname(data.firstname);
-    setLastname(data.lastname);
+    setAccountName(data.accountName);
     setPassword(data.password);
 
     // Navigate to next step
@@ -188,9 +187,9 @@ export function PseudoPasswordCreation() {
         <div className="flex flex-col md:w-1/2 md:pl-2">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <motion.div variants={itemVariants} className="space-y-4">
-              {/* First name field */}
+              {/* Account name field */}
               <div>
-                <label htmlFor="firstname" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="accountName" className="block text-sm font-medium text-gray-700 mb-1">
                   First name
                 </label>
                 <div className="relative">
@@ -198,52 +197,22 @@ export function PseudoPasswordCreation() {
                     <Person className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
-                    id="firstname"
+                    id="accountName"
                     type="text"
                     autoFocus
                     placeholder="Enter your first name"
                     className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${
-                      errors.firstname ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                      errors.accountName ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
                     } shadow-sm placeholder:text-gray-400 focus:ring-4 focus:outline-none sm:text-sm transition-all`}
-                    {...register("firstname")}
+                    {...register("accountName")}
                   />
-                  {errors.firstname && (
+                  {errors.accountName && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-1 text-sm text-red-600"
                     >
-                      {errors.firstname.message}
-                    </motion.p>
-                  )}
-                </div>
-              </div>
-
-              {/* Last name field */}
-              <div>
-                <label htmlFor="lastname" className="block text-sm font-medium text-gray-700 mb-1">
-                  Last name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Person className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    id="lastname"
-                    type="text"
-                    placeholder="Enter your last name"
-                    className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${
-                      errors.lastname ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-                    } shadow-sm placeholder:text-gray-400 focus:ring-4 focus:outline-none sm:text-sm transition-all`}
-                    {...register("lastname")}
-                  />
-                  {errors.lastname && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-1 text-sm text-red-600"
-                    >
-                      {errors.lastname.message}
+                      {errors.accountName.message}
                     </motion.p>
                   )}
                 </div>
