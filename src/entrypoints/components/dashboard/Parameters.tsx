@@ -62,6 +62,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
 
 // Define schemas for form validation
 const personalInfoSchema = z.object({
@@ -191,9 +192,10 @@ export default function Parameters() {
 
         getUserKeyPair(wallet, activeAccount)
             .then(keyPair => {
+                const encoder = EncoderFactory.bytesToHexEncoder();
                 setUserKeys({
-                    privateKey: Encoders.ToHexa(keyPair.privateKey),
-                    publicKey: Encoders.ToHexa(keyPair.publicKey)
+                    privateKey: encoder.encode(keyPair.privateKey.getPrivateKeyAsBytes()),
+                    publicKey: encoder.encode(keyPair.publicKey.getPublicKeyAsBytes())
                 });
             });
     }, [wallet, activeAccount]);
@@ -210,8 +212,9 @@ export default function Parameters() {
             for (const account of wallet.accounts) {
                 try {
                     const keyPair = await getUserKeyPair(wallet, account);
-                    publicKeys[account.id] = Encoders.ToHexa(keyPair.publicKey);
-                    privateKeys[account.id] = Encoders.ToHexa(keyPair.privateKey);
+                    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+                    publicKeys[account.id] = encoder.encode(keyPair.publicKey.getPublicKeyAsBytes());
+                    privateKeys[account.id] = encoder.encode(keyPair.privateKey.getPrivateKeyAsBytes());
                     visibilityState[account.id] = false; // Default to hidden
                 } catch (error) {
                     console.error(`Failed to load keys for account ${account.id}:`, error);

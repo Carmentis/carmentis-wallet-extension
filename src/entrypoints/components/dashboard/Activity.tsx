@@ -20,7 +20,14 @@ import { activeAccountState, walletState } from "@/entrypoints/contexts/authenti
 import React, { useEffect, useState } from "react";
 import { AccountDataStorage } from "@/utils/db/account-data-storage.ts";
 import { getUserKeyPair } from "@/entrypoints/main/wallet.tsx";
-import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {
+    ApplicationLedgerVb,
+    ApplicationVb,
+    Blockchain,
+    Explorer,
+    Hash,
+    ProviderFactory
+} from "@cmts-dev/carmentis-sdk/client";
 import { 
     Box, 
     Breadcrumbs, 
@@ -121,10 +128,13 @@ function TableOfChains() {
             const db = await AccountDataStorage.connectDatabase(activeAccount!);
             const keyPair = await getUserKeyPair(wallet!, activeAccount!);
             const chains = await db.getAllApplicationVirtualBlockchainId(offset, limit);
+            /*
             sdk.blockchain.blockchainCore.setUser(
                 sdk.blockchain.ROLES.OPERATOR, 
                 sdk.utils.encoding.toHexa(keyPair.privateKey)
             );
+
+             */
 
             setChains(chains.map(c => c.virtualBlockchainId));
         } catch (err) {
@@ -151,20 +161,27 @@ function TableOfChains() {
 
     async function renderRow(chain: string, index: number) {
         try {
-            const vb = new sdk.blockchain.appLedgerVb(chain);
-            await vb.load();
+            // creating the explorer and the blockchain
+            const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet?.nodeEndpoint as string);
+            const explorer = Explorer.createFromProvider(provider);
+            const blockchain = new Blockchain(provider);
 
-            const applicationId = vb.state.applicationId;
-            const applicationVb = new sdk.blockchain.applicationVb(applicationId);
-            await applicationVb.load();
+            // loading the organisation, application and application ledger
+            const applicationLedger = await blockchain.loadApplicationLedger(Hash.from(chain));
+            const application = await blockchain.loadApplication(applicationLedger.getApplicationId());
+            const organisationId = await application.getOrganizationId();
+            const organisation = await blockchain.loadOrganization(organisationId);
+            const applicationDescription = await application.getDescription();
+            const organisationDescription = await organisation.getDescription();
+            const height = applicationLedger.getHeight();
 
-            const application = await applicationVb.getDescriptionObject();
-            const organisation = await applicationVb.getOrganizationVb();
-            const organisationDescription = await organisation.getDescriptionObject();
-            const height = vb.getHeight() - 1;
 
             // Find the range of timeline for the virtual blockchain
-            const microblocks = vb.microblocks;
+            const microblocks = [];
+            for (let index = 1; index <= height; index++) {
+                const mb = await applicationLedger.getRecord(index)
+                microblocks.push(mb)
+            }
             const timestamps: number[] = microblocks.map(m => m.object.header.timestamp);
             const min = timestamps.reduce((a, b) => Math.min(a, b), timestamps[0]);
             const max = timestamps.reduce((a, b) => Math.max(a, b), timestamps[0]);
@@ -174,13 +191,13 @@ function TableOfChains() {
                     <Avatar className="bg-blue-100 text-blue-600 mr-2" sx={{ width: 28, height: 28 }}>
                         <Storage fontSize="small" />
                     </Avatar>
-                    <Typography className="font-medium">{application.getName()}</Typography>
+                    <Typography className="font-medium">{applicationDescription.name}</Typography>
                 </Box>,
                 <Box className="flex items-center">
                     <Avatar className="bg-purple-100 text-purple-600 mr-2" sx={{ width: 28, height: 28 }}>
                         <Business fontSize="small" />
                     </Avatar>
-                    <Typography>{organisationDescription.getName()}</Typography>
+                    <Typography>{organisationDescription.name}</Typography>
                 </Box>,
                 <Chip 
                     icon={<Timeline fontSize="small" />} 

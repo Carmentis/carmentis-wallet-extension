@@ -17,7 +17,7 @@
  */
 
 import { useAuthenticationContext } from "@/entrypoints/contexts/authentication.context.tsx";
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router";
 import { DropdownAccountSelection } from "@/entrypoints/components/dashboard/DropdownAccountSelection.tsx";
 import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";

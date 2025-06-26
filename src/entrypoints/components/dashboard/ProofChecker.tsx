@@ -39,7 +39,7 @@ import {
     DataObject
 } from "@mui/icons-material";
 import { useAsync } from "react-use";
-import { proofLoader } from "@cmts-dev/carmentis-sdk/client";
+import {Blockchain, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
 import { BlockViewer } from "@/entrypoints/components/dashboard/BlockViewer.tsx";
 import { useWallet } from "@/entrypoints/contexts/authentication.context.tsx";
@@ -436,11 +436,12 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
 
 function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Record<string, any> }) {
     const wallet = useWallet();
+    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+    const blockchain = new Blockchain(provider);
     const state = useAsync(async () => {
-        let loader = new proofLoader(proof);
+        let loader = await blockchain.importApplicationLedgerProof(proof);
         try {
-            const records = await loader.load();
-            return { verified: true, records: records.records }
+            return { verified: true, records: loader.map(l => l.data) }
         } catch (error) {
             console.error(error)
             return { verified: false, records: undefined }

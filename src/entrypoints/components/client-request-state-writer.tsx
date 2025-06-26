@@ -17,7 +17,6 @@
 
 import React, {ReactElement, useEffect} from "react";
 import {useRecoilValue, useSetRecoilState} from "recoil";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 
 import {

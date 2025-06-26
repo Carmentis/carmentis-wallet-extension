@@ -16,9 +16,10 @@
  */
 
 import {ProviderInterface} from "@/providers/providerInterface.tsx";
-import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {AES256GCMSymmetricEncryptionKey, CryptoSchemeFactory, EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import { SecretEncryptionKey } from '@/utils/secret-encryption-key.ts';
+import {randomBytes} from "node:crypto";
 
 export class CarmentisProvider implements ProviderInterface{
     generateWords(): string[] {
@@ -26,16 +27,19 @@ export class CarmentisProvider implements ProviderInterface{
     }
 
     async generateSeed(words: string[]): Promise<string> {
-        const seed = await Carmentis.getSeedFromWordList(words);
-        return sdk.utils.encoding.toHexa(seed);
+        const seed: Uint8Array = await Carmentis.getSeedFromWordList(words);
+        const encoder = EncoderFactory.bytesToHexEncoder();
+        return encoder.encode(seed);
     }
 
     encryptSeed(password: string, seed : Uint8Array) : Uint8Array {
+        // TODO security fix
         const secretKey = Carmentis.deriveAesKeyFromPassword(password);
         return secretKey.encrypt(seed);
     }
 
     decryptSeed(password: string, seed : Uint8Array) : Uint8Array {
+        // TODO security fix
         const secretKey = Carmentis.deriveAesKeyFromPassword(password);
         return secretKey.decrypt(seed);
     }

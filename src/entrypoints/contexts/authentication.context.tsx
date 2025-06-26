@@ -3,7 +3,7 @@ import {getUserKeyPair, SignatureKeyPair, Wallet} from '@/entrypoints/main/walle
 import {Account} from '@/entrypoints/main/Account.tsx';
 import {atom, selector, useRecoilState, useRecoilValue} from 'recoil';
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
-import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {PublicSignatureKey} from "@cmts-dev/carmentis-sdk/client";
 import {AtomEffect} from "recoil";
 
 export interface AuthenticationContainer {
@@ -86,13 +86,13 @@ export const activeAccountKeyPairState = selector<SignatureKeyPair|undefined>({
 	}
 })
 
-export const activeAccountPublicKeyState = selector<string|undefined>({
+export const activeAccountPublicKeyState = selector<PublicSignatureKey|undefined>({
 	key: "activeAccountPublicKey",
 	get: ({get}) => {
 		const keyPair = get(activeAccountKeyPairState);
 		if (!keyPair)
 			return undefined;
-		return Encoders.ToHexa(keyPair.publicKey);
+		return keyPair.publicKey;
 	}
 })
 
@@ -127,11 +127,6 @@ export function AuthenticationContextProvider(
 		}
     };
 
-	useEffect(() => {
-		if (wallet) {
-			sdk.blockchain.blockchainCore.setNode(wallet.nodeEndpoint);
-		}
-	}, [wallet]);
 
 
 	return <AuthenticationContext.Provider value={authenticationContainer}>

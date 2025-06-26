@@ -15,12 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js"
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
+import {
+    EncoderFactory,
+    PrivateSignatureKey, PublicSignatureKey,
+    SignatureAlgorithmId,
+    Wallet as CarmentisWallet
+} from '@cmts-dev/carmentis-sdk/client';
 
 import {Account, DefaultAccountWithIdentity} from '@/entrypoints/main/Account.tsx';
-
-import {Encoders} from '@/entrypoints/main/Encoders.tsx';
 
 /**
  * The default endpoint URL for the node server used in the application.
@@ -65,15 +67,23 @@ export function CreateFromIdentityAndSeed(accountName : string, seed : string, p
 }
 
 export type SignatureKeyPair = {
-    privateKey: object;
-    publicKey: object;
+    privateKey: PrivateSignatureKey;
+    publicKey: PublicSignatureKey;
 }
 
 export function getUserKeyPair(wallet : Wallet, account : Account) : Promise<SignatureKeyPair>  {
 
     return new Promise((resolve, reject) => {
-
-        let seed = sdk.utils.encoding.fromHexa(wallet.seed);
+        const hexEncoder = EncoderFactory.bytesToHexEncoder();
+        let seed = hexEncoder.decode(wallet.seed);
+        const carmentisWallet = CarmentisWallet.fromSeed(seed);
+        const privateKey = carmentisWallet.getPrivateSignatureKey(SignatureAlgorithmId.SECP256K1, account.nonce);
+        const publicKey = privateKey.getPublicKey();
+        resolve({
+            privateKey: privateKey,
+            publicKey: publicKey
+        })
+        /*
         Carmentis.derivePepperFromSeed(seed, account.nonce).then((pepper: Uint8Array) => {
             return Carmentis.deriveAccountPrivateKey(pepper).then((privateKey : Uint8Array) => {
                 return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {
@@ -87,6 +97,8 @@ export function getUserKeyPair(wallet : Wallet, account : Account) : Promise<Sig
         }).catch((error : Error) => {
             reject(error);
         })
+
+         */
     })
 
 }

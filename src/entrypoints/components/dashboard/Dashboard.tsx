@@ -22,7 +22,6 @@ import { Route, Routes, useNavigate } from 'react-router';
 import Parameters from '@/entrypoints/components/dashboard/Parameters.tsx';
 import { DropdownAccountSelection } from '@/entrypoints/components/dashboard/DropdownAccountSelection.tsx';
 import Skeleton from 'react-loading-skeleton';
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
 import { motion, AnimatePresence } from "framer-motion";
 import 'react-loading-skeleton/dist/skeleton.css';
 import {

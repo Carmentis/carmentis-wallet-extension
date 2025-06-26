@@ -32,7 +32,7 @@ import {
     Tooltip
 } from "@mui/material";
 import React, {useEffect, useState, useTransition} from "react";
-import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {ApplicationLedgerVb, Blockchain, Explorer, Hash, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import Skeleton from "react-loading-skeleton";
 import {useParams} from "react-router";
 import {Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator} from "@mui/lab";
@@ -57,13 +57,12 @@ export default function VirtualBlockchainViewer() {
     const params = useParams<{hash: string}>();
     const hash = params.hash;
     const wallet = useWallet();
+    const activeAccount = useRecoilValue(activeAccountState);
     const [state, startTransition] = useAsyncFn(async () => {
-        const vb = new sdk.blockchain.appLedgerVb(hash);
-        await vb.load();
-        const builder = vb.getProofBuilder();
-        builder.addAllMicroblocks();
-        const proof = await builder.generate();
-        console.debug("Generated proof:", proof)
+        const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+        const blockchain = Blockchain.createFromProvider(provider);
+        const vb = await blockchain.loadApplicationLedger(Hash.from(hash as string));
+        const proof = await vb.exportProof({ author: activeAccount?.pseudo as string })
 
         const json = JSON.stringify(proof, null, 2);
         const blob = new Blob([json], {type: "application/json"});
@@ -141,7 +140,7 @@ export default function VirtualBlockchainViewer() {
                                         variant="contained" 
                                         color="primary"
                                         startIcon={state.loading ? <CircularProgress size={20} color="inherit" /> : <FileDownload />}
-                                        onClick={() => exportProof(hash)} 
+                                        onClick={() => exportProof(hash as string)}
                                         disabled={state.loading}
                                         className="bg-blue-600 hover:bg-blue-700"
                                         size="large"
@@ -181,7 +180,9 @@ export default function VirtualBlockchainViewer() {
 
 
 function SingleChain({ chainId }: { chainId: string }) {
-    const vb = new sdk.blockchain.appLedgerVb(chainId);
+    const wallet = useWallet();
+    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+    const vb = new ApplicationLedgerVb({provider})
     const [height, setHeight] = useState<number|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -190,8 +191,8 @@ function SingleChain({ chainId }: { chainId: string }) {
         try {
             setIsLoading(true);
             setError(null);
-            await vb.load();
-            const height = vb.getHeight();
+            await vb.load(chainId);
+            const height = vb.height;
             setHeight(height-1);
         } catch (err) {
             console.error("Error loading chain:", err);
@@ -338,24 +339,22 @@ function SingleChain({ chainId }: { chainId: string }) {
 }
 
 function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
-    const vb = new sdk.blockchain.appLedgerVb(chainId);
+    const wallet = useRecoilValue(walletState);
     const [record, setRecord] = useState<Record<string, any>|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const wallet = useRecoilValue(walletState);
     const activeAccount = useRecoilValue(activeAccountState);
 
     async function loadBlock() {
         try {
+
             setIsLoading(true);
             setError(null);
             const keyPair = await getUserKeyPair(wallet!, activeAccount!);
-            sdk.blockchain.blockchainCore.setUser(
-                sdk.blockchain.ROLES.OPERATOR, 
-                sdk.utils.encoding.toHexa(keyPair.privateKey)
-            );
-            await vb.load();
-            const record = vb.getRecord(index);
+            const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet?.nodeEndpoint as string);
+            const explorer = Blockchain.createFromProvider(provider);
+            const vb = await explorer.loadApplicationLedger(Hash.from(chainId));
+            const record = await vb.getRecord(vb.getHeight());
             setRecord(record);
         } catch (err) {
             console.error(`Error loading block ${index}:`, err);

@@ -24,7 +24,15 @@ import {clientRequestSessionState, showSuccessScreenState} from "@/entrypoints/s
 import {Box, Button, Typography} from "@mui/material";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
 import {getUserKeyPair, Wallet} from "@/entrypoints/main/wallet.tsx";
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
+import {
+    EncoderFactory,
+    StringSignatureEncoder,
+    wiExtensionWallet,
+    WIRQ_AUTH_BY_PUBLIC_KEY,
+    WIRQ_DATA_APPROVAL,
+    WIRQ_GET_EMAIL,
+    WIRQ_GET_USER_DATA
+} from '@cmts-dev/carmentis-sdk/client';
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse,} from "@/entrypoints/background.ts";
 import {Account} from "@/entrypoints/main/Account.tsx";
 import PopupEventApproval from "@/entrypoints/components/popup/PopupEventApproval.tsx";
@@ -260,12 +268,10 @@ function PopupBody() {
     if (error) return <PopupError/>
     if (success) return <PopupSuccess/>
     if (noRequest)  return <PopupIdleBody/>
-    const wiWallet = new sdk.wiExtensionWallet();
+    const wiWallet = new wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data)
-    if (req.type === sdk.constants.SCHEMAS.WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody/>
-    if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_EMAIL) return <PopupGetEmail/>
-    if (req.type === sdk.constants.SCHEMAS.WIRQ_GET_USER_DATA) return <PopupGetUserData/>
-    if (req.type === sdk.constants.SCHEMAS.WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
+    if (req.type === WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody/>
+    if (req.type === WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
 
     return <>You have a request!</>
 }
@@ -389,131 +395,6 @@ function PopupError() {
 }
 
 
-function PopupGetUserData() {
-    const markAsAccepted = useAccept();
-    const activeAccount = useActiveAccount();
-    const {clientRequest} = useClientRequest();
-    const wiWallet = new sdk.wiExtensionWallet();
-    const req = wiWallet.getRequestFromMessage(clientRequest.data);
-    const requiredData : string[] = req.object.requiredData!
-
-    function mapRequiredDataItemWithValue(requiredItem: string) {
-        if (requiredItem === 'email') return activeAccount?.email || '';
-        return ''
-    }
-
-    async function accept() {
-        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
-
-
-
-        // transform each data
-        const userData = requiredData.map(mapRequiredDataItemWithValue)
-
-
-        const wiWallet = new sdk.wiExtensionWallet();
-        const answer = await wiWallet.approveGetUserDataRequest(userData);
-
-
-        const response: BackgroundRequest<ClientResponse> = {
-            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-            payload: answer
-        }
-
-        console.log("[popup dashboard] Response:", response)
-        browser.runtime.sendMessage(response);
-        markAsAccepted();
-    }
-
-    const header = (
-        <Box className="flex items-center">
-            <Box className="bg-green-50 p-1.5 rounded-full mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-            </Box>
-            <Typography variant="subtitle1" className="font-medium text-gray-800">
-                Personal Data Request
-            </Typography>
-        </Box>
-    );
-
-    const body = (
-        <Box className="space-y-3">
-            <Box className="bg-green-50 border-l-2 border-green-400 p-2 rounded-r-md text-xs text-green-700">
-                An application is requesting access to your personal information. Please review the details below.
-            </Box>
-            <OriginAndDateOfCurrentRequest/>
-
-            <Box className="mt-2">
-                <Typography variant="body2" className="font-medium text-gray-700 mb-1.5 text-xs">
-                    Requested Information:
-                </Typography>
-                <Box className="bg-gray-50 p-2 rounded-md border border-gray-100">
-                    {requiredData.map((d, i) => (
-                        <Box key={i} className="flex items-center mb-1 last:mb-0">
-                            <Box className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></Box>
-                            <Typography variant="body2" className="text-xs text-gray-700">
-                                {d}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
-        </Box>
-    )
-    const footer = <AcceptDeclineButtonsFooter accept={accept} />
-    return <PopupNotificationLayout header={header} body={body} footer={footer}/>
-}
-
-function PopupGetEmail() {
-    const markAsAccepted = useAccept();
-    const activeAccount = useRecoilValue(activeAccountState);
-    const clientRequest = useRecoilValue(clientRequestSessionState);
-
-    async function accept() {
-        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
-        const wiWallet = new sdk.wiExtensionWallet();
-        const answer = await wiWallet.approveGetEmailRequest(activeAccount?.email as string);
-        console.log("[get email] answer:", answer)
-
-
-        const response: BackgroundRequest<ClientResponse> = {
-            backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-            payload: answer
-        };
-
-        console.log("[popup dashboard] Response:", response)
-        browser.runtime.sendMessage(response);
-        markAsAccepted();
-    }
-
-    const header = (
-        <Box className="flex items-center">
-            <Box className="bg-purple-50 p-1.5 rounded-full mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-            </Box>
-            <Typography variant="subtitle1" className="font-medium text-gray-800">
-                Email Access Request
-            </Typography>
-        </Box>
-    );
-
-    const body = (
-        <Box className="space-y-3">
-            <Box className="bg-purple-50 border-l-2 border-purple-400 p-2 rounded-r-md text-xs text-purple-700">
-                An application is requesting access to your email address. Please review the details below.
-            </Box>
-            <OriginAndDateOfCurrentRequest/>
-        </Box>
-    )
-    const footer = <AcceptDeclineButtonsFooter accept={accept}/>
-    return <PopupNotificationLayout header={header} body={body} footer={footer}/>
-}
-
 function PopupIdleBody() {
     return (
         <div className="h-full w-full bg-gradient-to-b from-gray-50 to-white">
@@ -582,10 +463,17 @@ function PopupAuthByPublicKeyBody() {
 
     async function accept() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
-        const wiWallet = new sdk.wiExtensionWallet();
+        const wiWallet = new wiExtensionWallet();
         const keyPair = await genKeyPair()
+        const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = EncoderFactory.defaultBytesToStringEncoder();
+        console.log("Authenticating with tagged public key", signatureEncoder.encodePublicKey(keyPair.publicKey))
+        console.log("Authenticating with plain public key", encoder.encode(keyPair.publicKey.getPublicKeyAsBytes()))
         const req = wiWallet.getRequestFromMessage(clientRequest.data)
-        const answer = wiWallet.signAuthenticationByPublicKey(Encoders.ToHexa(keyPair.privateKey), req.object);
+        const answer = wiWallet.signAuthenticationByPublicKey(
+            keyPair.privateKey,
+            req.object
+        );
 
         const response: BackgroundRequest<ClientResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,

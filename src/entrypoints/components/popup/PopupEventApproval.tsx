@@ -1,7 +1,7 @@
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {activeAccountState, useWallet, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
-import * as sdk from "@cmts-dev/carmentis-sdk/client";
+import {} from "@cmts-dev/carmentis-sdk/client";
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
@@ -68,7 +68,7 @@ export default function PopupEventApproval() {
     const wallet = useWallet();
     const activeAccount = useActiveAccount();
     const clientRequest = useRecoilValue(clientRequestSessionState);
-    const wiWallet = new sdk.wiExtensionWallet();
+    const wiWallet = new wiExtensionWallet();
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const [ready, setReady] = useState(false);
     const virtualBlockchainRef = useRef<sdk.blockchain.appLedgerVb | null>(null);

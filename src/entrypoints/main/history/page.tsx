@@ -159,7 +159,7 @@ function BalanceCard() {
                                 {balanceResponse.data} <span className="text-xl">CMTS</span>
                             </Typography>
                             <Typography variant="body2" className="text-gray-500">
-                                {activeAccount?.firstname} {activeAccount?.lastname}'s balance
+                                {activeAccount?.pseudo}'s balance
                             </Typography>
                         </>
                     )}

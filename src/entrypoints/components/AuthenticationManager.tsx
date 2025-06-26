@@ -21,7 +21,7 @@ import {SecureWalletStorage} from '@/utils/db/wallet-storage.ts';
 import pino from 'pino';
 import {CarmentisProvider} from '@/providers/carmentisProvider.tsx';
 import * as Carmentis from '@/lib/carmentis-nodejs-sdk.js';
-import * as sdk from '@cmts-dev/carmentis-sdk/client';
+import {} from '@cmts-dev/carmentis-sdk/client';
 
 
 // setup the internationalisation
@@ -80,12 +80,15 @@ function configureEndpointsFromWallet(wallet: Wallet | undefined) {
     if (!wallet) {
         console.warn('Endpoints not set since the provided wallet is not defined.');
     } else {
+        /*
         // configure the SDK based on the wallet preferences
         sdk.blockchain.blockchainCore.setNode(
             wallet.nodeEndpoint
         )
         Carmentis.registerNodeEndpoint(wallet.nodeEndpoint);
         Carmentis.registerDataEndpoint(wallet.emailOracleEndpoint);
+
+         */
     }
 }
 
