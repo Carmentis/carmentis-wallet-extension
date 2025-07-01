@@ -111,7 +111,7 @@ export async function transferTokensToPublicKey(nodeUrl: string, senderPrivateKe
 		// perform the transfer
 		const senderAccount = await blockchain.loadAccount(senderAccountHash);
 		await senderAccount.transfer({
-			account: receiverAccountHash.toByes(),
+			account: receiverAccountHash.toBytes(),
 			amount: 0,
 			publicReference: '',
 			privateReference: ''
