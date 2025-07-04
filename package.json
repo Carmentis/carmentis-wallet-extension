@@ -17,7 +17,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@cmts-dev/carmentis-sdk": "1.4.2",
+    "@cmts-dev/carmentis-sdk": "^1.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
