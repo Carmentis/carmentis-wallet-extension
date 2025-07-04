@@ -62,7 +62,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {EncoderFactory, StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
 
 // Define schemas for form validation
 const personalInfoSchema = z.object({
@@ -143,6 +143,7 @@ export default function Parameters() {
     const [tabValue, setTabValue] = useState(0);
     const [showPrivateKey, setShowPrivateKey] = useState(false);
     const [userKeys, setUserKeys] = useState<{ privateKey: string, publicKey: string }>({ privateKey: '', publicKey: '' });
+    const [accountTaggedPublicKeys, setAccountTaggedPublicKeys] = useState<Record<string, string>>({});
     const [accountPublicKeys, setAccountPublicKeys] = useState<Record<string, string>>({});
     const [accountPrivateKeys, setAccountPrivateKeys] = useState<Record<string, string>>({});
     const [visiblePrivateKeys, setVisiblePrivateKeys] = useState<Record<string, boolean>>({});
@@ -192,10 +193,9 @@ export default function Parameters() {
 
         getUserKeyPair(wallet, activeAccount)
             .then(keyPair => {
-                const encoder = EncoderFactory.bytesToHexEncoder();
                 setUserKeys({
-                    privateKey: encoder.encode(keyPair.privateKey.getPrivateKeyAsBytes()),
-                    publicKey: encoder.encode(keyPair.publicKey.getPublicKeyAsBytes())
+                    privateKey: keyPair.privateKey.getPrivateKeyAsString(),
+                    publicKey: keyPair.publicKey.getPublicKeyAsString(),
                 });
             });
     }, [wallet, activeAccount]);
@@ -206,21 +206,24 @@ export default function Parameters() {
 
         const loadKeys = async () => {
             const publicKeys: Record<string, string> = {};
+            const taggedPublicKeys: Record<string, string> = {};
             const privateKeys: Record<string, string> = {};
             const visibilityState: Record<string, boolean> = {};
 
             for (const account of wallet.accounts) {
                 try {
+                    const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
                     const keyPair = await getUserKeyPair(wallet, account);
-                    const encoder = EncoderFactory.defaultBytesToStringEncoder();
-                    publicKeys[account.id] = encoder.encode(keyPair.publicKey.getPublicKeyAsBytes());
-                    privateKeys[account.id] = encoder.encode(keyPair.privateKey.getPrivateKeyAsBytes());
+                    taggedPublicKeys[account.id] = encoder.encodePublicKey(keyPair.publicKey);
+                    publicKeys[account.id] = keyPair.publicKey.getPublicKeyAsString();
+                    privateKeys[account.id] = keyPair.privateKey.getPrivateKeyAsString();
                     visibilityState[account.id] = false; // Default to hidden
                 } catch (error) {
                     console.error(`Failed to load keys for account ${account.id}:`, error);
                 }
             }
 
+            setAccountTaggedPublicKeys(taggedPublicKeys);
             setAccountPublicKeys(publicKeys);
             setAccountPrivateKeys(privateKeys);
             setVisiblePrivateKeys(prev => ({...prev, ...visibilityState}));
@@ -232,35 +235,6 @@ export default function Parameters() {
     // Handle tab change
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
-    };
-
-    // Save personal information
-    const onSavePersonalInfo = (data: PersonalInfoFormData) => {
-        try {
-            setWallet(wallet => {
-                if (!wallet) return undefined;
-
-                const accounts = wallet.accounts.map(a => {
-                    if (a.id !== wallet.activeAccountId) return a;
-                    return {
-                        ...a,
-                        pseudo: data.pseudo,
-                        nonce: data.nonce
-                    };
-                });
-
-                return {
-                    ...wallet,
-                    accounts
-                } as Wallet;
-            });
-
-            setSuccessMessage("Personal information updated successfully");
-            personalInfoForm.reset(data);
-        } catch (error) {
-            toast.error("Failed to update personal information");
-            console.error(error);
-        }
     };
 
     // Save network settings
@@ -315,47 +289,6 @@ export default function Parameters() {
         }
     };
 
-    // Copy public key to clipboard
-    const handleCopyPublicKey = () => {
-        navigator.clipboard.writeText(userKeys.publicKey);
-        setCopiedPublicKey(true);
-        setTimeout(() => setCopiedPublicKey(false), 2000);
-    };
-
-    // Share public key
-    const handleSharePublicKey = () => {
-        navigator.clipboard.writeText(userKeys.publicKey);
-        setCopiedPublicKey(true);
-        setTimeout(() => setCopiedPublicKey(false), 2000);
-        toast.success("Public key copied to clipboard");
-    };
-
-    // Delete account (for Account Management tab)
-    const handleDeleteAccount = () => {
-        const confirmName = document.getElementById('confirm-delete-name') as HTMLInputElement;
-
-        if (!activeAccount || !confirmName) return;
-
-        if (confirmName.value !== activeAccount.pseudo) {
-            toast.error("Account name doesn't match. Please enter the exact account name to confirm deletion.");
-            return;
-        }
-
-        setWallet(wallet => {
-            if (!wallet) return undefined;
-
-            const accounts = wallet.accounts.filter(a => a.id !== activeAccount.id);
-
-            if (accounts.length === 0) {
-                toast.error("Cannot delete the last account");
-                return wallet;
-            }
-
-            setSuccessMessage("Account deleted successfully");
-            setDeleteDialogOpen(false);
-            return {...wallet, accounts, activeAccountId: accounts[0].id};
-        });
-    };
 
     // Delete specific account (for Information tab)
     const handleDeleteSpecificAccount = (accountId: string, accountPseudo: string) => {
@@ -670,6 +603,45 @@ export default function Parameters() {
                                                             />
                                                             <Typography variant="caption" color="text.secondary" className="mt-1 block">
                                                                 This is the public key associated with this account and its current nonce.
+                                                            </Typography>
+                                                        </Grid>
+                                                    )}
+
+                                                    {accountTaggedPublicKeys[account.id] && (
+                                                        <Grid item xs={12}>
+                                                            <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
+                                                                Tagged Public Key
+                                                            </Typography>
+                                                            <TextField
+                                                                fullWidth
+                                                                variant="outlined"
+                                                                value={accountTaggedPublicKeys[account.id]}
+                                                                InputProps={{
+                                                                    readOnly: true,
+                                                                    className: "font-mono text-sm",
+                                                                    endAdornment: (
+                                                                        <InputAdornment position="end">
+                                                                            <Tooltip title="Copy to clipboard">
+                                                                                <IconButton
+                                                                                    onClick={() => {
+                                                                                        navigator.clipboard.writeText(accountTaggedPublicKeys[account.id]);
+                                                                                        toast.success("Tagged Public key copied to clipboard");
+                                                                                    }}
+                                                                                    edge="end"
+                                                                                >
+                                                                                    <ContentCopy />
+                                                                                </IconButton>
+                                                                            </Tooltip>
+                                                                        </InputAdornment>
+                                                                    ),
+                                                                }}
+                                                                sx={{
+                                                                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                                                                }}
+                                                            />
+                                                            <Typography variant="caption" color="text.secondary" className="mt-1 block">
+                                                                This is the <strong>tagged</strong> public key associated with this account and its current nonce.
+                                                                Providing this key with a system is useful to identity the used scheme.
                                                             </Typography>
                                                         </Grid>
                                                     )}

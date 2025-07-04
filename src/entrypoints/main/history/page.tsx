@@ -44,6 +44,7 @@ import {
     KeyboardArrowUp
 } from "@mui/icons-material";
 import { useAuthenticatedAccount } from '@/entrypoints/contexts/authentication.context.tsx';
+import {TOKEN} from "@cmts-dev/carmentis-sdk/client";
 
 export default function HistoryPage() {
     const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([]);
@@ -234,7 +235,7 @@ function TransactionHistory() {
         );
     }
 
-    if (data.length === 0) {
+    if (data.list.length === 0) {
         return (
             <Box className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-100 text-center">
                 <Typography variant="h6" className="text-gray-700 mb-2">
@@ -286,7 +287,7 @@ function TransactionHistory() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {data
+                            {data.list
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((transaction, index) => (
                                     <TransactionRow
@@ -303,7 +304,7 @@ function TransactionHistory() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={data.length}
+                    count={data.list.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
@@ -384,7 +385,7 @@ function TransactionRow({
                         variant="body2"
                         className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
                     >
-                        {`${sign}${transaction.amount} CMTS`}
+                        {`${sign}${transaction.amount / TOKEN} CMTS`}
                     </Typography>
                 </TableCell>
             </TableRow>

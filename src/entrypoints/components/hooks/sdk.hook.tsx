@@ -6,16 +6,26 @@ import {
 	TOKEN
 } from '@cmts-dev/carmentis-sdk/client';
 import {useRecoilValue} from "recoil";
-import {activeAccountPublicKeyState, useWallet} from "@/entrypoints/contexts/authentication.context.tsx";
+import {
+	activeAccountPublicKeyState,
+	nodeEndpointState,
+	useWallet
+} from "@/entrypoints/contexts/authentication.context.tsx";
 import useSWR from "swr";
 import {Explorer, Blockchain} from "@cmts-dev/carmentis-sdk/client";
 
-
-export async function useAccountBalance(accountPublicKey: PublicSignatureKey): Promise<number> {
+/**
+ * Fetches the account balance for the given account's public key from the specified node URL.
+ *
+ * @param {PublicSignatureKey} accountPublicKey - The public signature key of the account whose balance is to be retrieved.
+ * @param {string} nodeUrl - The URL of the node to connect to for fetching the account data.
+ * @return {Promise<number>} A promise that resolves to the account balance as a number.
+ * @throws {Error} If there is an issue retrieving the account information or balance.
+ */
+export async function useAccountBalance(accountPublicKey: PublicSignatureKey, nodeUrl: string): Promise<number> {
 	try {
 		// create the explorer
-		const wallet = useWallet()
-		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
 		const explorer = Explorer.createFromProvider(provider);
 
 		// load the hash of the account
@@ -23,8 +33,8 @@ export async function useAccountBalance(accountPublicKey: PublicSignatureKey): P
 		const accountState = await explorer.getAccountState(accountHash);
 		return accountState.balance / TOKEN;
 	} catch (e) {
-		console.log(e)
-		throw new Error(`${e}`)
+		console.log("Cannot proceed to the account's balance data:", e)
+		return 0
 	}
 }
 
@@ -40,9 +50,10 @@ export async function useAccountBalance(accountPublicKey: PublicSignatureKey): P
  */
 export function useAccountBalanceHook() {
 	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
+	const wallet = useWallet();
 	return useSWR(
-		accountPublicKey ? ['balanceAccount', accountPublicKey] : null,
-		([, pk]) => useAccountBalance(pk)
+		accountPublicKey ? ['balanceAccount', accountPublicKey, wallet] : null,
+		([, pk, wallet]) => useAccountBalance(pk, wallet.nodeEndpoint)
 	);
 }
 
@@ -59,14 +70,14 @@ export function useAccountBalanceHook() {
  * @throws {Error} Throws an error if unable to fetch the account history.
  */
 export async function useAccountHistory(
+	nodeUrl: string,
 	accountPublicKey : PublicSignatureKey,
 	offset = 0,
 	maxRecords = 50,
 ): Promise<AccountHistory> {
 	try {
 		// create the explorer
-		const wallet = useWallet()
-		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
 		const explorer = Explorer.createFromProvider(provider);
 
 		// load the hash of the account
@@ -80,7 +91,7 @@ export async function useAccountHistory(
 
 		return history;
 	} catch (e) {
-		console.log(e)
+		console.log(`Cannot load the history of transaction: ${e}`);
 		throw new Error(`${e}`)
 	}
 }
@@ -89,10 +100,12 @@ export function useAccountTransactionHistoryHook(
 	offset = 0,
 	maxRecords = 50,
 ) {
+	const network = useRecoilValue(nodeEndpointState)
 	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
+	console.log(`Network: ${network}, Account: ${accountPublicKey}, Offset: ${offset}, MaxRecords: ${maxRecords}`)
 	return useSWR(
-		accountPublicKey ? ['accountTransactionHistory', accountPublicKey, offset, maxRecords] : null,
-		([, pk, o, m]) => useAccountHistory(pk, o, m)
+		accountPublicKey ? ['accountTransactionHistory', network, accountPublicKey, offset, maxRecords] : null,
+		([, node, pk, o, m]) => useAccountHistory(node, pk, o, m)
 	);
 }
 

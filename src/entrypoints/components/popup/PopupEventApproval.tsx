@@ -1,7 +1,15 @@
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {activeAccountState, useWallet, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
-import {} from "@cmts-dev/carmentis-sdk/client";
+import {
+    ApplicationLedger,
+    ApplicationLedgerVb,
+    Blockchain,
+    EncoderFactory, Hash,
+    Microblock,
+    ProviderFactory,
+    wiExtensionWallet
+} from "@cmts-dev/carmentis-sdk/client";
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Encoders} from "@/entrypoints/main/Encoders.tsx";
@@ -51,6 +59,9 @@ import {
     OriginAndDateOfCurrentRequest,
     PopupNotificationLayout, useAccept, useActiveAccount, useClearClientRequest, useUserKeyPair
 } from "@/entrypoints/components/popup/PopupDashboard.tsx";
+import {CryptoSchemeFactory} from "@cmts-dev/carmentis-sdk/client";
+import {useAsync} from "react-use";
+import {isLet} from "@babel/types";
 
 /**
  * PopupEventApproval is a React functional component that handles the process of approving or declining
@@ -67,30 +78,37 @@ export default function PopupEventApproval() {
     const genKeyPair = useUserKeyPair();
     const wallet = useWallet();
     const activeAccount = useActiveAccount();
-    const clientRequest = useRecoilValue(clientRequestSessionState);
-    const wiWallet = new wiExtensionWallet();
-    const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const [ready, setReady] = useState(false);
-    const virtualBlockchainRef = useRef<sdk.blockchain.appLedgerVb | null>(null);
+    const virtualBlockchainRef = useRef<ApplicationLedger|null>(null);
     const [dataViewEnabled, setDataViewEnabled] = useRecoilState(dataViewEnabledState);
     const setError = useSetRecoilState(errorState);
+    const wiWallet = new wiExtensionWallet();
+    const clientRequest = useRecoilValue(clientRequestSessionState);
+    const req = wiWallet.getRequestFromMessage(clientRequest.data);
+    const blockchain = Blockchain.createFromProvider(
+        ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint)
+    );
 
     useEffect(() => {
         setDataViewEnabled(true);
         const loadRequest = async () => {
             const keyPair = await genKeyPair();
-            const sk = Encoders.ToHexa(keyPair.privateKey);
-            sdk.blockchain.blockchainCore.setUser(sdk.blockchain.ROLES.USER, sk);
-            wiWallet.getApprovalData(sk, req.object)
-                .then(async (binaryData) => {
-                    let res = await sdk.blockchain.blockchainManager.checkMicroblock(
-                        binaryData,
-                        {
-                            ignoreGas: true
-                        }
-                    );
-                    virtualBlockchainRef.current = res.vb;
-                    console.log("chain id:", res.vb.id)
+            const encoder = EncoderFactory.defaultBytesToStringEncoder();
+            const walletSeed = encoder.decode(wallet.seed);
+
+            wiWallet.getApprovalData(keyPair.privateKey, walletSeed, req.object)
+                .then(async (microblockData) => {
+
+                    // check the received microblock
+                    const importer = blockchain.getMicroblockImporter(microblockData);
+                    const isValidMicroBlock = await importer.isValidMicroBlock();
+                    if (!isValidMicroBlock) throw new Error("Invalid microblock received");
+
+                    // load the microblock
+                    const applicationLedger = importer.getVirtualBlockchainObject<ApplicationLedger>();
+                    const virtualBlockchain = applicationLedger.getVirtualBlockchain();
+                    virtualBlockchainRef.current = applicationLedger;
+                    console.log("chain id:", encoder.encode(virtualBlockchain.getId()))
                     setReady(true)
                 }).catch(e => {
                     clearRequest()
@@ -109,16 +127,18 @@ export default function PopupEventApproval() {
 
 
     async function accept() {
+        // derive the actor key from the private key and the genesis seed
         const keyPair = await getUserKeyPair(wallet!, activeAccount!);
-        const sk = Encoders.ToHexa(keyPair.privateKey);
-        const signature = await vb.signAsEndorser();
-        try {
-            const answer = await wiWallet.sendApprovalSignature(sk, req.object, signature);
+        const vb = applicationLedger.getVirtualBlockchain();
+        const signature = await vb.signAsEndorser(keyPair.privateKey); // TODO: derive key pair
 
+        try {
+            const answer = await wiWallet.sendApprovalSignature(keyPair.privateKey, req.object, signature);
+            const vbHash = answer.walletObject.vbHash;
 
             // store the virtual blockchain id in which the user is involved
             const db = await AccountDataStorage.connectDatabase(activeAccount!);
-            await db.storeApplicationVirtualBlockchainId(answer.walletObject.vbHash)
+            await db.storeApplicationVirtualBlockchainId(Hash.from(vbHash).encode())
 
             // clear the current request
             const response: BackgroundRequest<ClientResponse> = {
@@ -137,7 +157,7 @@ export default function PopupEventApproval() {
     }
 
     if (!ready) return <Splashscreen label={"Request loading..."}/>
-    const vb: sdk.blockchain.appLedgerVb = virtualBlockchainRef.current!;
+    const applicationLedger = virtualBlockchainRef.current!;
 
     let header = <></>;
     let body = <></>;
@@ -185,7 +205,7 @@ export default function PopupEventApproval() {
 
         body = (
             <Box className="flex-grow h-full">
-                <RecordDataViewer vb={vb}/>
+                <RecordDataViewer applicationLedger={applicationLedger}/>
             </Box>
         )
     } else {
@@ -209,7 +229,7 @@ export default function PopupEventApproval() {
                 </Box>
                 <OriginAndDateOfCurrentRequest/>
                 <Box className="flex-grow">
-                    <ApprovalMessageViewer vb={vb}/>
+                    <ApprovalMessageViewer applicationLedger={applicationLedger}/>
                 </Box>
             </Box>
         )
@@ -217,13 +237,8 @@ export default function PopupEventApproval() {
     return <PopupNotificationLayout header={header} body={body} footer={footer}/>
 }
 
-/**
- * Defines the properties required for the AppLedgerVBProps type.
- *
- * @typedef {Object} AppLedgerVBProps
- * @property {sdk.blockchain.appLedgerVb} vb - Represents a virtual blockchain ledger component used in the application.
- */
-type AppLedgerVBProps = { vb: sdk.blockchain.appLedgerVb }
+
+type AppLedgerVBProps = { applicationLedger: ApplicationLedger }
 
 /**
  * Represents a token type specifically tied to a field within a structure.
@@ -256,7 +271,7 @@ type FieldTokenType = {
  *        - `vb.getHeight(): number` - Gets the current height to use with the approval message.
  * @return {ReactElement} Returns a React component displaying the approval message and enabling interactivity for fields.
  */
-function ApprovalMessageViewer({vb}: AppLedgerVBProps) {
+function ApprovalMessageViewer({applicationLedger}: AppLedgerVBProps) {
     const [approvalMessageContent, setApprovalMessageContent] = useState<ReactElement>(<Skeleton/>);
     const setPath = useSetRecoilState(pathState);
     const setHeight = useSetRecoilState(heightState);
@@ -284,7 +299,7 @@ function ApprovalMessageViewer({vb}: AppLedgerVBProps) {
     }
 
     function renderApprovalMessage() {
-        const tokens = vb.getApprovalMessage(vb.getHeight());
+        const tokens = []; //vb.getApprovalMessage(vb.getHeight()); // TODO implement approval message
         const approvalMessage = tokens.map((token, i) => {
             if (token.isField) {
                 const renderedToken = renderFieldToken(token);
@@ -334,13 +349,15 @@ function min(a: number, b: number) {
  * @param {object} props.vb - The virtualized block providing access to record data and navigation methods.
  * @return {JSX.Element} A React JSX Element that renders the data viewer UI, including navigation controls and a data table.
  */
-function RecordDataViewer({vb}: AppLedgerVBProps) {
+function RecordDataViewer({applicationLedger}: AppLedgerVBProps) {
     const [height, setHeight] = useRecoilState(heightState);
     const [path, setPath] = useRecoilState(pathState);
+    const vb = applicationLedger.getVirtualBlockchain();
     const maxH = vb.getHeight();
     const h = height ?? vb.getHeight();
-    const record = vb.getRecord(h);
-    const data = path.reduce((r, item) => r[item], record)
+    const {loading, error, value: record} = useAsync(async () => {
+        return await applicationLedger.getRecord(h);
+    }, [h])
 
 
     function goToStart() {
@@ -367,6 +384,10 @@ function RecordDataViewer({vb}: AppLedgerVBProps) {
         {icon: <KeyboardDoubleArrowRight fontSize="small" />, tooltip: "End", onClick: goToEnd, disabled: h == maxH},
     ]
 
+
+
+    if (loading) return <Skeleton/>
+    const data = path.reduce((r, item) => r[item], record)
     return <div className={"flex flex-col space-y-2 h-full"}>
         <Box className="flex justify-between items-center">
             <Typography variant="body2" className="font-medium text-gray-700">

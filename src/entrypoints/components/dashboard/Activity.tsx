@@ -167,9 +167,12 @@ function TableOfChains() {
             const blockchain = new Blockchain(provider);
 
             // loading the organisation, application and application ledger
+            console.log("Loading application ledger...")
             const applicationLedger = await blockchain.loadApplicationLedger(Hash.from(chain));
+            console.log("Loading application...")
             const application = await blockchain.loadApplication(applicationLedger.getApplicationId());
             const organisationId = await application.getOrganizationId();
+            console.log("Loading organisation...")
             const organisation = await blockchain.loadOrganization(organisationId);
             const applicationDescription = await application.getDescription();
             const organisationDescription = await organisation.getDescription();
