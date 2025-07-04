@@ -392,7 +392,7 @@ function TransactionRow({
 
             {/* Expanded details */}
             <TableRow>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                <TableCell style={{ padding: 0 }} colSpan={6}>
                     <AnimatePresence>
                         {isExpanded && (
                             <motion.div
@@ -422,7 +422,7 @@ function TransactionRow({
                                                         variant="body2"
                                                         className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
                                                     >
-                                                        {`${sign}${transaction.amount} CMTS`}
+                                                        {`${sign}${transaction.amount / TOKEN} CMTS`}
                                                     </Typography>
                                                 </Box>
                                             </Box>
