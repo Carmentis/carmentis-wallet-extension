@@ -32,7 +32,14 @@ import {
     Tooltip
 } from "@mui/material";
 import React, {useEffect, useState, useTransition} from "react";
-import {ApplicationLedgerVb, Blockchain, Explorer, Hash, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {
+    ApplicationLedgerVb,
+    Blockchain,
+    EncoderFactory,
+    Explorer,
+    Hash,
+    ProviderFactory
+} from "@cmts-dev/carmentis-sdk/client";
 import Skeleton from "react-loading-skeleton";
 import {useParams} from "react-router";
 import {Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator} from "@mui/lab";
@@ -182,6 +189,7 @@ export default function VirtualBlockchainViewer() {
 function SingleChain({ chainId }: { chainId: string }) {
     const wallet = useWallet();
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+    const blockchain = Blockchain.createFromProvider(provider);
     const vb = new ApplicationLedgerVb({provider})
     const [height, setHeight] = useState<number|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
@@ -189,11 +197,13 @@ function SingleChain({ chainId }: { chainId: string }) {
 
     async function loadChain() {
         try {
+            const applicationLedger = await blockchain.loadApplicationLedger(Hash.from(chainId));
+            const vb = applicationLedger.getVirtualBlockchain();
             setIsLoading(true);
             setError(null);
-            await vb.load(chainId);
-            const height = vb.height;
-            setHeight(height-1);
+            const encoder = EncoderFactory.defaultBytesToStringEncoder();
+            const height = vb.getHeight();
+            setHeight(height);
         } catch (err) {
             console.error("Error loading chain:", err);
             setError("Failed to load blockchain data. Please try again.");

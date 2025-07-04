@@ -180,12 +180,15 @@ function TableOfChains() {
 
 
             // Find the range of timeline for the virtual blockchain
-            const microblocks = [];
+            const records = [];
+            const timestamps = [];
             for (let index = 1; index <= height; index++) {
-                const mb = await applicationLedger.getRecord(index)
-                microblocks.push(mb)
+                const vb = applicationLedger.getVirtualBlockchain();
+                const record = await applicationLedger.getRecord(index)
+                const mb = await vb.getMicroblock(index);
+                timestamps.push(mb.getTimestamp());
+                records.push(record)
             }
-            const timestamps: number[] = microblocks.map(m => m.object.header.timestamp);
             const min = timestamps.reduce((a, b) => Math.min(a, b), timestamps[0]);
             const max = timestamps.reduce((a, b) => Math.max(a, b), timestamps[0]);
 
