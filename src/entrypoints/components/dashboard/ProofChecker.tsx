@@ -39,7 +39,7 @@ import {
     DataObject
 } from "@mui/icons-material";
 import { useAsync } from "react-use";
-import {Blockchain, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {Blockchain, ImportedProof, Proof, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
 import { BlockViewer } from "@/entrypoints/components/dashboard/BlockViewer.tsx";
 import { useWallet } from "@/entrypoints/contexts/authentication.context.tsx";
@@ -183,6 +183,8 @@ function ProofCheckerFailure({ error }: { error: string }) {
     );
 }
 
+
+
 function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     const toast = useToast();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -316,7 +318,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                                         </div>
 
                                         <Typography variant="h6" className="font-medium text-gray-800 mb-3">
-                                            {fileName ? fileName : 'Drag & Drop or Click to Upload'}
+                                            Drag & Drop or Click to Upload'
                                         </Typography>
 
                                         <Typography variant="body2" className="text-gray-500 mb-6">
@@ -434,19 +436,20 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     );
 }
 
-function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Record<string, any> }) {
+async function importProof(blockchain: Blockchain, proof: Proof): Promise<{ verified: true, records: ImportedProof[] } | {verified: false, records: undefined}> {
+    try {
+        return { verified: true, records: await blockchain.importApplicationLedgerProof(proof) }
+    } catch (error) {
+        console.error(error)
+        return { verified: false, records: undefined }
+    }
+}
+
+function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any }) {
     const wallet = useWallet();
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
     const blockchain = new Blockchain(provider);
-    const state = useAsync(async () => {
-        let loader = await blockchain.importApplicationLedgerProof(proof);
-        try {
-            return { verified: true, records: loader.map(l => l.data) }
-        } catch (error) {
-            console.error(error)
-            return { verified: false, records: undefined }
-        }
-    });
+    const state = useAsync(async () => importProof(blockchain, proof));
 
     // Animation variants
     const containerVariants = {
@@ -493,13 +496,14 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
         );
     }
 
-    if (state.error || !state.value) {
+    if (state.error || !state.value || !state.value.verified) {
         return <ProofCheckerFailure error={state.error?.toString() || "Unknown error"} />;
     }
 
+
+    const records = state.value.records;
     const data = state.value;
-    const header = proof.information;
-    const appLedgerId = proof.proofData.appLedgerId;
+    const appLedgerId = proof.virtualBlockchainIdentifier;
 
     const rows = [
         { header: "Proof Verification Status", value: <Chip 
@@ -512,8 +516,8 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
                 '& .MuiChip-label': { fontWeight: 500 }
             }}
         /> },
-        { header: "Proof Title", value: header.title },
-        { header: "Proof Export Time", value: header.exportTime },
+        { header: "Proof Title", value: proof.info.title },
+        { header: "Proof Export Time", value: proof.info.data },
         { header: "Virtual Blockchain ID", value: <Link 
             href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${appLedgerId}`} 
             target={"_blank"}
@@ -521,9 +525,10 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
         >
             {appLedgerId}
         </Link> },
-        { header: "Application", value: header.application },
-        { header: "Operator", value: header.applicationOperator },
+        //{ header: "Application", value: header.application },
+        //{ header: "Operator", value: header.applicationOperator },
     ];
+
 
     return (
         <motion.div
@@ -540,7 +545,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
                                 Proof Verification Results
                             </Typography>
                             <Typography variant="body1" className="text-gray-600">
-                                {header.title}
+                                {proof.info.title}
                             </Typography>
                         </Box>
 
@@ -634,7 +639,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
                         </Box>
 
                         <CardContent className="p-8">
-                            <ProofRecordViewer records={data.records} />
+                            <ProofRecordViewer records={records} />
                         </CardContent>
                     </Paper>
                 </motion.div>
@@ -643,7 +648,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: Rec
     );
 }
 
-function ProofRecordViewer({ records }: { records: { height: number, record: Record<string, any> }[] }) {
+function ProofRecordViewer({ records }: { records: ImportedProof[] }) {
     // Animation variants
     const timelineVariants = {
         hidden: { opacity: 0 },
@@ -741,7 +746,9 @@ function ProofRecordViewer({ records }: { records: { height: number, record: Rec
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 0.3 + (i * 0.1), duration: 0.5 }}
                                         >
-                                            <BlockViewer initialPath={[]} data={record.record} />
+                                            <BlockViewer initialPath={[]} data={
+                                                record.data // TODO: check because its very strange to access data this way.
+                                            } />
                                         </motion.div>
                                     </CardContent>
                                 </Card>

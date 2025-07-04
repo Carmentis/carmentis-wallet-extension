@@ -47,7 +47,7 @@ import { timelineItemClasses } from '@mui/lab/TimelineItem';
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {useRecoilValue} from "recoil";
 import {activeAccountState, useWallet, walletState} from "@/entrypoints/contexts/authentication.context.tsx";
-import {useAsyncFn} from "react-use";
+import {useAsync, useAsyncFn} from "react-use";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Storage,
@@ -65,8 +65,12 @@ export default function VirtualBlockchainViewer() {
     const hash = params.hash;
     const wallet = useWallet();
     const activeAccount = useRecoilValue(activeAccountState);
+    const {loading: keyPairLoading, value: keyPair} = useAsync(async () => {
+        return getUserKeyPair(wallet, activeAccount!)
+    })
     const [state, startTransition] = useAsyncFn(async () => {
-        const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+        if (keyPairLoading || !keyPair) return
+        const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet.nodeEndpoint);
         const blockchain = Blockchain.createFromProvider(provider);
         const vb = await blockchain.loadApplicationLedger(Hash.from(hash as string));
         const proof = await vb.exportProof({ author: activeAccount?.pseudo as string })
@@ -79,7 +83,7 @@ export default function VirtualBlockchainViewer() {
         link.download = `proof-${hash}.json`;
         link.click();
         URL.revokeObjectURL(url); // Clean up the URL after downloading
-    });
+    }, [keyPair]);
 
     async function exportProof(chainId: string) {
         startTransition()
