@@ -201,7 +201,6 @@ function SingleChain({ chainId }: { chainId: string }) {
             const vb = applicationLedger.getVirtualBlockchain();
             setIsLoading(true);
             setError(null);
-            const encoder = EncoderFactory.defaultBytesToStringEncoder();
             const height = vb.getHeight();
             setHeight(height);
         } catch (err) {
