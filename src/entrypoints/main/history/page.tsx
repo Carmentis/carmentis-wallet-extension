@@ -44,7 +44,7 @@ import {
     KeyboardArrowUp
 } from "@mui/icons-material";
 import { useAuthenticatedAccount } from '@/entrypoints/contexts/authentication.context.tsx';
-import {TOKEN} from "@cmts-dev/carmentis-sdk/client";
+import {AccountHistoryEntry, Hash, TOKEN} from "@cmts-dev/carmentis-sdk/client";
 
 export default function HistoryPage() {
     const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([]);
@@ -320,13 +320,14 @@ function TransactionRow({
                             isExpanded,
                             onToggleExpand
                         }: {
-    transaction: AccountTransactionHistoryEntry;
+    transaction: AccountHistoryEntry;
     isExpanded: boolean;
     onToggleExpand: () => void;
 }) {
     const isPositive = transaction.amount >= 0;
     const sign = isPositive ? "+" : "";
-    const date = new Date(transaction.timestamp);
+    const date = new Date(transaction.timestamp * 1000);
+    const linkedAccount = Hash.from(transaction.linkedAccount).encode();
 
     // Format date nicely
     const formattedDate = date.toLocaleDateString(undefined, {
@@ -367,16 +368,16 @@ function TransactionRow({
                 </TableCell>
                 <TableCell>
                     <Chip
-                        label={transaction.name}
+                        label={transaction.type}
                         size="small"
                         className={isPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
                         icon={isPositive ? <ArrowUpward className="text-green-500" fontSize="small" /> : <ArrowDownward className="text-red-500" fontSize="small" />}
                     />
                 </TableCell>
                 <TableCell>
-                    <Tooltip title={transaction.linkedAccount}>
+                    <Tooltip title={linkedAccount}>
                         <Typography variant="body2" className="max-w-[150px] truncate">
-                            {transaction.linkedAccount}
+                            {linkedAccount}
                         </Typography>
                     </Tooltip>
                 </TableCell>
@@ -433,7 +434,7 @@ function TransactionRow({
                                             </Typography>
                                             <Box className="mt-2">
                                                 <Typography variant="body2" className="break-all font-mono bg-gray-100 p-2 rounded">
-                                                    {transaction.linkedAccount}
+                                                    {linkedAccount}
                                                 </Typography>
                                             </Box>
                                         </Grid>

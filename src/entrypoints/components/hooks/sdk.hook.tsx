@@ -102,7 +102,6 @@ export function useAccountTransactionHistoryHook(
 ) {
 	const network = useRecoilValue(nodeEndpointState)
 	const accountPublicKey = useRecoilValue(activeAccountPublicKeyState);
-	console.log(`Network: ${network}, Account: ${accountPublicKey}, Offset: ${offset}, MaxRecords: ${maxRecords}`)
 	return useSWR(
 		accountPublicKey ? ['accountTransactionHistory', network, accountPublicKey, offset, maxRecords] : null,
 		([, node, pk, o, m]) => useAccountHistory(node, pk, o, m)
