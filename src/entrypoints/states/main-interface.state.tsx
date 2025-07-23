@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {atom, useSetRecoilState} from "recoil";
+import {atom} from "recoil";
 
 export interface MainInterfaceStatus {
     showNotifications: boolean
@@ -27,22 +27,6 @@ export const mainInterfaceState = atom<MainInterfaceStatus>({
         showNotifications: false,
     }
 })
-
-export function useMainInterfaceActions() {
-    const setMainInterface = useSetRecoilState(mainInterfaceState);
-    return {
-        showNotifications: () => {
-            setMainInterface(status => {
-                return {...status, showNotifications: true}
-            })
-        },
-        hideNotifications: () => {
-            setMainInterface(status => {
-                return {...status, showNotifications: false}
-            })
-        }
-    }
-}
 
 
 

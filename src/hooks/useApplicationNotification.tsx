@@ -15,10 +15,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {activeAccountKeyPairState} from "@/states/globals.tsx";
-import {useRecoilValue} from "recoil";
+import {useLiveQuery} from "dexie-react-hooks";
+import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
+import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
 
-export function useAccountKeyPair() {
-    const keyPair = useRecoilValue(activeAccountKeyPairState);
-    return { accountKeyPair: keyPair, loading: keyPair === undefined }
+export function useApplicationNotification() {
+    const storedNotifications: AppNotification[] | undefined = useLiveQuery(async () => {
+        const db = await NotificationStorageDB.connectDatabase()
+        const result = await db.notifications.orderBy('ts').toArray();
+        if (result) return result
+        else return []
+    })
+
+    return {
+        isLoading: storedNotifications === undefined,
+        notifications: storedNotifications ? storedNotifications : []
+    }
+
 }

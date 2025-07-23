@@ -16,12 +16,14 @@
  */
 
 import React, {ReactElement, useEffect} from "react";
-import {useRecoilValue, useSetRecoilState} from "recoil";
+import {useSetRecoilState} from "recoil";
 import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 
 import {
-    ClientRequestPayload, QRDataClientRequest,
+    QRDataClientRequest,
 } from "@/entrypoints/background.ts";
+import {Runtime} from "webextension-polyfill";
+import MessageSender = Runtime.MessageSender;
 
 
 
@@ -32,7 +34,7 @@ import {
  * @param {ReactElement} props.children - The React child elements to be rendered within the component.
  * @return {JSX.Element} The rendered component containing the child elements.
  */
-export function ClientRequestStateWriter(props: { children: ReactElement }): JSX.Element {
+export function ClientRequestListener(props: { children: ReactElement }): JSX.Element {
     const setClientRequestSession = useSetRecoilState(clientRequestSessionState);
 
     useEffect(() => {
@@ -45,11 +47,15 @@ export function ClientRequestStateWriter(props: { children: ReactElement }): JSX
             }
         };
 
-        const listener = (message: QRDataClientRequest|unknown, sender, sendResponse) => {
+        const listener = (
+            message: QRDataClientRequest|unknown,
+            sender: MessageSender,
+            sendResponse: (message: unknown) => void
+        ) => {
             console.log("[client request] Message received:", message);
             handleMessage(message);
             sendResponse({success: true});
-            return false;
+            return true;
         };
 
         browser.runtime.onMessage.addListener(listener);
@@ -61,14 +67,3 @@ export function ClientRequestStateWriter(props: { children: ReactElement }): JSX
 
     return <> {props.children} </>
 }
-
-// this function is used to be set once and to import messages received from outside of the component.
-/*
-browser.runtime.onMessage.addListener((message : IncomingQR, sender, sendResponse) => {
-    console.log("[client request] Message received:", message)
-    onNewActionMessage(message);
-    sendResponse({success: true});
-    return false;
-});
- */
-

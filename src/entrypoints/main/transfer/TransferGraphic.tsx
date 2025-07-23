@@ -21,7 +21,8 @@ import React, {useState} from "react";
 import {motion} from "framer-motion";
 import {Avatar, Box, Chip, IconButton, Paper, Tooltip, Typography} from "@mui/material";
 import {ArrowForward, CheckCircle, ContentCopy, Key} from "@mui/icons-material";
-import {tokenTransferState} from "@/states/states.tsx";
+
+import {tokenTransferState} from "@/entrypoints/main/transfer/states.ts";
 
 export function TransferGraphic() {
     const tokenTransfer = useRecoilValue(tokenTransferState);

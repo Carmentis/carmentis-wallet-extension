@@ -15,10 +15,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ProviderInterface} from "@/providers/providerInterface.tsx";
 import {CryptoSchemeFactory, EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import { SecretEncryptionKey } from '@/utils/secret-encryption-key.ts';
+import {ProviderInterface} from "@/types/ProviderInterface.ts";
 
 export class CarmentisProvider implements ProviderInterface{
     generateWords(): string[] {

@@ -1,7 +1,7 @@
 import {Avatar, Box, Grid, Typography} from '@mui/material';
 import React from 'react';
-import NoTokenAccount from '@/components/NoTokenAccount.tsx';
-import {Splashscreen} from "@/components/Splashscreen.tsx";
+import NoTokenAccount from '@/components/shared/NoTokenAccount.tsx';
+import {Splashscreen} from "@/components/shared/Splashscreen.tsx";
 import {motion} from "framer-motion";
 import {History as HistoryIcon} from "@mui/icons-material";
 import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";

@@ -37,9 +37,10 @@ import {z} from "zod";
 import {AccountBalance, CheckCircle, Key, Send, SwapHoriz} from "@mui/icons-material";
 import React, {useState} from "react";
 import {useTokenTransfer} from "@/hooks/useTokenTransfer.tsx";
-import {activeAccountState, tokenTransferState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {TransferGraphic} from "@/entrypoints/main/transfer/TransferGraphic.tsx";
+import {tokenTransferState} from "@/entrypoints/main/transfer/states.ts";
 
 // Define the form schema with Zod
 const transferSchema = z.object({

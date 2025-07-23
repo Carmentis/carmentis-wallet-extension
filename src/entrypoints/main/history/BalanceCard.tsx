@@ -17,7 +17,7 @@
 
 import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 import {useAuthenticatedAccount} from "@/hooks/useAuthenticatedAccount.tsx";
-import NoTokenAccount from "@/components/NoTokenAccount.tsx";
+import NoTokenAccount from "@/components/shared/NoTokenAccount.tsx";
 import {motion} from "framer-motion";
 import {Avatar, Box, CardContent, Paper, Typography} from "@mui/material";
 import {AccountBalance} from "@mui/icons-material";

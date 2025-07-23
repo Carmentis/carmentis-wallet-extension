@@ -19,7 +19,7 @@ import {useRecoilValue} from "recoil";
 import useSWR from "swr";
 
 import {useAccountBalance} from "@/hooks/useAccountBalance.tsx";
-import {activeAccountPublicKeyState} from "@/states/states.tsx";
+import {activeAccountPublicKeyState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 
 /**

@@ -60,7 +60,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 

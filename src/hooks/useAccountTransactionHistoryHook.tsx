@@ -18,7 +18,7 @@
 import {useRecoilValue} from "recoil";
 import useSWR from "swr";
 import {useAccountHistory} from "@/hooks/useAccountHistory.tsx";
-import {activeAccountPublicKeyState, nodeEndpointState} from "@/states/states.tsx";
+import {activeAccountPublicKeyState, nodeEndpointState} from "@/states/globals.tsx";
 
 export function useAccountTransactionHistoryHook(
     offset = 0,

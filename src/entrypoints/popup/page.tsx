@@ -17,24 +17,24 @@
 
 
 import {AuthenticationManager} from '@/components/shared/AuthenticationManager.tsx';
-import {ClientRequestStateWriter} from '@/components/client-request-state-writer.tsx';
+import {ClientRequestListener} from '@/contexts/ClientRequestListener.tsx';
 import {NoWalletDetected} from '@/entrypoints/popup/NoWalletDetected.tsx';
 import Login from '@/components/shared/Login.tsx';
 import AccountSelection from '@/components/shared/AccountSelection.tsx';
 import {PopupDashboard} from '@/components/popup/PopupDashboard.tsx';
 import {useRecoilValue} from "recoil";
 import {PropsWithChildren} from "react";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
 
 export function PopupAppEntrypoint() {
     return <>
         <AuthenticationManager>
-            <ClientRequestStateWriter>
+            <ClientRequestListener>
                 <PopupLayout>
                     <PopupApp></PopupApp>
                 </PopupLayout>
-            </ClientRequestStateWriter>
+            </ClientRequestListener>
         </AuthenticationManager>
     </>
 }

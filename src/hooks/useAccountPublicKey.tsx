@@ -16,7 +16,7 @@
  */
 
 import {useRecoilValue} from "recoil";
-import {activeAccountPublicKeyState} from "@/states/states.tsx";
+import {activeAccountPublicKeyState} from "@/states/globals.tsx";
 
 export function useAccountPublicKey() {
     const publicKey = useRecoilValue(activeAccountPublicKeyState);

@@ -23,7 +23,7 @@ import Login from '@/components/shared/Login.tsx';
 import AccountSelection from '@/components/shared/AccountSelection.tsx';
 import Dashboard from '@/entrypoints/main/dashboard/Dashboard.tsx';
 import {useRecoilValue} from 'recoil';
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
 
 /**

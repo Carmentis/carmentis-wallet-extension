@@ -93,7 +93,3 @@ export const nodeEndpointState = selector({
         return wallet?.nodeEndpoint;
     }
 })
-export const tokenTransferState = atom({
-    key: 'transferPublicKeyState',
-    default: {publicKey: '', tokenAmount: 0}
-});

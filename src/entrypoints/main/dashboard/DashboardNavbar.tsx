@@ -19,8 +19,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { DropdownAccountSelection } from "@/components/shared/DropdownAccountSelection.tsx";
-import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
-import { useApplicationNotificationHook } from "@/entrypoints/states/application-nofications.state.tsx";
 import {
   Badge,
   Chip,
@@ -52,10 +50,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRecoilValue } from "recoil";
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { SpinningWheel } from "@/components/SpinningWheel.tsx";
+import { SpinningWheel } from "@/components/shared/SpinningWheel.tsx";
 import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
+import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
+import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -391,7 +391,7 @@ function BalanceChip() {
  */
 function NotificationsButton() {
   const actions = useMainInterfaceActions();
-  const { notifications, isLoading } = useApplicationNotificationHook();
+  const { notifications, isLoading } = useApplicationNotification();
   const badgeContent = isLoading ? undefined : notifications.length;
 
   return (

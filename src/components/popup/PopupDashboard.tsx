@@ -32,12 +32,12 @@ import {
 } from "@cmts-dev/carmentis-sdk/client";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse,} from "@/entrypoints/background.ts";
 import PopupEventApproval from "@/components/popup/PopupEventApproval.tsx";
-import {errorState} from "@/components/popup/popup-even-approval.state.ts";
+import {errorState} from "@/components/popup/states.ts";
 import Skeleton from "react-loading-skeleton";
 import image from '@/assets/success.png';
 import { motion } from "framer-motion";
 import { CheckCircle } from "react-bootstrap-icons";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {Account} from "@/types/Account.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 

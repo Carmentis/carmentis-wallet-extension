@@ -16,23 +16,23 @@
  */
 
 import {Button, Card, CardContent, Drawer, Typography} from "@mui/material";
-import {PropsWithChildren, ReactElement, useEffect} from "react";
+import {PropsWithChildren, ReactElement} from "react";
 import {useRecoilValue} from "recoil";
 import {
     AppNotification,
-    appNotificationState,
-    useApplicationNotificationHook
 } from "@/entrypoints/states/application-nofications.state.tsx";
-import {mainInterfaceState, useMainInterfaceActions} from "@/entrypoints/states/main-interface.state.tsx";
+import {mainInterfaceState} from "@/entrypoints/states/main-interface.state.tsx";
 import {useNavigate} from "react-router";
 import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
-import {activeAccountState} from "@/states/states.tsx";
+import {activeAccountState} from "@/states/globals.tsx";
+import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
+import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
 
 
 
 export default function NotificationRightBar() {
 
-    const {notifications} = useApplicationNotificationHook();
+    const {notifications} = useApplicationNotification();
 
     const mainInterfaceStatus = useRecoilValue(mainInterfaceState);
     const mainInterfaceActions = useMainInterfaceActions();

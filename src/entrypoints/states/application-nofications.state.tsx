@@ -15,11 +15,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {atom, selector, useRecoilValue} from "recoil";
-import {AccountStorageDB} from "@/utils/db/AccountStorageDB.ts";
-import {useLiveQuery} from "dexie-react-hooks";
+import {selector} from "recoil";
 import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
-import {activeAccountState} from "@/states/states.tsx";
 
 export interface AppNotification {
     notificationId?: string,
@@ -41,17 +38,3 @@ export const appNotificationState = selector<AppNotification[]>({
     },
 });
 
-export function useApplicationNotificationHook() {
-    const storedNotifications: AppNotification[] | undefined = useLiveQuery(async () => {
-        const db = await NotificationStorageDB.connectDatabase()
-        const result = await db.notifications.orderBy('ts').toArray();
-        if (result) return result
-        else return []
-    })
-
-    return {
-        isLoading: storedNotifications === undefined,
-        notifications: storedNotifications ? storedNotifications : []
-    }
-
-}

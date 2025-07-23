@@ -58,7 +58,7 @@ import {
     Dns
 } from "@mui/icons-material";
 import {BlockViewer} from "@/components/dashboard/BlockViewer.tsx";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 
 export default function VirtualBlockchainViewer() {

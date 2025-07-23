@@ -15,10 +15,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {activeAccountKeyPairState} from "@/states/globals.tsx";
-import {useRecoilValue} from "recoil";
-
-export function useAccountKeyPair() {
-    const keyPair = useRecoilValue(activeAccountKeyPairState);
-    return { accountKeyPair: keyPair, loading: keyPair === undefined }
-}
+/**
+ * Represents a token type specifically tied to a field within a structure.
+ *
+ * @typedef {Object} FieldTokenType
+ * @property {boolean} isField - Indicates that this token type is associated with a field.
+ * @property {*} value - Contains the value corresponding to the field.
+ * @property {string} field - The name of the field this token type is associated with.
+ * @property {{ name: string }} def - Provides the definition object for the field, including its name.
+ * @property {undefined} height - A reserved property that is currently set to undefined.
+ */
+export type FieldTokenType = {
+    isField: true;
+    value: any;
+    field: string;
+    def: { name: string };
+    height: undefined
+};

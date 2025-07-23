@@ -17,7 +17,7 @@
 
 import React from "react";
 import {useRecoilState} from 'recoil';
-import {walletState} from "@/states/states.tsx";
+import {walletState} from "@/states/globals.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 
 export default function AccountSelection() {

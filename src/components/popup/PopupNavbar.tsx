@@ -19,7 +19,7 @@ import React, {useState} from "react";
 import {DropdownAccountSelection} from "@/components/shared/DropdownAccountSelection.tsx";
 import {useRecoilValue} from "recoil";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
-import {walletState} from "@/states/states.tsx";
+import {walletState} from "@/states/globals.tsx";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
 
 export function PopupNavbar() {

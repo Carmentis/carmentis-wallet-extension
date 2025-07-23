@@ -15,10 +15,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {activeAccountKeyPairState} from "@/states/globals.tsx";
-import {useRecoilValue} from "recoil";
+import {useSetRecoilState} from "recoil";
+import {mainInterfaceState} from "@/entrypoints/states/main-interface.state.tsx";
 
-export function useAccountKeyPair() {
-    const keyPair = useRecoilValue(activeAccountKeyPairState);
-    return { accountKeyPair: keyPair, loading: keyPair === undefined }
+export function useMainInterfaceActions() {
+    const setMainInterface = useSetRecoilState(mainInterfaceState);
+    return {
+        showNotifications: () => {
+            setMainInterface(status => {
+                return {...status, showNotifications: true}
+            })
+        },
+        hideNotifications: () => {
+            setMainInterface(status => {
+                return {...status, showNotifications: false}
+            })
+        }
+    }
 }

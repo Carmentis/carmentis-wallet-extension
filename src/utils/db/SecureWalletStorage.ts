@@ -16,10 +16,10 @@
  */
 
 
-import {ProviderInterface} from "@/providers/providerInterface.tsx";
 import {SecretEncryptionKey} from '@/utils/secret-encryption-key.ts';
 
 import {Wallet} from "@/types/Wallet.ts";
+import {ProviderInterface} from "@/types/ProviderInterface.ts";
 
 const ENCRYPTED_WALLET = "encryptedWallet"
 const ENCRYPTED_WALLET_DB_VERSION = 1;

@@ -16,7 +16,7 @@
  */
 
 import {useRecoilValue} from "recoil";
-import {activeAccountState, walletState} from "@/states/states.tsx";
+import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useNavigate} from "react-router";
 import React, {useEffect, useState} from "react";
 import {EmptyStateMessage} from "@/entrypoints/main/activity/EmptyStateMessage.tsx";
@@ -27,7 +27,7 @@ import {Avatar, Box, Button, Chip, CircularProgress, Paper, Typography} from "@m
 import {ArrowRight, Business, Refresh, Schedule, Storage, Timeline} from "@mui/icons-material";
 import {LoadingState} from "@/entrypoints/main/activity/LoadingState.tsx";
 import {ErrorState} from "@/entrypoints/main/activity/ErrorState.tsx";
-import {DynamicTableComponent} from "@/components/async-row-table.tsx";
+import {DynamicTableComponent} from "@/entrypoints/main/activity/DynamicTableComponent.tsx";
 
 export function TableOfChains() {
     const offset = 0;

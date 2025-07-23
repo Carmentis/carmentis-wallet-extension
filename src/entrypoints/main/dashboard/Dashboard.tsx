@@ -24,8 +24,6 @@ import { DropdownAccountSelection } from '@/components/shared/DropdownAccountSel
 import Skeleton from 'react-loading-skeleton';
 import { motion, AnimatePresence } from "framer-motion";
 import 'react-loading-skeleton/dist/skeleton.css';
-import { NavbarSidebarLayout } from '@/components/layout/navbar-sidebar.layout.tsx';
-import { SidebarItem } from '@/components/layout/sidebar-components.tsx';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
 import {
     Badge,
@@ -41,13 +39,11 @@ import {
     Button,
     Chip
 } from '@mui/material';
-import { SpinningWheel } from '@/components/SpinningWheel.tsx';
+import { SpinningWheel } from '@/components/shared/SpinningWheel.tsx';
 import axios from 'axios';
 import { useRecoilValue } from 'recoil';
 //import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
-import NotificationRightBar from "@/components/NotificationRightBar.tsx";
-import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
-import { useApplicationNotificationHook } from "@/entrypoints/states/application-nofications.state.tsx";
+import NotificationRightBar from "@/entrypoints/main/dashboard/NotificationRightBar.tsx";
 import { getUserKeyPair } from "@/entrypoints/main/wallet.tsx";
 import ActivityPage from "@/entrypoints/main/activity/Activity.tsx";
 import VirtualBlockchainViewer from "@/entrypoints/main/activity/VirtualBlockchainViewer.tsx";
@@ -76,10 +72,14 @@ import {
 import TokenTransferPage from "@/entrypoints/main/transfer/TokenTransfer.tsx";
 import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
-import {activeAccountState, nodeEndpointState, walletState} from "@/states/states.tsx";
+import {activeAccountState, nodeEndpointState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAuthenticatedAccount} from "@/hooks/useAuthenticatedAccount.tsx";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
+import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
+import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
+import {DashboardLayout} from "@/entrypoints/main/dashboard/DashboardLayout.tsx";
+import {SidebarItem} from "@/entrypoints/main/dashboard/SidebarItem.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -95,7 +95,7 @@ export function Dashboard(): ReactElement {
     const wallet = useWallet();
 
     return (
-        <NavbarSidebarLayout
+        <DashboardLayout
             navbar={<DashboardNavbar />}
             sidebar={<DashboardSidebar />}
         >
@@ -132,7 +132,7 @@ export function Dashboard(): ReactElement {
                 />
             </Routes>
             <NotificationRightBar />
-        </NavbarSidebarLayout>
+        </DashboardLayout>
     );
 }
 

@@ -15,10 +15,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {activeAccountKeyPairState} from "@/states/globals.tsx";
-import {useRecoilValue} from "recoil";
+import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
 
-export function useAccountKeyPair() {
-    const keyPair = useRecoilValue(activeAccountKeyPairState);
-    return { accountKeyPair: keyPair, loading: keyPair === undefined }
+export interface ProviderInterface {
+    generateWords(): string[];
+
+    generateSeed(words: string[]): Promise<string>;
+
+    encryptSeed(password: string, seed: Uint8Array): Uint8Array;
+
+    decryptSeed(password: string, seed: Uint8Array): Uint8Array;
+
+    deriveSecretKeyFromPassword(password: string): Promise<SecretEncryptionKey>
 }

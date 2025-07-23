@@ -32,10 +32,10 @@ import {AuthenticationContextProvider,} from '@/contexts/AuthenticationContext.t
 import {ApplicationStatusContextProvider,} from '@/contexts/ApplicationStatusContext.tsx';
 import {RecoilRoot, useRecoilState, useRecoilValue} from 'recoil';
 import {ToastContainer} from "react-toastify";
-import {Splashscreen} from "@/components/Splashscreen.tsx";
+import {Splashscreen} from "@/components/shared/Splashscreen.tsx";
 import {ErrorBoundary} from "react-error-boundary";
 import {ErrorFallback} from "@/components/shared/ErrorFallback.tsx";
-import {passwordState, walletState} from "@/states/states.tsx";
+import {passwordState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 

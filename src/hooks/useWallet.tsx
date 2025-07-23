@@ -16,7 +16,7 @@
  */
 
 import {useRecoilValue} from "recoil";
-import {walletState} from "@/states/states.tsx";
+import {walletState} from "@/states/globals.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 
 export function useWallet(): Wallet {
