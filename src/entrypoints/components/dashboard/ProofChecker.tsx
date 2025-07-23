@@ -39,7 +39,14 @@ import {
     DataObject
 } from "@mui/icons-material";
 import { useAsync } from "react-use";
-import {Blockchain, ImportedProof, Proof, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {
+    Blockchain,
+    BlockchainFacade,
+    ImportedProof,
+    Proof,
+    ProofVerificationResult,
+    ProviderFactory
+} from "@cmts-dev/carmentis-sdk/client";
 import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
 import { BlockViewer } from "@/entrypoints/components/dashboard/BlockViewer.tsx";
 import { useWallet } from "@/entrypoints/contexts/authentication.context.tsx";
@@ -436,19 +443,15 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     );
 }
 
-async function importProof(blockchain: Blockchain, proof: Proof): Promise<{ verified: true, records: ImportedProof[] } | {verified: false, records: undefined}> {
-    try {
-        return { verified: true, records: await blockchain.importApplicationLedgerProof(proof) }
-    } catch (error) {
-        console.error(error)
-        return { verified: false, records: undefined }
-    }
+async function importProof(blockchain: BlockchainFacade, proof: Proof): Promise<{ records: object[], result: ProofVerificationResult }> {
+    const result = await blockchain.verifyProofFromJson(proof);
+    const records = await Promise.all(result.getInvolvedBlockHeights().map(h => result.getRecordContainedInBlockAtHeight<any>(h)))
+    return {result,  records}
 }
 
 function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any }) {
     const wallet = useWallet();
-    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
-    const blockchain = new Blockchain(provider);
+    const blockchain = BlockchainFacade.createFromNodeUrl(wallet.nodeEndpoint)
     const state = useAsync(async () => importProof(blockchain, proof));
 
     // Animation variants
@@ -496,20 +499,21 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
         );
     }
 
-    if (state.error || !state.value || !state.value.verified) {
+    if (state.error || !state.value) {
         return <ProofCheckerFailure error={state.error?.toString() || "Unknown error"} />;
     }
 
 
-    const records = state.value.records;
+    const { records, result: verificationResult } = state.value;
+    const verified = verificationResult.isVerified();
     const data = state.value;
     const appLedgerId = proof.virtualBlockchainIdentifier;
 
     const rows = [
         { header: "Proof Verification Status", value: <Chip 
-            label={data.verified ? 'Verified' : 'Failed'} 
-            color={data.verified ? 'success' : 'error'}
-            icon={data.verified ? <CheckCircle /> : <ErrorIcon />}
+            label={verified ? 'Verified' : 'Failed'}
+            color={verified ? 'success' : 'error'}
+            icon={verified ? <CheckCircle /> : <ErrorIcon />}
             className="font-medium shadow-sm"
             sx={{ 
                 padding: '4px 8px',
@@ -573,23 +577,23 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
             </motion.div>
 
             <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                <Paper elevation={0} className={`border ${data.verified ? 'border-green-100' : 'border-red-100'} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300`}>
-                    <Box className={`p-5 ${data.verified ? 'bg-gradient-to-r from-green-50 to-green-50/70' : 'bg-gradient-to-r from-red-50 to-red-50/70'} border-b ${data.verified ? 'border-green-100' : 'border-red-100'} flex items-center`}>
+                <Paper elevation={0} className={`border ${verified ? 'border-green-100' : 'border-red-100'} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300`}>
+                    <Box className={`p-5 ${verified ? 'bg-gradient-to-r from-green-50 to-green-50/70' : 'bg-gradient-to-r from-red-50 to-red-50/70'} border-b ${verified ? 'border-green-100' : 'border-red-100'} flex items-center`}>
                         <div className="relative mr-4">
-                            <div className={`absolute inset-0 ${data.verified ? 'bg-green-200' : 'bg-red-200'} rounded-full blur-sm opacity-30`}></div>
+                            <div className={`absolute inset-0 ${verified ? 'bg-green-200' : 'bg-red-200'} rounded-full blur-sm opacity-30`}></div>
                             <Avatar 
-                                className={`${data.verified ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'} border shadow-sm`} 
+                                className={`${verified ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'} border shadow-sm`} 
                                 sx={{ width: 40, height: 40 }}
                             >
-                                {data.verified ? <VerifiedUser /> : <ErrorIcon />}
+                                {verified ? <VerifiedUser /> : <ErrorIcon />}
                             </Avatar>
                         </div>
                         <Typography variant="h6" className="font-semibold text-gray-800">
                             Proof Information
                         </Typography>
                         <Chip 
-                            label={data.verified ? "Verified" : "Failed"} 
-                            color={data.verified ? "success" : "error"}
+                            label={verified ? "Verified" : "Failed"} 
+                            color={verified ? "success" : "error"}
                             size="small"
                             className="ml-auto"
                             sx={{ fontWeight: 500 }}
@@ -648,7 +652,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
     );
 }
 
-function ProofRecordViewer({ records }: { records: ImportedProof[] }) {
+function ProofRecordViewer({ records }: { records: any[] }) {
     // Animation variants
     const timelineVariants = {
         hidden: { opacity: 0 },

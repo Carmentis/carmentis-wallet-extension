@@ -1,5 +1,6 @@
 import {
-	AccountHistory, AccountVb, Hash,
+	AccountHistoryView,
+	AccountTransferPublicationExecutionContext, AccountVb, BlockchainFacade, CMTSToken, Hash,
 	PrivateSignatureKey,
 	ProviderFactory, PublicSignatureKey,
 	StringSignatureEncoder,
@@ -12,7 +13,6 @@ import {
 	useWallet
 } from "@/entrypoints/contexts/authentication.context.tsx";
 import useSWR from "swr";
-import {Explorer, Blockchain} from "@cmts-dev/carmentis-sdk/client";
 
 /**
  * Fetches the account balance for the given account's public key from the specified node URL.
@@ -22,8 +22,9 @@ import {Explorer, Blockchain} from "@cmts-dev/carmentis-sdk/client";
  * @return {Promise<number>} A promise that resolves to the account balance as a number.
  * @throws {Error} If there is an issue retrieving the account information or balance.
  */
-export async function useAccountBalance(accountPublicKey: PublicSignatureKey, nodeUrl: string): Promise<number> {
+export async function useAccountBalance(accountPublicKey: PublicSignatureKey, nodeUrl: string): Promise<CMTSToken> {
 	try {
+		/*
 		// create the explorer
 		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
 		const explorer = Explorer.createFromProvider(provider);
@@ -32,9 +33,14 @@ export async function useAccountBalance(accountPublicKey: PublicSignatureKey, no
 		const accountHash = await explorer.getAccountByPublicKey(accountPublicKey);
 		const accountState = await explorer.getAccountState(accountHash);
 		return accountState.balance / TOKEN;
+
+		 */
+		const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
+		const accountHash = await blockchain.getAccountHashFromPublicKey(accountPublicKey);
+		return blockchain.getAccountBalance(accountHash);
 	} catch (e) {
 		console.log("Cannot proceed to the account's balance data:", e)
-		return 0
+		return CMTSToken.zero()
 	}
 }
 
@@ -66,7 +72,7 @@ export function useAccountBalanceHook() {
  * @param {string} accountPublicKey - The public key of the account for which the history is to be fetched.
  * @param {number} [offset=0] - The starting offset for the history records. Defaults to 0.
  * @param {number} [maxRecords=50] - The maximum number of records to retrieve. Defaults to 50.
- * @return {Promise<AccountHistory>} A promise that resolves to the account history object.
+ * @return {Promise<AccountHistoryView>} A promise that resolves to the account history object.
  * @throws {Error} Throws an error if unable to fetch the account history.
  */
 export async function useAccountHistory(
@@ -74,8 +80,13 @@ export async function useAccountHistory(
 	accountPublicKey : PublicSignatureKey,
 	offset = 0,
 	maxRecords = 50,
-): Promise<AccountHistory> {
+): Promise<AccountHistoryView> {
 	try {
+
+		const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
+		const accountHash = await blockchain.getAccountHashFromPublicKey(accountPublicKey);
+		return blockchain.getAccountHistory(accountHash);
+		/*
 		// create the explorer
 		const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
 		const explorer = Explorer.createFromProvider(provider);
@@ -90,6 +101,8 @@ export async function useAccountHistory(
 		);
 
 		return history;
+
+		 */
 	} catch (e) {
 		console.log(`Cannot load the history of transaction: ${e}`);
 		throw new Error(`${e}`)
@@ -110,26 +123,13 @@ export function useAccountTransactionHistoryHook(
 
 export async function transferTokensToPublicKey(nodeUrl: string, senderPrivateKey: PrivateSignatureKey, senderPublicKey: PublicSignatureKey, receiverPublicKey: string, tokenAmount: number) {
 	try {
-		// creating the explorer and the blockchain
-		const provider = ProviderFactory.createKeyedProviderExternalProvider(senderPrivateKey, nodeUrl);
-		const explorer = Explorer.createFromProvider(provider);
-		const blockchain = new Blockchain(provider);
-
-		// load the accounts
+		const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(nodeUrl, senderPrivateKey);
 		const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-		const senderAccountHash  = await explorer.getAccountByPublicKey(senderPublicKey);
-		const receiverAccountHash = await explorer.getAccountByPublicKey(signatureEncoder.decodePublicKey(receiverPublicKey));
-
-		// perform the transfer
-		const senderAccount = await blockchain.loadAccount(senderAccountHash);
-		await senderAccount.transfer({
-			account: receiverAccountHash.toBytes(),
-			amount: 0,
-			publicReference: '',
-			privateReference: ''
-		})
-		senderAccount.setGasPrice(TOKEN);
-		await senderAccount.publishUpdates();
+		const parsedReceiverPublicKey = signatureEncoder.decodePublicKey(receiverPublicKey);
+		const transferContext = new AccountTransferPublicationExecutionContext()
+			.withTransferToPublicKey(senderPrivateKey, parsedReceiverPublicKey)
+			.withAmount(CMTSToken.createCMTS(tokenAmount));
+		await blockchain.publishTokenTransfer(transferContext);
 	} catch (e) {
 		throw e;
 	}

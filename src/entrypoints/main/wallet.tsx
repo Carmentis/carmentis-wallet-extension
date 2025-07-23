@@ -77,28 +77,12 @@ export function getUserKeyPair(wallet : Wallet, account : Account) : Promise<Sig
         const hexEncoder = EncoderFactory.bytesToHexEncoder();
         let seed = hexEncoder.decode(wallet.seed);
         const carmentisWallet = CarmentisWallet.fromSeed(seed);
-        const privateKey = carmentisWallet.getPrivateSignatureKey(SignatureAlgorithmId.SECP256K1, account.nonce);
+        const privateKey = carmentisWallet.getAccountPrivateSignatureKey(SignatureAlgorithmId.SECP256K1, account.nonce);
         const publicKey = privateKey.getPublicKey();
         resolve({
             privateKey: privateKey,
             publicKey: publicKey
         })
-        /*
-        Carmentis.derivePepperFromSeed(seed, account.nonce).then((pepper: Uint8Array) => {
-            return Carmentis.deriveAccountPrivateKey(pepper).then((privateKey : Uint8Array) => {
-                return Carmentis.getPublicKey(privateKey).then((publicKey : Uint8Array) => {
-                    resolve({
-                        privateKey: privateKey,
-                        publicKey: publicKey
-                    })
-                })
-            });
-
-        }).catch((error : Error) => {
-            reject(error);
-        })
-
-         */
     })
 
 }

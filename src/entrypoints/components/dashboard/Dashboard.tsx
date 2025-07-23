@@ -258,7 +258,7 @@ function DashboardHome() {
  */
 function DashboardOverview() {
     const activeAccount = useAuthenticatedAccount();
-    const balance = useAccountBalanceHook();
+    const {data: balance, isLoading, error} = useAccountBalanceHook();
     const numberVb = useAsync(async () => {
         const db = await AccountDataStorage.connectDatabase(activeAccount);
         return db.getNumberOfApplicationVirtualBlockchainId();
@@ -326,8 +326,8 @@ function DashboardOverview() {
                         <StatsCard
                             title="Balance"
                             icon={<AccountBalance className="text-blue-500" />}
-                            value={balance.isLoading ? <Skeleton height={40} width={120} /> :
-                                balance.error || typeof balance.data !== 'number' ? "--" : `${balance.data} CMTS`}
+                            value={isLoading ? <Skeleton height={40} width={120} /> :
+                                balance ?  balance.toString() : "--" }
                             subtitle="Your current token balance"
                         />
                     </Grid>

@@ -22,29 +22,29 @@ import { useNavigate } from "react-router";
 import { DropdownAccountSelection } from "@/entrypoints/components/dashboard/DropdownAccountSelection.tsx";
 import { useMainInterfaceActions } from "@/entrypoints/states/main-interface.state.tsx";
 import { useApplicationNotificationHook } from "@/entrypoints/states/application-nofications.state.tsx";
-import { 
-  Badge, 
-  Chip, 
-  Typography, 
-  AppBar, 
-  Toolbar, 
-  Box, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
-  ListItemIcon, 
-  ListItemText, 
+import {
+  Badge,
+  Chip,
+  Typography,
+  AppBar,
+  Toolbar,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Divider,
   Avatar,
   Tooltip as MuiTooltip
 } from "@mui/material";
 import { useAccountBalanceHook } from "@/entrypoints/components/hooks/sdk.hook.tsx";
-import { 
-  Email, 
-  MoreVert, 
-  Settings, 
-  Logout, 
-  Help, 
+import {
+  Email,
+  MoreVert,
+  Settings,
+  Logout,
+  Help,
   AccountBalance as AccountBalanceIcon,
   Notifications,
   NetworkCheck,
@@ -367,9 +367,8 @@ function BalanceChip() {
         );
   }
 
-  if (typeof balance.data !== 'number') {
-    return null;
-  }
+  if (!balance.data) return null;
+
 
   return (
     <motion.div
@@ -379,7 +378,7 @@ function BalanceChip() {
     >
       <div className={"flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
         <Typography variant="body2" className="font-medium text-blue-700">
-          {balance.data} CMTS
+          {balance.data.toString()}
         </Typography>
       </div>
 

@@ -44,7 +44,7 @@ import {
     KeyboardArrowUp
 } from "@mui/icons-material";
 import { useAuthenticatedAccount } from '@/entrypoints/contexts/authentication.context.tsx';
-import {AccountHistoryEntry, Hash, TOKEN} from "@cmts-dev/carmentis-sdk/client";
+import {Hash, CMTSToken, Transaction} from "@cmts-dev/carmentis-sdk/client";
 
 export default function HistoryPage() {
     const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([]);
@@ -157,7 +157,7 @@ function BalanceCard() {
                     ) : (
                         <>
                             <Typography variant="h3" className="font-bold text-gray-800 mb-2">
-                                {balanceResponse.data} <span className="text-xl">CMTS</span>
+                                {balanceResponse.data?.toString()}
                             </Typography>
                             <Typography variant="body2" className="text-gray-500">
                                 {activeAccount?.pseudo}'s balance
@@ -235,7 +235,7 @@ function TransactionHistory() {
         );
     }
 
-    if (data.list.length === 0) {
+    if (!data.containsTransactions()) {
         return (
             <Box className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-100 text-center">
                 <Typography variant="h6" className="text-gray-700 mb-2">
@@ -287,14 +287,15 @@ function TransactionHistory() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {data.list
+                            {data.getTransactionHeights()
+                                .map(height => data.getTransactionAtHeight(height))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((transaction, index) => (
                                     <TransactionRow
-                                        key={`${transaction.timestamp}-${index}`}
+                                        key={`${transaction.getTimestamp()}-${index}`}
                                         transaction={transaction}
-                                        isExpanded={expandedRow === `${transaction.timestamp}-${index}`}
-                                        onToggleExpand={() => toggleRowExpand(`${transaction.timestamp}-${index}`)}
+                                        isExpanded={expandedRow === `${transaction.getTimestamp()}-${index}`}
+                                        onToggleExpand={() => toggleRowExpand(`${transaction.getTimestamp()}-${index}`)}
                                     />
                                 ))}
                         </TableBody>
@@ -304,7 +305,7 @@ function TransactionHistory() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={data.list.length}
+                    count={data.getNumberOfTransactions()}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
@@ -320,14 +321,13 @@ function TransactionRow({
                             isExpanded,
                             onToggleExpand
                         }: {
-    transaction: AccountHistoryEntry;
+    transaction: Transaction;
     isExpanded: boolean;
     onToggleExpand: () => void;
 }) {
-    const isPositive = transaction.amount >= 0;
-    const sign = isPositive ? "+" : "";
-    const date = new Date(transaction.timestamp * 1000);
-    const linkedAccount = Hash.from(transaction.linkedAccount).encode();
+    const isPositive = transaction.isPositive()
+    const date = transaction.transferredAt();
+    const linkedAccount = transaction.getLinkedAccount()
 
     // Format date nicely
     const formattedDate = date.toLocaleDateString(undefined, {
@@ -368,16 +368,16 @@ function TransactionRow({
                 </TableCell>
                 <TableCell>
                     <Chip
-                        label={transaction.type}
+                        label={formatTransactionType(transaction)}
                         size="small"
                         className={isPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
                         icon={isPositive ? <ArrowUpward className="text-green-500" fontSize="small" /> : <ArrowDownward className="text-red-500" fontSize="small" />}
                     />
                 </TableCell>
                 <TableCell>
-                    <Tooltip title={linkedAccount}>
+                    <Tooltip title={linkedAccount.encode()}>
                         <Typography variant="body2" className="max-w-[150px] truncate">
-                            {linkedAccount}
+                            {linkedAccount.encode()}
                         </Typography>
                     </Tooltip>
                 </TableCell>
@@ -386,7 +386,7 @@ function TransactionRow({
                         variant="body2"
                         className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
                     >
-                        {`${sign}${transaction.amount / TOKEN} CMTS`}
+                        {transaction.getAmount().toString()}
                     </Typography>
                 </TableCell>
             </TableRow>
@@ -411,7 +411,7 @@ function TransactionRow({
                                             <Box className="mt-2 space-y-2">
                                                 <Box className="flex justify-between">
                                                     <Typography variant="body2" className="text-gray-600">Type:</Typography>
-                                                    <Typography variant="body2" className="font-medium">{transaction.name}</Typography>
+                                                    <Typography variant="body2" className="font-medium"></Typography>
                                                 </Box>
                                                 <Box className="flex justify-between">
                                                     <Typography variant="body2" className="text-gray-600">Date:</Typography>
@@ -423,7 +423,7 @@ function TransactionRow({
                                                         variant="body2"
                                                         className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
                                                     >
-                                                        {`${sign}${transaction.amount / TOKEN} CMTS`}
+                                                        {transaction.getAmount().toString()}
                                                     </Typography>
                                                 </Box>
                                             </Box>
@@ -434,7 +434,7 @@ function TransactionRow({
                                             </Typography>
                                             <Box className="mt-2">
                                                 <Typography variant="body2" className="break-all font-mono bg-gray-100 p-2 rounded">
-                                                    {linkedAccount}
+                                                    {linkedAccount.encode()}
                                                 </Typography>
                                             </Box>
                                         </Grid>
@@ -447,4 +447,21 @@ function TransactionRow({
             </TableRow>
         </>
     );
+}
+
+/**
+ * Formats transaction type as a string.
+ *
+ * @param transaction The transaction to format.
+ */
+function formatTransactionType(transaction: Transaction) {
+    if (transaction.isPurchase()) return "Purchase";
+    if (transaction.isSale()) return "Sale";
+    if (transaction.isEarnedFees()) return "Earned fees";
+    if (transaction.isPaidFees()) return "Paid fees";
+    if (transaction.isSentPayment()) return "Sent payment";
+    if (transaction.isReceivedPayment()) return "Received payment";
+    if (transaction.isSentIssuance()) return "Sent issuance"
+    if (transaction.isReceivedIssuance()) return "Received issuance"
+    return ""
 }
