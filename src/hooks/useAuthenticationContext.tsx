@@ -15,13 +15,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {useContext} from "react";
+import {AuthenticationContext} from "@/contexts/AuthenticationContext.tsx";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+/**
+ * A custom hook that provides access to the authentication context.
+ * This hook must be used within a component wrapped by `AuthenticationContextProvider`.
+ *
+ * @throws {Error} If the hook is called outside of the `AuthenticationContextProvider`.
+ */
+export function useAuthenticationContext() {
+    const context = useContext(AuthenticationContext);
+    if (!context) throw new Error('Cannot call useAuthenticationContext outside of AuthenticationContextProvider')
+    return context;
 }

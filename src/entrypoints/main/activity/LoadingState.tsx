@@ -15,13 +15,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {motion} from "framer-motion";
+import {CircularProgress, Typography} from "@mui/material";
+import React from "react";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+/**
+ * Loading state component for the activity page
+ */
+export function LoadingState() {
+    return (
+        <motion.div
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            className="flex flex-col items-center justify-center py-16"
+        >
+            <CircularProgress size={60} thickness={4} className="mb-4"/>
+            <Typography variant="h6" className="font-medium text-gray-800 mb-2">
+                Loading Blockchain Data
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                Please wait while we fetch your blockchain activity...
+            </Typography>
+        </motion.div>
+    );
 }

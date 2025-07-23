@@ -15,13 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {Account} from "@/types/Account.tsx";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+export interface Wallet {
+    explorerEndpoint: string;
+    seed: string;
+    password?: string,
+    counter: number;
+    accounts: Account[];
+    activeAccountId?: string;
+    nodeEndpoint: string;
 }

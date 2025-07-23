@@ -15,13 +15,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {useRecoilValue} from "recoil";
+import {activeAccountPublicKeyState} from "@/states/states.tsx";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+export function useAccountPublicKey() {
+    const publicKey = useRecoilValue(activeAccountPublicKeyState);
+    return { accountPublicKey: publicKey, loading: publicKey === undefined }
 }

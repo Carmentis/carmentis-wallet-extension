@@ -15,13 +15,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
-
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+/**
+ * Represents an Account entity with its related properties.
+ *
+ * @interface Account
+ *
+ * @property {string} id - A unique identifier for the account.
+ * @property {number} nonce - A numeric value used for keeping track of transaction or operation state.
+ * @property {string} pseudo - The pseudonym associated with the account.
+ * @property {string} [accountVirtualBlockchainId] - An optional identifier associated with the virtual blockchain of the account.
+ */
+export interface Account {
+    id: string;
+    nonce: number;
+    pseudo: string;
+    accountVirtualBlockchainId?: string;
 }

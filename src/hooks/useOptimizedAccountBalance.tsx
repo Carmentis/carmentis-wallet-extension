@@ -16,10 +16,11 @@
  */
 
 import {useRecoilValue} from "recoil";
-import {activeAccountPublicKeyState, useWallet} from "@/entrypoints/contexts/authentication.context.tsx";
 import useSWR from "swr";
 
 import {useAccountBalance} from "@/hooks/useAccountBalance.tsx";
+import {activeAccountPublicKeyState} from "@/states/states.tsx";
+import {useWallet} from "@/hooks/useWallet.tsx";
 
 /**
  * Custom hook to fetch and manage the account balance for the active account.

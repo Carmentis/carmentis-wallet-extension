@@ -15,13 +15,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+const DEFAULT_NODE_ENDPOINT = "https://dev-node.beta.carmentis.io"
+const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.beta.carmentis.io"
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+export function useDefaultNetworkConfig() {
+    return {
+        nodeEndpoint: DEFAULT_NODE_ENDPOINT,
+        explorerEndpoint: DEFAULT_EXPLORER_ENDPOINT
+    }
 }

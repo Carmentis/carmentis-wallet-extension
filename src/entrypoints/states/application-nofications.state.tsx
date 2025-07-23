@@ -16,10 +16,10 @@
  */
 
 import {atom, selector, useRecoilValue} from "recoil";
-import {activeAccountState} from "@/entrypoints/contexts/authentication.context.tsx";
-import {AccountStorageDB} from "@/utils/db/account-data-storage.ts";
+import {AccountStorageDB} from "@/utils/db/AccountStorageDB.ts";
 import {useLiveQuery} from "dexie-react-hooks";
-import {NotificationStorageDB} from "@/utils/db/notification-storage.ts";
+import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
+import {activeAccountState} from "@/states/states.tsx";
 
 export interface AppNotification {
     notificationId?: string,

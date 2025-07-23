@@ -15,13 +15,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
+import {Account} from "@/types/Account.tsx";
 
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+const DEFAULT_NONCE = 0;
+
+export function useAccountBuilder() {
+    return { buildAccountFromPseudo, buildAccountFromPseudoAndNonce }
 }
+
+function buildAccountFromPseudoAndNonce(pseudo: string, nonce : number) : Account {
+    return {
+        id: generateAccountId(),
+        nonce,
+        pseudo
+    }
+}
+
+
+function buildAccountFromPseudo(pseudo: string) : Account {
+    return {
+        id: generateAccountId(),
+        pseudo,
+        nonce: DEFAULT_NONCE,
+    }
+}
+
+function randomHex(size: number) {
+    let result = [];
+    let hexRef = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+
+    for (let n = 0; n < size; n++) {
+        result.push(hexRef[Math.floor(Math.random() * 16)]);
+    }
+    return result.join('');
+}
+
+
+
+function generateAccountId() : string {
+    return randomHex(32)
+}
+
+

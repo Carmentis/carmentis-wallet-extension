@@ -17,14 +17,14 @@
 
 
 import {ReactElement} from 'react';
-import {AuthenticationManager} from '@/entrypoints/components/AuthenticationManager.tsx';
-import {useApplicationStatus} from '@/entrypoints/contexts/application-status.context.tsx';
-import {activeAccountState, walletState,} from '@/entrypoints/contexts/authentication.context.tsx';
-import OnBoarding from '@/entrypoints/components/onboarding/OnBoarding.tsx';
-import Login from '@/entrypoints/components/Login.tsx';
-import AccountSelection from '@/entrypoints/components/AccountSelection.tsx';
-import Dashboard from '@/entrypoints/components/dashboard/Dashboard.tsx';
+import {AuthenticationManager} from '@/components/shared/AuthenticationManager.tsx';
+import OnBoarding from '@/components/onboarding/OnBoarding.tsx';
+import Login from '@/components/shared/Login.tsx';
+import AccountSelection from '@/components/shared/AccountSelection.tsx';
+import Dashboard from '@/entrypoints/main/dashboard/Dashboard.tsx';
 import {useRecoilValue} from 'recoil';
+import {activeAccountState, walletState} from "@/states/states.tsx";
+import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
 
 /**
  * This function returns the full page entrypoint called by the main application.

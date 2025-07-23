@@ -15,13 +15,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {PrivateSignatureKey, PublicSignatureKey} from "@cmts-dev/carmentis-sdk/client";
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+/**
+ * Represents a cryptographic signature key pair consisting of a private key and a public key.
+ * The `privateKey` is used for generating digital signatures, and the `publicKey`
+ * is used for verifying those signatures.
+ *
+ * This type defines a structured object that holds both the private and public keys
+ * required for asymmetric cryptographic operations.
+ */
+export type SignatureKeyPair = {
+    privateKey: PrivateSignatureKey;
+    publicKey: PublicSignatureKey;
 }

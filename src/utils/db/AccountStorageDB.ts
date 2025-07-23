@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Carmentis. All rights reserved.
- * Licensed under the Apache 2.0 licence.
+ * Licensed under the Apache 2.0 licence. 
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -15,13 +15,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import Dexie, {Table} from 'dexie';
 
-export interface ProviderInterface {
-    generateWords() : string[];
-    generateSeed( words : string[] ): Promise<string>;
+import {ApplicationLedgerVirtualBlockchain} from "@/types/ApplicationLedgerVirtualBlockchain.tsx";
 
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array;
-    deriveSecretKeyFromPassword( password : string ) : Promise<SecretEncryptionKey>
+export class AccountStorageDB extends Dexie {
+
+    applicationsVirtualBlockchains!: Table<ApplicationLedgerVirtualBlockchain, string>;
+
+    constructor(dbName: string) {
+        super(dbName);
+        this.version(1).stores({
+            applicationsVirtualBlockchains: 'virtualBlockchainId',
+        });
+    }
 }
+
