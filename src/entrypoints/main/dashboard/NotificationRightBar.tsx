@@ -18,15 +18,12 @@
 import {Button, Card, CardContent, Drawer, Typography} from "@mui/material";
 import {PropsWithChildren, ReactElement} from "react";
 import {useRecoilValue} from "recoil";
-import {
-    AppNotification,
-} from "@/entrypoints/states/application-nofications.state.tsx";
-import {mainInterfaceState} from "@/entrypoints/states/main-interface.state.tsx";
 import {useNavigate} from "react-router";
 import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
-import {activeAccountState} from "@/states/globals.tsx";
+import {activeAccountState, mainInterfaceState} from "@/states/globals.tsx";
 import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
 import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
+import {AppNotification} from "@/types/AppNotification.ts";
 
 
 

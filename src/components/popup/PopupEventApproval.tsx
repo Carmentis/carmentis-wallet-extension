@@ -1,5 +1,4 @@
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 import {
     ApplicationLedger,
     Blockchain,
@@ -29,6 +28,7 @@ import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {ApprovalMessageViewer} from "@/components/popup/ApprovalMessageViewer.tsx";
 import {RecordDataViewer} from "@/components/popup/RecordDataViewer.tsx";
+import {clientRequestSessionState} from "@/states/globals.tsx";
 
 /**
  * PopupEventApproval is a React functional component that handles the process of approving or declining

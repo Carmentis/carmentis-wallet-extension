@@ -15,26 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {selector} from "recoil";
-import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
-
-export interface AppNotification {
-    notificationId?: string,
-    ts: number,
-    title: string,
-    message: string,
-    seen: boolean,
-    link?: string,
-    buttonMessage?: string
-    accountId?: string
+export interface MainInterfaceStatus {
+    showNotifications: boolean
 }
-
-export const appNotificationState = selector<AppNotification[]>({
-    key: 'appNotifications',
-    get: async () => {
-        const db = await NotificationStorageDB.connectDatabase();
-        const transactions = await db.notifications.orderBy('ts').toArray();
-        return transactions;
-    },
-});
-

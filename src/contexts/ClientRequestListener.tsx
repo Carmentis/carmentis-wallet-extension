@@ -17,13 +17,13 @@
 
 import React, {ReactElement, useEffect} from "react";
 import {useSetRecoilState} from "recoil";
-import {clientRequestSessionState} from "@/entrypoints/states/client-request-session.state.tsx";
 
 import {
     QRDataClientRequest,
 } from "@/entrypoints/background.ts";
 import {Runtime} from "webextension-polyfill";
 import MessageSender = Runtime.MessageSender;
+import {clientRequestSessionState} from "@/states/globals.tsx";
 
 
 

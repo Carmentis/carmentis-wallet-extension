@@ -18,7 +18,6 @@
 import React, {PropsWithChildren, ReactElement, useState} from "react";
 import "react-loading-skeleton/dist/skeleton.css";
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {clientRequestSessionState, showSuccessScreenState} from "@/entrypoints/states/client-request-session.state.tsx";
 import {Box, Button, Typography} from "@mui/material";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {
@@ -37,7 +36,7 @@ import Skeleton from "react-loading-skeleton";
 import image from '@/assets/success.png';
 import { motion } from "framer-motion";
 import { CheckCircle } from "react-bootstrap-icons";
-import {activeAccountState, walletState} from "@/states/globals.tsx";
+import {activeAccountState, clientRequestSessionState, showSuccessScreenState, walletState} from "@/states/globals.tsx";
 import {Account} from "@/types/Account.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 

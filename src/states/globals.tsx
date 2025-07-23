@@ -21,6 +21,10 @@ import {useAccountKeyPairLoader} from "@/hooks/useAccountKeyPairLoader.tsx";
 import {SignatureKeyPair} from "@/types/SignatureKeyPair.tsx";
 import {Account} from "@/types/Account.tsx";
 import {Wallet} from "@/types/Wallet.ts";
+import {MainInterfaceStatus} from "@/types/MainInterfaceStatus.ts";
+import {AppNotification} from "@/types/AppNotification.ts";
+import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
+import {QRDataClientRequest} from "@/entrypoints/background.ts";
 
 function walletSessionStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
@@ -92,4 +96,52 @@ export const nodeEndpointState = selector({
         const wallet = get(walletState);
         return wallet?.nodeEndpoint;
     }
+})
+export const mainInterfaceState = atom<MainInterfaceStatus>({
+    key: 'mainInterfaceStatus',
+    default: {
+        showNotifications: false,
+    }
+})
+
+export const appNotificationState = selector<AppNotification[]>({
+    key: 'appNotifications',
+    get: async () => {
+        const db = await NotificationStorageDB.connectDatabase();
+        const transactions = await db.notifications.orderBy('ts').toArray();
+        return transactions;
+    },
+});
+
+function clientRequestStorageEffect<T>(key: string): AtomEffect<T> {
+    return ({setSelf, onSet}) => {
+        // Initialize atom from chrome.storage.session
+        chrome.storage.session.get([key], (result) => {
+            console.log("[clientRequestSession] obtained result:", result)
+            if (result[key] !== undefined) {
+                setSelf(result[key] as T);
+            } else {
+                setSelf(undefined);
+            }
+        });
+
+        // Save atom updates to chrome.storage.session
+        onSet((newValue) => {
+            console.log("[clientRequestSession] Updating client request sesssoin:", newValue)
+            if (newValue === undefined) {
+                chrome.storage.session.remove([key]);
+            } else {
+                chrome.storage.session.set({[key]: newValue});
+            }
+        });
+    };
+}
+
+export const clientRequestSessionState = atom<QRDataClientRequest | undefined>({
+    key: "clientRequestSession",
+    effects: [clientRequestStorageEffect<QRDataClientRequest | undefined>("clientRequestSession")],
+})
+export const showSuccessScreenState = atom<boolean>({
+    key: 'showSuccessScreen',
+    default: false,
 })

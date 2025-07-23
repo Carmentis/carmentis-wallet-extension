@@ -15,18 +15,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {atom} from "recoil";
-
-export interface MainInterfaceStatus {
-    showNotifications: boolean
+export interface AppNotification {
+    notificationId?: string,
+    ts: number,
+    title: string,
+    message: string,
+    seen: boolean,
+    link?: string,
+    buttonMessage?: string
+    accountId?: string
 }
-
-export const mainInterfaceState = atom<MainInterfaceStatus>({
-    key: 'mainInterfaceStatus',
-    default: {
-        showNotifications: false,
-    }
-})
-
-
-

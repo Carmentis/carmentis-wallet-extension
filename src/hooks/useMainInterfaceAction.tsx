@@ -16,7 +16,8 @@
  */
 
 import {useSetRecoilState} from "recoil";
-import {mainInterfaceState} from "@/entrypoints/states/main-interface.state.tsx";
+
+import {mainInterfaceState} from "@/states/globals.tsx";
 
 export function useMainInterfaceActions() {
     const setMainInterface = useSetRecoilState(mainInterfaceState);

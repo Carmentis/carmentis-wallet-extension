@@ -17,7 +17,8 @@
 
 import {useLiveQuery} from "dexie-react-hooks";
 import {NotificationStorageDB} from "@/utils/db/NotificationStorageDB.ts";
-import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
+
+import {AppNotification} from "@/types/AppNotification.ts";
 
 export function useApplicationNotification() {
     const storedNotifications: AppNotification[] | undefined = useLiveQuery(async () => {

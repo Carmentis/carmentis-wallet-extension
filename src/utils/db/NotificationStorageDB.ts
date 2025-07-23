@@ -16,7 +16,8 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import {AppNotification} from "@/entrypoints/states/application-nofications.state.tsx";
+
+import {AppNotification} from "@/types/AppNotification.ts";
 
 const NOTIFICATION_DATABASE_NAME = "notification-database"
 
