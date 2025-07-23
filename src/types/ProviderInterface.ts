@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {SecretEncryptionKey} from "@/utils/secret-encryption-key.ts";
+import {SymmetricEncryptionKey} from "@cmts-dev/carmentis-sdk/client";
 
 export interface ProviderInterface {
     generateWords(): string[];
@@ -26,5 +26,5 @@ export interface ProviderInterface {
 
     decryptSeed(password: string, seed: Uint8Array): Uint8Array;
 
-    deriveSecretKeyFromPassword(password: string): Promise<SecretEncryptionKey>
+    deriveSecretKeyFromPassword(password: string): Promise<SymmetricEncryptionKey>
 }

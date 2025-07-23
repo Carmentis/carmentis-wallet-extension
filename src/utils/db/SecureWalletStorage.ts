@@ -16,17 +16,18 @@
  */
 
 
-import {SecretEncryptionKey} from '@/utils/secret-encryption-key.ts';
+import {SecretEncryptionKey} from '@/types/SecretEncryptionKey.ts';
 
 import {Wallet} from "@/types/Wallet.ts";
 import {ProviderInterface} from "@/types/ProviderInterface.ts";
+import {SymmetricEncryptionKey} from "@cmts-dev/carmentis-sdk/client";
 
 const ENCRYPTED_WALLET = "encryptedWallet"
 const ENCRYPTED_WALLET_DB_VERSION = 1;
 export class SecureWalletStorage {
 
 
-    constructor( private readonly secretKey: SecretEncryptionKey) {
+    constructor( private readonly secretKey: SymmetricEncryptionKey) {
 
     }
 
@@ -133,7 +134,7 @@ export class SecureWalletStorage {
                 // encrypt the wallet
                 const textEncoder = new TextEncoder();
                 const plaintext = textEncoder.encode(JSON.stringify(wallet));
-                const ciphertext = await this.secretKey.encrypt(plaintext).catch(reject);
+                const ciphertext = this.secretKey.encrypt(plaintext);
 
                 // store the encrypted wallet
                 const store = await SecureWalletStorage.OpenDatabase();

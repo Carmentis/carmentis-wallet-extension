@@ -36,8 +36,6 @@ The `src` directory contains the source code for the Carmentis Wallet Extension.
 
 - **hooks**: Custom React hooks (e.g., useWallet).
 
-- **lib**: Library code or third-party integrations.
-
 - **locales**: Internationalization and localization files.
 
 - **public**: Public assets accessible directly.
