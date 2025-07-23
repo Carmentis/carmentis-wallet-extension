@@ -16,7 +16,7 @@
  */
 
 import {ProviderInterface} from "@/providers/providerInterface.tsx";
-import {EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {CryptoSchemeFactory, EncoderFactory} from "@cmts-dev/carmentis-sdk/client";
 import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import { SecretEncryptionKey } from '@/utils/secret-encryption-key.ts';
 
@@ -33,12 +33,16 @@ export class CarmentisProvider implements ProviderInterface{
 
     encryptSeed(password: string, seed : Uint8Array) : Uint8Array {
         // TODO security fix
+        //const secretKey = CryptoSchemeFactory.deriveKeyFromPassword(password);
+        //return secretKey.encrypt(seed);
         const secretKey = Carmentis.deriveAesKeyFromPassword(password);
         return secretKey.encrypt(seed);
     }
 
     decryptSeed(password: string, seed : Uint8Array) : Uint8Array {
         // TODO security fix
+        //const secretKey = CryptoSchemeFactory.deriveKeyFromPassword(password);
+        //return secretKey.decrypt(seed);
         const secretKey = Carmentis.deriveAesKeyFromPassword(password);
         return secretKey.decrypt(seed);
     }
