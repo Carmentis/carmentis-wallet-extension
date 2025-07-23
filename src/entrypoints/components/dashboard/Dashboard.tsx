@@ -34,7 +34,6 @@ import {
 import { NavbarSidebarLayout } from '@/entrypoints/components/layout/navbar-sidebar.layout.tsx';
 import { SidebarItem } from '@/entrypoints/components/layout/sidebar-components.tsx';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
-import { useAccountBalanceHook } from '@/entrypoints/components/hooks/sdk.hook.tsx';
 import {
     Badge,
     Box,
@@ -83,6 +82,7 @@ import {
     AccountBalance
 } from "@mui/icons-material";
 import TokenTransferPage from "@/entrypoints/components/dashboard/TokenTransfer.tsx";
+import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -258,7 +258,7 @@ function DashboardHome() {
  */
 function DashboardOverview() {
     const activeAccount = useAuthenticatedAccount();
-    const {data: balance, isLoading, error} = useAccountBalanceHook();
+    const {data: balance, isLoading, error} = useOptimizedAccountBalance();
     const numberVb = useAsync(async () => {
         const db = await AccountDataStorage.connectDatabase(activeAccount);
         return db.getNumberOfApplicationVirtualBlockchainId();

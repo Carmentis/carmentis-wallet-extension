@@ -39,7 +39,6 @@ import {
 } from '@/entrypoints/contexts/authentication.context.tsx';
 import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import { Formatter } from '@/entrypoints/main/Formatter.tsx';
-import { transferTokensToPublicKey } from '@/entrypoints/components/hooks/sdk.hook.tsx';
 import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
 import { Encoders } from '@/entrypoints/main/Encoders.tsx';
 import { useToast } from "@/entrypoints/components/AuthenticationManager.tsx";
@@ -58,6 +57,7 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 import React from "react";
+import {useTokenTransfer} from "@/hooks/useTokenTransfer.tsx";
 
 // Define the form schema with Zod
 const transferSchema = z.object({
@@ -140,6 +140,7 @@ function TransferForm() {
     const toast = useToast();
     const [tokenTransfer, setTokenTransfer] = useRecoilState(tokenTransferState);
     const [isTransferring, setIsTransferring] = useState(false);
+    const transferTokensToPublicKey = useTokenTransfer();
 
     // Form handling with react-hook-form
     const {

@@ -19,11 +19,6 @@ import {
     TablePagination,
     useTheme
 } from '@mui/material';
-import {
-    AccountTransactionHistoryEntry,
-    useAccountBalanceHook,
-    useAccountTransactionHistoryHook,
-} from '@/entrypoints/components/hooks/sdk.hook.tsx';
 import React, { useState, useEffect } from 'react';
 import NoTokenAccount from '@/entrypoints/components/NoTokenAccount.tsx';
 import { SparkLineChart } from "@mui/x-charts";
@@ -45,11 +40,11 @@ import {
 } from "@mui/icons-material";
 import { useAuthenticatedAccount } from '@/entrypoints/contexts/authentication.context.tsx';
 import {Hash, CMTSToken, Transaction} from "@cmts-dev/carmentis-sdk/client";
+import {useAccountTransactionHistoryHook} from "@/hooks/useAccountTransactionHistoryHook.tsx";
+import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 
 export default function HistoryPage() {
-    const [history, setHistory] = useState<AccountTransactionHistoryEntry[]>([]);
-    const balanceResponse = useAccountBalanceHook();
-    const activeAccount = useAuthenticatedAccount();
+    const balanceResponse = useOptimizedAccountBalance();
 
     // Animation variants
     const pageVariants = {
@@ -118,7 +113,7 @@ export default function HistoryPage() {
 }
 
 function BalanceCard() {
-    const balanceResponse = useAccountBalanceHook();
+    const balanceResponse = useOptimizedAccountBalance();
     const activeAccount = useAuthenticatedAccount();
 
     // Animation variants

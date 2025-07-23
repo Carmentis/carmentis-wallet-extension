@@ -38,7 +38,6 @@ import {
   Avatar,
   Tooltip as MuiTooltip
 } from "@mui/material";
-import { useAccountBalanceHook } from "@/entrypoints/components/hooks/sdk.hook.tsx";
 import {
   Email,
   MoreVert,
@@ -56,6 +55,7 @@ import { activeAccountState, walletState } from "@/entrypoints/contexts/authenti
 import axios from 'axios';
 import { useEffect, useState } from "react";
 import { SpinningWheel } from "@/entrypoints/components/SpinningWheel.tsx";
+import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -355,7 +355,7 @@ function ExplorerConnectionStatus() {
  * Balance chip component showing the user's token balance
  */
 function BalanceChip() {
-  const balance = useAccountBalanceHook();
+  const balance = useOptimizedAccountBalance();
 
   if (balance.isLoading) {
     return (
