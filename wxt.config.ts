@@ -5,6 +5,7 @@ import { version } from './package.json'
 export default defineConfig({
   srcDir: './src',
   outDir: './.output',
+  modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Carmentis Wallet',
     version: version,

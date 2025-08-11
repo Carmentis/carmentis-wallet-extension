@@ -123,6 +123,7 @@ export default defineBackground({
         console.log('background executed');
 
         browser.runtime.onInstalled.addListener(({reason}) => {
+            console.log("[background] onInstalled:", reason)
             if (reason === "install") {
                 browser.tabs.create({url: "./main.html"});
             }
