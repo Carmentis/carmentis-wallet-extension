@@ -92,7 +92,7 @@ export default function ProofChecker() {
                     <Box className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <Box>
                             <Breadcrumbs className="mb-3">
-                                <Link href="/src/public" className="text-blue-600 hover:text-blue-800 no-underline hover:underline">Dashboard</Link>
+                                <Link href="/public" className="text-blue-600 hover:text-blue-800 no-underline hover:underline">Dashboard</Link>
                                 <Typography className="font-medium text-gray-700">Proof Checker</Typography>
                             </Breadcrumbs>
                             <Typography variant="h4" className="font-bold text-gray-800 mb-3">

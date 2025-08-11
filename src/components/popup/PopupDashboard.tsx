@@ -408,7 +408,7 @@ function PopupIdleBody() {
                     className="bg-white p-4 rounded-full shadow-sm mb-4"
                 >
                     <img 
-                        src="/assets/img/logo.svg" 
+                        src="/src/assets/img/logo.svg"
                         className="w-16 h-16" 
                         alt="Carmentis Logo"
                     />

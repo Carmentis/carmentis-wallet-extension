@@ -23,6 +23,7 @@ import {
     onboardingAccountNameAtom,
     onboardingPasswordAtom, onboardingSeedAtom
 } from "@/components/onboarding/onboarding.state.ts";
+import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 
 export function Landing() {
     const navigate = useNavigate();
@@ -76,11 +77,7 @@ export function Landing() {
         <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
             {/* Left column - Logo and brand */}
             <div className="flex flex-col items-center justify-center md:w-1/2 md:border-r md:border-gray-100 md:pr-6 pb-6 md:pb-0">
-                <img 
-                    src="https://docs.carmentis.io/img/carmentis-logo-color.png"
-                    alt="Carmentis Logo"
-                    className="w-20 h-auto mb-4"
-                />
+                <CarmentisLogoDark  className="w-20 h-auto mb-4"/>
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("onboarding.create-wallet.title")}</h1>
                     <p className="text-gray-600">{t("onboarding.create-wallet.subtitle")}</p>

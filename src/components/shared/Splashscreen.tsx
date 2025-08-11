@@ -16,6 +16,7 @@
  */
 
 import React from "react";
+import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 
 
 export function Splashscreen( {label} : {label?: string} ) {
@@ -26,9 +27,7 @@ export function Splashscreen( {label} : {label?: string} ) {
             <div className="h-full w-full">
                 <div className="loading flex justify-center items-center h-full flex-col">
                     <div className="mb-5">
-                        <img className="mx-auto h-10 w-auto"
-                             src="/assets/img/logo.svg"
-                             alt="Your Company"/>
+                        <CarmentisLogoDark className="mx-auto h-10 w-auto"/>
                     </div>
 
                     <div role="status">

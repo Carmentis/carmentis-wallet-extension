@@ -21,16 +21,15 @@ import {RecoveryPhrase} from "@/components/onboarding/RecoveryPhrase.tsx";
 import {SetupWallet} from "@/components/onboarding/SetupWallet.tsx";
 import {Landing} from "@/components/onboarding/Landing.tsx";
 import {ImportWallet} from "@/components/onboarding/ImportWallet.tsx";
+import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
+import React from "react";
 
 function OnBoarding() {
     return (
         <>
             <div id="app-content" className="flex min-h-full justify-center flex-col bg-gradient-to-b from-white to-gray-50">
                 <div className="app-header mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-                    <img
-                        className="h-10"
-                        src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg"
-                        alt="Carmentis Logo"/>
+                    <CarmentisLogoDark className={"h-10"}/>
                 </div>
                 <div className="app-body">
                     <div className="flex min-h-full flex-col justify-center px-6 py-8 lg:px-8">

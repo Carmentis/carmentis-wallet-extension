@@ -19,6 +19,7 @@ import React from "react";
 import {useRecoilState} from 'recoil';
 import {walletState} from "@/states/globals.tsx";
 import {Wallet} from "@/types/Wallet.ts";
+import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 
 export default function AccountSelection() {
 
@@ -42,9 +43,7 @@ export default function AccountSelection() {
     return  <>
         <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img className="mx-auto h-10 w-auto"
-                     src="https://cdn.prod.website-files.com/66018cbdc557ae3625391a87/662527ae3e3abfceb7f2ae35_carmentis-logo-dark.svg"
-                     alt="Your Company"/>
+                <CarmentisLogoDark/>
                 <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
                     Select your account
                 </h2>

@@ -40,13 +40,13 @@ export default defineContentScript({
     matches: ['*://*/*'],
     main(ctx) {
 
-        const port = chrome.runtime.connect({name: 'carmentis-wallet'});
+        const port = browser.runtime.connect({name: 'carmentis-wallet'});
         port.onMessage.addListener((msg) => {
             console.log(msg.type);
         });
 
 
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("[content] message received from onMessage:", message)
             window.postMessage({
                 data: message,
@@ -72,7 +72,7 @@ export default defineContentScript({
 
                 const script = document.createElement('script');
                 script.type = 'module'; // Optional, if using ES6 modules
-                script.src = browser.runtime.getURL('/vendor/carmentis-wallet-init.js');
+                script.src = browser.runtime.getURL('/wallet-init.js');
                 container.append(script);
 
             },
