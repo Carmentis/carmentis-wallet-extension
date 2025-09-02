@@ -463,10 +463,6 @@ function PopupAuthByPublicKeyBody() {
         if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
         const wiWallet = new wiExtensionWallet();
         const keyPair = await genKeyPair()
-        const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-        const encoder = EncoderFactory.defaultBytesToStringEncoder();
-        console.log("Authenticating with tagged public key", signatureEncoder.encodePublicKey(keyPair.publicKey))
-        console.log("Authenticating with plain public key", encoder.encode(keyPair.publicKey.getPublicKeyAsBytes()))
         const req = wiWallet.getRequestFromMessage(clientRequest.data)
         const answer = wiWallet.signAuthenticationByPublicKey(
             keyPair.privateKey,
