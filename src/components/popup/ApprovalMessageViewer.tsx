@@ -85,8 +85,12 @@ export function ApprovalMessageViewer({applicationLedger}: AppLedgerVBProps) {
     }, []);
 
 
+    // TODO: show a clear approval message
+    /*
     return <div className={"flex flex-col h-full min-h-0"}>
         <p className="font-bold">Approval message</p>
         {approvalMessageContent}
     </div>
+     */
+    return <></>
 }
