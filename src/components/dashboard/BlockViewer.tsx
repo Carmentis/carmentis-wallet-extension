@@ -186,6 +186,12 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
         const isArray = Array.isArray(value);
         const isExpandable = isObject || isArray;
 
+        // to prevent null or undefined issues, we explicity format
+        const safeValue =
+            value === undefined ? 'undefined' :
+            value === null ? 'null' :
+                value;
+
         return (
             <motion.div 
                 key={index}
@@ -248,15 +254,15 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {Object.entries(value).slice(0, 10).map(([subKey, subValue], i) => (
+                                {Object.entries(safeValue).slice(0, 10).map(([subKey, subValue], i) => (
                                     <div key={i} className="flex items-start p-2 border-b border-gray-100 last:border-0">
                                         <span className="text-gray-700 font-medium mr-2 min-w-[100px]">{subKey}:</span>
                                         <div>{getValuePreview(subValue)}</div>
                                     </div>
                                 ))}
-                                {Object.keys(value).length > 10 && (
+                                {Object.keys(safeValue).length > 10 && (
                                     <div className="text-center text-gray-500 p-2">
-                                        + {Object.keys(value).length - 10} more properties
+                                        + {Object.keys(safeValue).length - 10} more properties
                                     </div>
                                 )}
                                 <div className="text-center mt-2">
