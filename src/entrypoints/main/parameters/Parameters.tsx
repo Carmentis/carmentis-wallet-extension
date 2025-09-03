@@ -187,12 +187,12 @@ export default function Parameters() {
     // Load user keys
     useEffect(() => {
         if (!wallet || !activeAccount) return;
-
+        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
         getUserKeyPair(wallet, activeAccount)
             .then(keyPair => {
                 setUserKeys({
-                    privateKey: keyPair.privateKey.getPrivateKeyAsString(),
-                    publicKey: keyPair.publicKey.getPublicKeyAsString(),
+                    privateKey: encoder.encodePrivateKey(keyPair.privateKey),
+                    publicKey: encoder.encodePublicKey(keyPair.publicKey),
                 });
             });
     }, [wallet, activeAccount]);
@@ -566,7 +566,7 @@ export default function Parameters() {
                                                         />
                                                     </Grid>
 
-                                                    {accountPublicKeys[account.id] && (
+                                                    {accountTaggedPublicKeys[account.id] && (
                                                         <Grid item xs={12}>
                                                             <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
                                                                 Public Key
@@ -574,7 +574,7 @@ export default function Parameters() {
                                                             <TextField
                                                                 fullWidth
                                                                 variant="outlined"
-                                                                value={accountPublicKeys[account.id]}
+                                                                value={accountTaggedPublicKeys[account.id]}
                                                                 InputProps={{
                                                                     readOnly: true,
                                                                     className: "font-mono text-sm",
@@ -583,7 +583,7 @@ export default function Parameters() {
                                                                             <Tooltip title="Copy to clipboard">
                                                                                 <IconButton
                                                                                     onClick={() => {
-                                                                                        navigator.clipboard.writeText(accountPublicKeys[account.id]);
+                                                                                        navigator.clipboard.writeText(accountTaggedPublicKeys[account.id]);
                                                                                         toast.success("Public key copied to clipboard");
                                                                                     }}
                                                                                     edge="end"
@@ -600,44 +600,6 @@ export default function Parameters() {
                                                             />
                                                             <Typography variant="caption" color="text.secondary" className="mt-1 block">
                                                                 This is the public key associated with this account and its current nonce.
-                                                            </Typography>
-                                                        </Grid>
-                                                    )}
-
-                                                    {accountTaggedPublicKeys[account.id] && (
-                                                        <Grid item xs={12}>
-                                                            <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
-                                                                Tagged Public Key
-                                                            </Typography>
-                                                            <TextField
-                                                                fullWidth
-                                                                variant="outlined"
-                                                                value={accountTaggedPublicKeys[account.id]}
-                                                                InputProps={{
-                                                                    readOnly: true,
-                                                                    className: "font-mono text-sm",
-                                                                    endAdornment: (
-                                                                        <InputAdornment position="end">
-                                                                            <Tooltip title="Copy to clipboard">
-                                                                                <IconButton
-                                                                                    onClick={() => {
-                                                                                        navigator.clipboard.writeText(accountTaggedPublicKeys[account.id]);
-                                                                                        toast.success("Tagged Public key copied to clipboard");
-                                                                                    }}
-                                                                                    edge="end"
-                                                                                >
-                                                                                    <ContentCopy />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        </InputAdornment>
-                                                                    ),
-                                                                }}
-                                                                sx={{
-                                                                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                                                                }}
-                                                            />
-                                                            <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                                                                This is the <strong>tagged</strong> public key associated with this account and its current nonce.
                                                                 Providing this key with a system is useful to identity the used scheme.
                                                             </Typography>
                                                         </Grid>
