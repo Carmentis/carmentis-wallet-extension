@@ -171,7 +171,7 @@ export default function PopupEventApproval() {
         );
 
         body = (
-            <Box className="flex-grow h-full">
+            <Box className="grow h-full">
                 <RecordDataViewer applicationLedger={applicationLedger}/>
             </Box>
         )
@@ -195,7 +195,7 @@ export default function PopupEventApproval() {
                     An application is requesting your approval for an event. Please review the details below.
                 </Box>
                 <OriginAndDateOfCurrentRequest/>
-                <Box className="flex-grow">
+                <Box className="grow">
                     <ApprovalMessageViewer applicationLedger={applicationLedger}/>
                 </Box>
             </Box>

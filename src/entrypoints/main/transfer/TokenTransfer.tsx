@@ -82,7 +82,7 @@ export default function TokenTransferPage() {
                 </Typography>
             </Box>
 
-            <Box className="bg-gradient-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-6 mb-8 shadow-sm">
+            <Box className="bg-linear-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-6 mb-8 shadow-sm">
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={8}>
                         <Typography variant="h6" className="font-semibold text-gray-800 mb-2">

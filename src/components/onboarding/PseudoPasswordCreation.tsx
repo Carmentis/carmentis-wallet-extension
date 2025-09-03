@@ -152,7 +152,7 @@ export function PseudoPasswordCreation() {
 
           <motion.div variants={itemVariants} className="bg-blue-50 p-4 mb-6 rounded-lg border border-blue-100">
             <p className="text-sm text-blue-700 flex items-start">
-              <ShieldLock className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <ShieldLock className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
               This password unlocks your wallet only on this device. Carmentis cannot recover your password if you lose it.
             </p>
           </motion.div>
@@ -167,15 +167,15 @@ export function PseudoPasswordCreation() {
               <h3 className="text-sm font-medium text-gray-700 mb-2">Security Tips:</h3>
               <ul className="text-sm text-gray-600 space-y-2">
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Use a strong, unique password
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Never share your recovery phrase
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Keep your device secure
                 </li>
               </ul>

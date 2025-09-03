@@ -123,9 +123,9 @@ export default function VirtualBlockchainViewer() {
         >
             <motion.div variants={itemVariants}>
                 <Box className="mb-8">
-                    <Paper elevation={0} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-100 rounded-lg p-6 mb-6">
+                    <Paper elevation={0} className="bg-linear-to-r from-blue-50 to-indigo-50 border border-gray-100 rounded-lg p-6 mb-6">
                         <Box className="flex flex-col md:flex-row md:items-center justify-between">
-                            <Box className="flex-grow">
+                            <Box className="grow">
                                 <Box className="flex items-center mb-3">
                                     <Typography variant="h4" className="font-bold text-gray-800">
                                         Virtual Blockchain Explorer

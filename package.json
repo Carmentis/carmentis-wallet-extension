@@ -12,7 +12,7 @@
     "zip": "wxt zip --mv3",
     "zip:firefox": "wxt zip -b firefox --mv3",
     "compile": "tsc --noEmit",
-    "tailwind": "npx tailwindcss -i src/entrypoints/global.css  -o src/entrypoints/main/global.css && npx tailwindcss -i src/entrypoints/global.css  -o src/entrypoints/popup/global.css",
+    "tailwind": "npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/main/global.css && npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/popup/global.css",
     "postinstall": "wxt prepare",
     "test": "jest"
   },

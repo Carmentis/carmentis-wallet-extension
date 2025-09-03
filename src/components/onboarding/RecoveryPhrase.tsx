@@ -207,9 +207,9 @@ export function RecoveryPhrase() {
           <motion.div variants={itemVariants} className={`p-4 mb-6 rounded-lg border ${challengeStarted ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100'}`}>
             <div className="flex items-start">
               {challengeStarted ? (
-                <ShieldLock className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <ShieldLock className="text-blue-600 mt-0.5 mr-3 shrink-0" />
               ) : (
-                <ExclamationTriangle className="text-amber-500 mt-0.5 mr-3 flex-shrink-0" />
+                <ExclamationTriangle className="text-amber-500 mt-0.5 mr-3 shrink-0" />
               )}
               <p className={`text-sm ${challengeStarted ? 'text-blue-700' : 'text-amber-700'}`}>
                 {challengeStarted 
@@ -230,15 +230,15 @@ export function RecoveryPhrase() {
               <h3 className="text-sm font-medium text-gray-700 mb-2">Security Tips:</h3>
               <ul className="text-sm text-gray-600 space-y-2">
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Write down your phrase on paper, not digitally
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Store it in a secure, private location
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                   Never share these words with anyone
                 </li>
               </ul>

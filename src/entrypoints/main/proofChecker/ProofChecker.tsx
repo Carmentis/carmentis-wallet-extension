@@ -88,7 +88,7 @@ export default function ProofChecker() {
             className="max-w-6xl mx-auto"
         >
             <Box className="mb-8">
-                <Paper elevation={0} className="bg-gradient-to-r from-blue-50 to-blue-100/30 border border-blue-100 rounded-xl p-8 mb-6 shadow-sm">
+                <Paper elevation={0} className="bg-linear-to-r from-blue-50 to-blue-100/30 border border-blue-100 rounded-xl p-8 mb-6 shadow-sm">
                     <Box className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <Box>
                             <Breadcrumbs className="mb-3">
@@ -160,7 +160,7 @@ function ProofCheckerFailure({ error }: { error: string }) {
             className="flex flex-col items-center justify-center py-16"
         >
             <Paper elevation={0} className="border border-red-100 rounded-xl p-10 max-w-md mx-auto text-center shadow-md overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-red-50/50 to-white z-0"></div>
+                <div className="absolute inset-0 bg-linear-to-b from-red-50/50 to-white z-0"></div>
                 <div className="relative z-10">
                     <div className="relative mx-auto mb-8 w-28 h-28">
                         <div className="absolute inset-0 bg-red-200 rounded-full blur-md opacity-30"></div>
@@ -292,7 +292,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                 <Grid item xs={12} md={6}>
                     <motion.div variants={cardVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
                         <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden h-full shadow-sm hover:shadow-md transition-all duration-300">
-                            <Box className="p-5 bg-gradient-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
+                            <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
                                 <div className="relative mr-4">
                                     <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
                                     <Avatar className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" sx={{ width: 40, height: 40 }}>
@@ -377,7 +377,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                 <Grid item xs={12} md={6}>
                     <motion.div variants={cardVariants}>
                         <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden h-full shadow-sm hover:shadow-md transition-all duration-300">
-                            <Box className="p-5 bg-gradient-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
+                            <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
                                 <div className="relative mr-4">
                                     <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
                                     <Avatar className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" sx={{ width: 40, height: 40 }}>
@@ -555,7 +555,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
             className="space-y-8"
         >
             <motion.div variants={itemVariants}>
-                <Paper elevation={0} className="border border-blue-100 rounded-xl p-6 mb-2 shadow-sm bg-gradient-to-r from-blue-50/50 to-white">
+                <Paper elevation={0} className="border border-blue-100 rounded-xl p-6 mb-2 shadow-sm bg-linear-to-r from-blue-50/50 to-white">
                     <Box className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <Box>
                             <Typography variant="h5" className="font-bold text-gray-800 mb-2">
@@ -591,7 +591,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
 
             <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
                 <Paper elevation={0} className={`border ${verified ? 'border-green-100' : 'border-red-100'} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300`}>
-                    <Box className={`p-5 ${verified ? 'bg-gradient-to-r from-green-50 to-green-50/70' : 'bg-gradient-to-r from-red-50 to-red-50/70'} border-b ${verified ? 'border-green-100' : 'border-red-100'} flex items-center`}>
+                    <Box className={`p-5 ${verified ? 'bg-linear-to-r from-green-50 to-green-50/70' : 'bg-linear-to-r from-red-50 to-red-50/70'} border-b ${verified ? 'border-green-100' : 'border-red-100'} flex items-center`}>
                         <div className="relative mr-4">
                             <div className={`absolute inset-0 ${verified ? 'bg-green-200' : 'bg-red-200'} rounded-full blur-sm opacity-30`}></div>
                             <Avatar 
@@ -635,7 +635,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
             {data.records && (
                 <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
                     <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                        <Box className="p-5 bg-gradient-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
+                        <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
                             <div className="relative mr-4">
                                 <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
                                 <Avatar 
@@ -738,7 +738,7 @@ function ProofRecordViewer({ records }: { records: any[] }) {
                             </TimelineSeparator>
                             <TimelineContent sx={{ py: '12px', px: 3 }}>
                                 <Card className="border border-blue-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 mb-6 overflow-hidden">
-                                    <Box className="p-4 bg-gradient-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
+                                    <Box className="p-4 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
                                         <div className="relative mr-3">
                                             <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
                                             <Avatar 

@@ -70,7 +70,7 @@ export function ImportWallet() {
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
                     <div className="flex items-start">
-                        <ShieldLock className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                        <ShieldLock className="text-blue-600 mt-0.5 mr-3 shrink-0" />
                         <p className="text-sm text-blue-700">
                             Make sure you're in a private location before entering your recovery phrase.
                         </p>
@@ -87,15 +87,15 @@ export function ImportWallet() {
                         <h3 className="text-sm font-medium text-gray-700 mb-2">Important Notes:</h3>
                         <ul className="text-sm text-gray-600 space-y-2">
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 Your recovery phrase must be entered in the correct order
                             </li>
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 All 12 words must be from the official word list
                             </li>
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 Double-check your spelling before submitting
                             </li>
                         </ul>

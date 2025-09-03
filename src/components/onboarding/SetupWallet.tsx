@@ -120,15 +120,15 @@ export function SetupWallet() {
                             <h3 className="text-sm font-medium text-gray-700 mb-2">During this process:</h3>
                             <ul className="text-sm text-gray-600 space-y-2">
                                 <li className="flex items-start">
-                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                     Your recovery phrase is being securely encrypted
                                 </li>
                                 <li className="flex items-start">
-                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                     Your wallet identity is being created
                                 </li>
                                 <li className="flex items-start">
-                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                     Everything is stored securely on your device
                                 </li>
                             </ul>
@@ -165,15 +165,15 @@ export function SetupWallet() {
                         <h3 className="text-sm font-medium text-gray-700 mb-2">You can now:</h3>
                         <ul className="text-sm text-gray-600 space-y-2">
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 View and manage your assets
                             </li>
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 Send and receive transactions
                             </li>
                             <li className="flex items-start">
-                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-500 shrink-0" />
                                 Connect to decentralized applications
                             </li>
                         </ul>

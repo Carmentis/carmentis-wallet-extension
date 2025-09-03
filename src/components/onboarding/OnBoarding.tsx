@@ -27,7 +27,7 @@ import React from "react";
 function OnBoarding() {
     return (
         <>
-            <div id="app-content" className="flex min-h-full justify-center flex-col bg-gradient-to-b from-white to-gray-50">
+            <div id="app-content" className="flex min-h-full justify-center flex-col bg-linear-to-b from-white to-gray-50">
                 <div className="app-header mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
                     <CarmentisLogoDark className={"h-10"}/>
                 </div>

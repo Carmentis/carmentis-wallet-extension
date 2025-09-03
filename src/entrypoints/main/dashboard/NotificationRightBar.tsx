@@ -75,7 +75,7 @@ function NotificationBaseCard({children, title, message, notificationId}: PropsW
     }
 
     return <Card>
-        <CardContent className={"!p-4 w-72"}>
+        <CardContent className={"p-4! w-72"}>
             <div className="flex justify-between">
                 <Typography variant="h6" className={"font-bold"}>{title}</Typography>
                 <i className={"bi bi-x-lg hover:bg-gray-50 cursor-pointer"} onClick={deleteNotification}></i>

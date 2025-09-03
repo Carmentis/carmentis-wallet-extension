@@ -15,13 +15,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-@import "styles/dashboard.css";
-@import "styles/record-displayer.css";
-@import "styles/data-tree-viewer.css";
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './styles/dashboard.css' layer(base);
+@import './styles/record-displayer.css' layer(base);
+@import './styles/data-tree-viewer.css' layer(base);
+
+
 
 @layer components {
     .account-selection-large {
@@ -33,7 +33,7 @@
     }
 
     .btn-primary {
-        @apply py-2 px-2  text-gray-800 font-semibold rounded-md shadow-md focus:outline-none focus:ring focus:ring-opacity-75;
+        @apply py-2 px-2  text-gray-800 font-semibold rounded-md shadow-md focus:outline-none focus:ring;
     }
 
     .btn-highlight {
