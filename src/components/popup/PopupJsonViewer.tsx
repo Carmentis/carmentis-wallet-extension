@@ -160,6 +160,13 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
     const isArray = Array.isArray(value);
     const isExpandable = isObject || isArray;
 
+    // we prevent null and undefined values sent by the application.
+    const safeValue =
+        value === undefined ? 'undefined' :
+            value === null ? 'null' :
+                value;
+
+
     return (
       <Box 
         key={index}
@@ -230,15 +237,15 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
               </Box>
             ) : (
               <Box className="space-y-1">
-                {Object.entries(value).slice(0, 5).map(([subKey, subValue], i) => (
+                {Object.entries(safeValue).slice(0, 5).map(([subKey, subValue], i) => (
                   <Box key={i} className="flex items-start p-1.5 border-b border-gray-100 last:border-0 text-xs">
                     <span className="text-gray-700 font-medium mr-1.5 min-w-[80px]">{subKey}:</span>
                     <Box className="break-words">{formatValue(subValue)}</Box>
                   </Box>
                 ))}
-                {Object.keys(value).length > 5 && (
+                {Object.keys(safeValue).length > 5 && (
                   <Box className="text-center text-gray-500 p-1 text-xs">
-                    + {Object.keys(value).length - 5} more properties
+                    + {Object.keys(safeValue).length - 5} more properties
                   </Box>
                 )}
                 <Box className="text-center mt-1">
