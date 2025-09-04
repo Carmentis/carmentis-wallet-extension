@@ -1,6 +1,25 @@
 {
   "tagAnnotate": true,
   "noCi": true,
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "releaseRules": [
+          { "type": "dev", "release": "patch" },
+          { "type": "refactor", "release": "patch" },
+          { "type": "fix", "release": "patch" },
+          { "type": "feat", "release": "minor" },
+          { "type": "BREAKING CHANGE", "release": "major" }
+        ]
+      }
+    ],
+    "@semantic-release/changelog",
+    "@semantic-release/npm",
+    "@semantic-release/git",
+    "@semantic-release/github"
+  ],
   "analyzeCommits": {
     "preset": "angular"
   },
