@@ -31,6 +31,8 @@ jobs:
         run: npm ci
 
       - name: Semantic Release dry-run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: check
         run: |
           npx semantic-release --dry-run | tee output.log
