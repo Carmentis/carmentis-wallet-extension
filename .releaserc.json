@@ -1,7 +1,6 @@
 {
   "branches": ["main"],
   "tagAnnotate": true,
-  "noCi": true,
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
@@ -16,52 +15,14 @@
         ]
       }
     ],
+    "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
-      }
-    ],
     [
       "@semantic-release/git",
       {
-        "assets": ["package.json", "CHANGELOG.md", ".output/*.zip"],
+        "assets": ["package.json", "CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
-    ],
-    [
-      "@semantic-release/github",
-      {
-        "assets": [
-          {
-            "path": "**/carmentis*.zip",
-            "label": "Extension build"
-          }
-        ]
-      }
     ]
-  ],
-  "verifyConditions": [
-    "@semantic-release/changelog",
-    "@semantic-release/git",
-    "@semantic-release/github",
-    "@semantic-release/exec"
-  ],
-  "prepare": [
-    "@semantic-release/changelog",
-    {
-      "path": "@semantic-release/git",
-      "assets": ["package.json", "CHANGELOG.md"],
-      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-    },
-    {
-      "path": "@semantic-release/exec",
-      "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
-    }
-  ],
-  "publish": [
-    "@semantic-release/git",
-    "@semantic-release/github"
   ]
 }
