@@ -11,13 +11,44 @@ permissions:
   pull-requests: write
 
 jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_needed: ${{ steps.check.outputs.release_needed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.17.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Semantic Release dry-run
+        id: check
+        run: |
+          npx semantic-release --dry-run | tee output.log
+          if grep -q "The next release version is" output.log; then
+            echo "release_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "release_needed=false" >> $GITHUB_OUTPUT
+          fi
+
   release:
+    needs: check-release
+    if: needs.check-release.outputs.release_needed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # obligatoire pour semantic-release
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

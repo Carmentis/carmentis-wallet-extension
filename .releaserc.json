@@ -18,6 +18,12 @@
     ],
     "@semantic-release/changelog",
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": ["package.json", "CHANGELOG.md"],
@@ -39,10 +45,15 @@
   "verifyConditions": [
     "@semantic-release/changelog",
     "@semantic-release/git",
-    "@semantic-release/github"
+    "@semantic-release/github",
+    "@semantic-release/exec"
   ],
   "prepare": [
     "@semantic-release/changelog",
+    {
+      "path": "@semantic-release/exec",
+      "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
+    },
     {
       "path": "@semantic-release/git",
       "assets": ["package.json", "CHANGELOG.md"],
