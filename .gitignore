@@ -1,7 +1,7 @@
 # ignore the generated documentation
 docs
 
-package-lock.json
+
 
 # ignore the generated file styles
 src/entrypoints/popup/global.css
