@@ -24,7 +24,7 @@
       }
     ],
     ["@semantic-release/exec", {
-      "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
+      "prepareCmd": "rm -Rf .output && npm run tailwind && npm run zip && npm run zip:firefox"
     }],
     [
       "@semantic-release/git",
@@ -37,7 +37,7 @@
       "@semantic-release/github",
       {
         "assets": [
-          { "path": ".output/*.zip", "label": "Built extension" }
+          { "path": ".output/*.zip" }
         ]
       }
     ]
