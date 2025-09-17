@@ -39,6 +39,7 @@ import { CheckCircle } from "react-bootstrap-icons";
 import {activeAccountState, clientRequestSessionState, showSuccessScreenState, walletState} from "@/states/globals.tsx";
 import {Account} from "@/types/Account.tsx";
 import {Wallet} from "@/types/Wallet.ts";
+import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 
 
 
@@ -407,11 +408,7 @@ function PopupIdleBody() {
                     }}
                     className="bg-white p-4 rounded-full shadow-sm mb-4"
                 >
-                    <img 
-                        src="/src/assets/img/logo.svg"
-                        className="w-16 h-16" 
-                        alt="Carmentis Logo"
-                    />
+                    <CarmentisLogoDark/>
                 </motion.div>
                 <motion.div
                     initial={{ y: 10, opacity: 0 }}

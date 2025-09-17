@@ -311,6 +311,19 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
         );
     }
 
+    let renderedShownData: any = <></>
+    if (shownData !== null && shownData !== undefined) {
+        if (Object.keys(shownData).length === 0) {
+            renderedShownData = renderEmptyState()
+        } else {
+            renderedShownData = Object.entries(shownData).map(([key, value], index) =>
+                renderExpandableValue(key, value, index)
+            )
+        }
+    } else {
+        renderedShownData = renderEmptyState()
+    }
+
     return (
         <div className="w-full h-full overflow-auto">
             {renderBreadcrumbs()}
@@ -322,13 +335,7 @@ export function BlockViewer({data, initialPath}: {data: Record<string, any>, ini
                     animate="visible"
                     className="p-3"
                 >
-                    {Object.keys(shownData).length === 0 ? (
-                        renderEmptyState()
-                    ) : (
-                        Object.entries(shownData).map(([key, value], index) => 
-                            renderExpandableValue(key, value, index)
-                        )
-                    )}
+                    {renderedShownData}
                 </motion.div>
             </Paper>
         </div>

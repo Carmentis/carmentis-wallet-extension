@@ -91,10 +91,6 @@ export default function ProofChecker() {
                 <Paper elevation={0} className="bg-linear-to-r from-blue-50 to-blue-100/30 border border-blue-100 rounded-xl p-8 mb-6 shadow-sm">
                     <Box className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <Box>
-                            <Breadcrumbs className="mb-3">
-                                <Link href="/public" className="text-blue-600 hover:text-blue-800 no-underline hover:underline">Dashboard</Link>
-                                <Typography className="font-medium text-gray-700">Proof Checker</Typography>
-                            </Breadcrumbs>
                             <Typography variant="h4" className="font-bold text-gray-800 mb-3">
                                 Blockchain Proof Verification
                             </Typography>
@@ -520,7 +516,8 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
     const { records, result: verificationResult } = state.value;
     const verified = verificationResult.isVerified();
     const data = state.value;
-    const appLedgerId = proof.virtualBlockchainIdentifier;
+    const { author, date, title, virtualBlockchainIdentifier: appLedgerId } = proof.info;
+
 
     const rows = [
         { header: "Proof Verification Status", value: <Chip 
@@ -533,8 +530,9 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
                 '& .MuiChip-label': { fontWeight: 500 }
             }}
         /> },
-        { header: "Proof Title", value: proof.info.title },
-        { header: "Proof Export Time", value: proof.info.data },
+        { header: "Proof Title", value: title },
+        { header: "Proof Export Time", value: date },
+        { header: "Proof Author", value: author },
         { header: "Virtual Blockchain ID", value: <Link 
             href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${appLedgerId}`} 
             target={"_blank"}
@@ -542,8 +540,6 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
         >
             {appLedgerId}
         </Link> },
-        //{ header: "Application", value: header.application },
-        //{ header: "Operator", value: header.applicationOperator },
     ];
 
 
@@ -555,38 +551,20 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
             className="space-y-8"
         >
             <motion.div variants={itemVariants}>
-                <Paper elevation={0} className="border border-blue-100 rounded-xl p-6 mb-2 shadow-sm bg-linear-to-r from-blue-50/50 to-white">
-                    <Box className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <Box>
-                            <Typography variant="h5" className="font-bold text-gray-800 mb-2">
-                                Proof Verification Results
-                            </Typography>
-                            <Typography variant="body1" className="text-gray-600">
-                                {proof.info.title}
-                            </Typography>
-                        </Box>
-
-                        <motion.div
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                        >
-                            <Button 
-                                variant="contained" 
-                                startIcon={<Refresh />}
-                                onClick={() => resetProof()}
-                                size="large"
-                                className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 shadow-md"
-                                sx={{
-                                    textTransform: 'none',
-                                    fontWeight: 500,
-                                    fontSize: '0.95rem',
-                                }}
-                            >
-                                Verify Another Proof
-                            </Button>
-                        </motion.div>
-                    </Box>
-                </Paper>
+                <Button
+                    variant="contained"
+                    startIcon={<Refresh />}
+                    onClick={() => resetProof()}
+                    size="large"
+                    className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 shadow-md"
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.95rem',
+                    }}
+                >
+                    Verify Another Proof
+                </Button>
             </motion.div>
 
             <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
@@ -749,10 +727,10 @@ function ProofRecordViewer({ records }: { records: any[] }) {
                                             </Avatar>
                                         </div>
                                         <Typography variant="h6" className="font-medium text-gray-800">
-                                            Block {record.height}
+                                            Block {i + 1}
                                         </Typography>
                                         <Chip 
-                                            label={`#${record.height}`} 
+                                            label={`# ${i + 1}`}
                                             size="small"
                                             className="ml-auto bg-blue-100 text-blue-700 border border-blue-200 shadow-sm"
                                         />
@@ -764,7 +742,7 @@ function ProofRecordViewer({ records }: { records: any[] }) {
                                             transition={{ delay: 0.3 + (i * 0.1), duration: 0.5 }}
                                         >
                                             <BlockViewer initialPath={[]} data={
-                                                record.data // TODO: check because its very strange to access data this way.
+                                                record
                                             } />
                                         </motion.div>
                                     </CardContent>
