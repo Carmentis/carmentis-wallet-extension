@@ -58,10 +58,6 @@
     {
       "path": "@semantic-release/exec",
       "prepareCmd": "npm run tailwind && npm run zip && npm run zip:firefox"
-    },
-    {
-      "path": "@semantic-release/git",
-      "assets": [".output/*.zip"]
     }
   ],
   "publish": [
