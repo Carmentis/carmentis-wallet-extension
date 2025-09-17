@@ -34,7 +34,7 @@ import {
 import React, {useEffect, useState, useTransition} from "react";
 import {
     ApplicationLedgerVb,
-    Blockchain,
+    Blockchain, BlockchainFacade,
     EncoderFactory,
     Explorer,
     Hash,
@@ -368,7 +368,7 @@ function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
             const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet?.nodeEndpoint as string);
             const explorer = Blockchain.createFromProvider(provider);
             const vb = await explorer.loadApplicationLedger(Hash.from(chainId));
-            const record = await vb.getRecord(vb.getHeight());
+            const record = await vb.getRecord(index);
             setRecord(record);
         } catch (err) {
             console.error(`Error loading block ${index}:`, err);
