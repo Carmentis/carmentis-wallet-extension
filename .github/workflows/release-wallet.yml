@@ -1,34 +1,37 @@
-name: Build and Release
+name: Release
 
 on:
-  create:
-    tags:
-      - "v*"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # obligatoire pour semantic-release
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.17.0
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run tailwind && npm run zip && npm run zip:firefox
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: .output/carmentis-wallet-extension*.zip
+      - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
+        run: npx semantic-release

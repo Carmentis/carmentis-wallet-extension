@@ -1,4 +1,5 @@
 {
+  "branches": ["main"],
   "tagAnnotate": true,
   "noCi": true,
   "plugins": [
@@ -16,28 +17,36 @@
       }
     ],
     "@semantic-release/changelog",
-    "@semantic-release/npm",
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["package.json", "CHANGELOG.md"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": ".output/carmentis-wallet-extension*.zip",
+            "label": "Extension build"
+          }
+        ]
+      }
+    ]
+  ],
+  "verifyConditions": [
+    "@semantic-release/changelog",
     "@semantic-release/git",
     "@semantic-release/github"
   ],
-  "analyzeCommits": {
-    "preset": "angular"
-  },
-  "generateNotes": {
-    "preset": "angular"
-  },
-  "verifyConditions": [
-    "@semantic-release/changelog",
-    "@semantic-release/npm",
-    "@semantic-release/git"
-  ],
   "prepare": [
     "@semantic-release/changelog",
-    "@semantic-release/npm",
     {
       "path": "@semantic-release/git",
-      "assets": [ "package.json" ],
-      "message": "Release: ${nextRelease.version}"
+      "assets": ["package.json", "CHANGELOG.md"],
+      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
     }
   ],
   "publish": [
