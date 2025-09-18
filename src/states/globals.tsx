@@ -19,7 +19,7 @@ import {atom, AtomEffect, selector} from "recoil";
 import {PublicSignatureKey} from "@cmts-dev/carmentis-sdk/client";
 import {useAccountKeyPairLoader} from "@/hooks/useAccountKeyPairLoader.tsx";
 import {SignatureKeyPair} from "@/types/SignatureKeyPair.tsx";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
 import {MainInterfaceStatus} from "@/types/MainInterfaceStatus.ts";
 import {AppNotification} from "@/types/AppNotification.ts";

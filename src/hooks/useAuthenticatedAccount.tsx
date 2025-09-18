@@ -16,7 +16,7 @@
  */
 
 import {useWallet} from "@/hooks/useWallet.tsx";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 
 export function useAuthenticatedAccount(): Account {
     const wallet = useWallet();

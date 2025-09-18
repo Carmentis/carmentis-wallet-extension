@@ -16,7 +16,7 @@
  */
 
 import {AccountStorageDB} from "@/utils/db/AccountStorageDB.ts";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 
 /**
  * Manages data storage for blockchain-related entities such as applications, flows, and micro-blocks.
