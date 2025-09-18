@@ -17,7 +17,7 @@
 
 import {EncoderFactory, SignatureAlgorithmId, Wallet as CarmentisWallet} from "@cmts-dev/carmentis-sdk/client";
 import {SignatureKeyPair} from "@/types/SignatureKeyPair.tsx";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
 
 export function useAccountKeyPairLoader() {

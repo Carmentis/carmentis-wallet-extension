@@ -43,7 +43,7 @@ import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAccountBuilder} from "@/hooks/useAccountBuilder.tsx";
 import {IllegalStateError} from "@/errors/IllegalStateError.tsx";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
 
 /**

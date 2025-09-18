@@ -16,7 +16,7 @@
  */
 
 
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 
 const DEFAULT_NONCE = 0;
 

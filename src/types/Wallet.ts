@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 
 export interface Wallet {
     explorerEndpoint: string;

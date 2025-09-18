@@ -63,6 +63,7 @@ import {StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
+import {AccountEdition} from "@/entrypoints/main/parameters/components/AccountEdition.tsx";
 
 // Define schemas for form validation
 const personalInfoSchema = z.object({
@@ -146,7 +147,6 @@ export default function Parameters() {
     const [accountPublicKeys, setAccountPublicKeys] = useState<Record<string, string>>({});
     const [accountPrivateKeys, setAccountPrivateKeys] = useState<Record<string, string>>({});
     const [visiblePrivateKeys, setVisiblePrivateKeys] = useState<Record<string, boolean>>({});
-    const [deleteAccountDialogs, setDeleteAccountDialogs] = useState<Record<string, boolean>>({});
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Forms
@@ -287,47 +287,6 @@ export default function Parameters() {
     };
 
 
-    // Delete specific account (for Information tab)
-    const handleDeleteSpecificAccount = (accountId: string, accountPseudo: string) => {
-        // Get the confirmation input for this specific account
-        const confirmInput = document.getElementById(`confirm-delete-${accountId}`) as HTMLInputElement;
-
-        if (!confirmInput) return;
-
-        if (confirmInput.value !== accountPseudo) {
-            toast.error("Account name doesn't match. Please enter the exact account name to confirm deletion.");
-            return;
-        }
-
-        setWallet(wallet => {
-            if (!wallet) return undefined;
-
-            const accounts = wallet.accounts.filter(a => a.id !== accountId);
-
-            if (accounts.length === 0) {
-                toast.error("Cannot delete the last account");
-                return wallet;
-            }
-
-            // If deleting the active account, set the first account as active
-            const newActiveId = wallet.activeAccountId === accountId ? accounts[0].id : wallet.activeAccountId;
-
-            setSuccessMessage("Account deleted successfully");
-            // Close this account's delete dialog
-            setDeleteAccountDialogs(prev => ({...prev, [accountId]: false}));
-
-            return {...wallet, accounts, activeAccountId: newActiveId};
-        });
-    };
-
-    // Toggle private key visibility for a specific account
-    const togglePrivateKeyVisibility = (accountId: string) => {
-        setVisiblePrivateKeys(prev => ({
-            ...prev,
-            [accountId]: !prev[accountId]
-        }));
-    };
-
     // Page animations
     const pageVariants = {
         initial: { opacity: 0 },
@@ -415,259 +374,8 @@ export default function Parameters() {
                                     </Grid>
 
                                     {wallet?.accounts.map((account, index) => (
-                                        <Grid size={12} key={account.id}>
-                                            <Paper elevation={0} className="p-6 border border-gray-100 rounded-lg mb-4">
-                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                                                    <Box display="flex" alignItems="center">
-                                                        <Avatar
-                                                            className="bg-blue-100 text-blue-600 mr-4"
-                                                            sx={{ width: 48, height: 48 }}
-                                                        >
-                                                            {account.pseudo?.charAt(0) || ''}
-                                                        </Avatar>
-                                                        <Typography variant="h6" className="font-semibold text-gray-800">
-                                                            Account {index + 1}
-                                                            {account.id === wallet.activeAccountId && (
-                                                                <Chip 
-                                                                    label="Active" 
-                                                                    size="small" 
-                                                                    className="ml-2 bg-green-100 text-green-600 font-medium"
-                                                                />
-                                                            )}
-                                                        </Typography>
-                                                    </Box>
-                                                    {wallet?.accounts.length > 1 && (
-                                                        <Tooltip title="Delete Account">
-                                                            <IconButton
-                                                                color="error"
-                                                                onClick={() => setDeleteAccountDialogs(prev => ({...prev, [account.id]: true}))}
-                                                                size="small"
-                                                                className="text-red-500 hover:bg-red-50"
-                                                            >
-                                                                <DeleteForever fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    )}
-                                                </Box>
-
-                                                {/* Confirmation Dialog */}
-                                                <AnimatePresence>
-                                                    {deleteAccountDialogs[account.id] && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, height: 0 }}
-                                                            animate={{ opacity: 1, height: 'auto' }}
-                                                            exit={{ opacity: 0, height: 0 }}
-                                                            transition={{ duration: 0.3 }}
-                                                            className="mb-4"
-                                                        >
-                                                            <Alert severity="error" className="mb-4">
-                                                                <Typography variant="body2">
-                                                                    To confirm deletion, please type <strong>{account.pseudo}</strong> below.
-                                                                </Typography>
-                                                            </Alert>
-
-                                                            <TextField
-                                                                id={`confirm-delete-${account.id}`}
-                                                                label="Confirm account name"
-                                                                variant="outlined"
-                                                                fullWidth
-                                                                className="mb-4"
-                                                                placeholder={`Type "${account.pseudo}" to confirm`}
-                                                            />
-
-                                                            <Box display="flex" justifyContent="flex-end">
-                                                                <Stack direction="row" spacing={2}>
-                                                                    <Button
-                                                                        variant="outlined"
-                                                                        size="small"
-                                                                        onClick={() => setDeleteAccountDialogs(prev => ({...prev, [account.id]: false}))}
-                                                                    >
-                                                                        Cancel
-                                                                    </Button>
-                                                                    <motion.div
-                                                                        whileHover={{ scale: 1.02 }}
-                                                                        whileTap={{ scale: 0.98 }}
-                                                                    >
-                                                                        <Button
-                                                                            variant="contained"
-                                                                            color="error"
-                                                                            startIcon={<DeleteForever />}
-                                                                            onClick={() => handleDeleteSpecificAccount(account.id, account.pseudo)}
-                                                                            size="small"
-                                                                        >
-                                                                            Confirm Deletion
-                                                                        </Button>
-                                                                    </motion.div>
-                                                                </Stack>
-                                                            </Box>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-
-                                                <Grid container spacing={3}>
-                                                    <Grid size={6}>
-                                                        <Controller
-                                                            name={`${account.id}.pseudo`}
-                                                            control={accountInfoControl}
-                                                            render={({ field }) => (
-                                                                <TextField
-                                                                    {...field}
-                                                                    label="Account Name"
-                                                                    variant="outlined"
-                                                                    fullWidth
-                                                                    error={!!accountInfoErrors?.[account.id]?.pseudo}
-                                                                    helperText={accountInfoErrors?.[account.id]?.pseudo?.message}
-                                                                    InputProps={{
-                                                                        startAdornment: (
-                                                                            <InputAdornment position="start">
-                                                                                <Badge fontSize="small" />
-                                                                            </InputAdornment>
-                                                                        ),
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </Grid>
-                                                    <Grid size={6}>
-                                                        <Controller
-                                                            name={`${account.id}.nonce`}
-                                                            control={accountInfoControl}
-                                                            render={({ field }) => (
-                                                                <TextField
-                                                                    {...field}
-                                                                    label="Account Nonce"
-                                                                    variant="outlined"
-                                                                    fullWidth
-                                                                    type="number"
-                                                                    error={!!accountInfoErrors?.[account.id]?.nonce}
-                                                                    helperText={accountInfoErrors?.[account.id]?.nonce?.message || "Used to derive different keys"}
-                                                                    InputProps={{
-                                                                        startAdornment: (
-                                                                            <InputAdornment position="start">
-                                                                                <LockReset fontSize="small" />
-                                                                            </InputAdornment>
-                                                                        ),
-                                                                    }}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        field.onChange(value === '' ? undefined : Number(value));
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </Grid>
-
-                                                    {accountTaggedPublicKeys[account.id] && (
-                                                        <Grid size={12}>
-                                                            <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
-                                                                Public Key
-                                                            </Typography>
-                                                            <TextField
-                                                                fullWidth
-                                                                variant="outlined"
-                                                                value={accountTaggedPublicKeys[account.id]}
-                                                                InputProps={{
-                                                                    readOnly: true,
-                                                                    className: "font-mono text-sm",
-                                                                    endAdornment: (
-                                                                        <InputAdornment position="end">
-                                                                            <Tooltip title="Copy to clipboard">
-                                                                                <IconButton
-                                                                                    onClick={() => {
-                                                                                        navigator.clipboard.writeText(accountTaggedPublicKeys[account.id]);
-                                                                                        toast.success("Public key copied to clipboard");
-                                                                                    }}
-                                                                                    edge="end"
-                                                                                >
-                                                                                    <ContentCopy />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        </InputAdornment>
-                                                                    ),
-                                                                }}
-                                                                sx={{
-                                                                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                                                                }}
-                                                            />
-                                                            <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                                                                This is the public key associated with this account and its current nonce.
-                                                                Providing this key with a system is useful to identity the used scheme.
-                                                            </Typography>
-                                                        </Grid>
-                                                    )}
-
-                                                    {/* Private Key Field */}
-                                                    {accountPrivateKeys[account.id] && (
-                                                        <Grid size={12} className="mt-4">
-                                                            <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2 flex items-center">
-                                                                Private Key
-                                                            </Typography>
-                                                            <TextField
-                                                                fullWidth
-                                                                variant="outlined"
-                                                                type={visiblePrivateKeys[account.id] ? 'text' : 'password'}
-                                                                value={accountPrivateKeys[account.id]}
-                                                                InputProps={{
-                                                                    readOnly: true,
-                                                                    className: "font-mono text-sm",
-                                                                    endAdornment: (
-                                                                        <InputAdornment position="end">
-                                                                            <Tooltip title={visiblePrivateKeys[account.id] ? "Hide private key" : "Show private key"}>
-                                                                                <IconButton
-                                                                                    onClick={() => togglePrivateKeyVisibility(account.id)}
-                                                                                    edge="end"
-                                                                                >
-                                                                                    {visiblePrivateKeys[account.id] ? <VisibilityOff /> : <Visibility />}
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                            <Tooltip title="Copy to clipboard">
-                                                                                <IconButton
-                                                                                    onClick={() => {
-                                                                                        navigator.clipboard.writeText(accountPrivateKeys[account.id]);
-                                                                                        toast.success("Private key copied to clipboard");
-                                                                                    }}
-                                                                                    edge="end"
-                                                                                >
-                                                                                    <ContentCopy />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        </InputAdornment>
-                                                                    ),
-                                                                }}
-                                                                sx={{
-                                                                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                                                                }}
-                                                            />
-                                                            <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                                                                <strong>Warning:</strong> Never share your private key with anyone. It provides full access to your account.
-                                                            </Typography>
-                                                        </Grid>
-                                                    )}
-
-                                                </Grid>
-                                            </Paper>
-                                        </Grid>
+                                        <AccountEdition account={account} index={index}/>
                                     ))}
-
-                                    <Grid item xs={12}>
-                                        <Box display="flex" justifyContent="flex-end">
-                                            <motion.div
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                <Button
-                                                    type="submit"
-                                                    variant="contained"
-                                                    color="primary"
-                                                    startIcon={<Save />}
-                                                    disabled={!isAccountInfoDirty}
-                                                    className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
-                                                >
-                                                    Save All Accounts
-                                                </Button>
-                                            </motion.div>
-                                        </Box>
-                                    </Grid>
                                 </Grid>
                             </form>
                         </TabPanel>
@@ -733,7 +441,7 @@ export default function Parameters() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Box display="flex" justifyContent="flex-end">
                                             <motion.div
                                                 whileHover={{ scale: 1.02 }}

@@ -37,7 +37,7 @@ import image from '@/assets/success.png';
 import { motion } from "framer-motion";
 import { CheckCircle } from "react-bootstrap-icons";
 import {activeAccountState, clientRequestSessionState, showSuccessScreenState, walletState} from "@/states/globals.tsx";
-import {Account} from "@/types/Account.tsx";
+import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
 import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 
