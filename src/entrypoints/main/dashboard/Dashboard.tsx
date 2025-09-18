@@ -80,6 +80,12 @@ import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
 import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
 import {DashboardLayout} from "@/entrypoints/main/dashboard/DashboardLayout.tsx";
 import {SidebarItem} from "@/entrypoints/main/dashboard/SidebarItem.tsx";
+import {ResourcesSection} from "@/entrypoints/main/dashboard/components/ResourcesSection.tsx";
+import {QuickActionCard} from "@/entrypoints/main/dashboard/components/QuickActionCard.tsx";
+import {
+    NodeConnectionStatusSidebarItem
+} from "@/entrypoints/main/dashboard/components/NodeConnectionStatusSidebarItem.tsx";
+import {StatsCard} from "@/entrypoints/main/dashboard/components/StatsCard.tsx";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -164,75 +170,6 @@ function DashboardSidebar() {
     );
 }
 
-/**
- * Node connection status indicator for the sidebar
- */
-function NodeConnectionStatusSidebarItem() {
-    const [loaded, setLoaded] = useState(true);
-    const [success, setSuccess] = useState(false);
-    const node = useRecoilValue(nodeEndpointState);
-
-    async function sendPing() {
-        if (!node) return
-        setLoaded(true);
-        console.log(`Contacting ${node}`)
-        axios.get(node)
-            .then(() => setSuccess(true))
-            .catch((error) => {
-                console.log(error)
-                setSuccess(false)
-            })
-            .finally(() => setLoaded(false))
-    }
-
-    useEffect(() => {
-        sendPing()
-    }, [node]);
-
-    if (loaded) return (
-        <Tooltip title={`Connecting to ${node}...`} placement="right">
-            <div className="flex items-center px-4 py-3 mx-2 rounded-lg">
-                <div className="w-5 mr-3">
-                    <SpinningWheel />
-                </div>
-                <Typography variant="body2" className="text-gray-600 font-medium">
-                    Connecting...
-                </Typography>
-            </div>
-        </Tooltip>
-    );
-
-    const tooltipMessage = success ?
-        `Connected to node ${node}` :
-        `Connection failure at ${node}`;
-
-    const statusColor = success ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50";
-    const statusText = success ? "Connected" : "Connection Error";
-    const statusBorder = success ? "border-green-100" : "border-red-100";
-
-    return (
-        <Tooltip title={tooltipMessage} placement="right">
-            <motion.div
-                className={`flex items-center px-4 py-3 mx-2 rounded-lg cursor-pointer border ${statusBorder} ${statusColor}`}
-                onClick={sendPing}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-            >
-                <Badge 
-                    color={success ? "success" : "error"} 
-                    variant="dot" 
-                    invisible={false}
-                    className="mr-3"
-                >
-                    <NetworkCheck className="text-lg" />
-                </Badge>
-                <Typography variant="body2" className="font-medium">
-                    {statusText}
-                </Typography>
-            </motion.div>
-        </Tooltip>
-    );
-}
 
 /**
  * Main dashboard home component
@@ -384,183 +321,7 @@ function DashboardOverview() {
     );
 }
 
-/**
- * Stats card component for displaying metrics
- */
-function StatsCard({ title, icon, value, subtitle, color = "blue" }) {
-    // Always use blue for consistency with onboarding style
-    const iconClass = "bg-blue-50 text-blue-600";
 
-    return (
-        <motion.div
-            className="h-full"
-        >
-            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm">
-                <CardContent className="p-6">
-                    <Box display="flex" alignItems="center" mb={3}>
-                        <Box className={`p-2.5 rounded-full mr-3 ${iconClass} border border-blue-100`}>
-                            {icon}
-                        </Box>
-                        <Typography variant="h6" className="font-medium text-gray-700">
-                            {title}
-                        </Typography>
-                    </Box>
 
-                    <Box className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-3">
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            {value}
-                        </Typography>
-                    </Box>
-
-                    <Typography variant="body2" className="text-gray-500">
-                        {subtitle}
-                    </Typography>
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-}
-
-/**
- * Quick action card component for navigation
- */
-function QuickActionCard({ title, icon, description, link, color = "blue" }) {
-    const navigate = useNavigate();
-
-    // Always use blue for consistency with onboarding style
-    const iconClass = "bg-blue-50 text-blue-600";
-
-    return (
-        <motion.div
-            onClick={() => navigate(link)}
-            className="cursor-pointer h-full"
-        >
-            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-200">
-                <CardContent className="p-6">
-                    <Box className={`p-3 rounded-full w-fit mb-4 ${iconClass} border border-blue-100`}>
-                        {icon}
-                    </Box>
-
-                    <Typography variant="h6" className="font-semibold text-gray-800 mb-2">
-                        {title}
-                    </Typography>
-
-                    <Typography variant="body2" className="text-gray-500 mb-4">
-                        {description}
-                    </Typography>
-
-                    <Button 
-                        variant="outlined" 
-                        size="small" 
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50 normal-case"
-                        endIcon={<ArrowForward fontSize="small" />}
-                    >
-                        Get Started
-                    </Button>
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-}
-
-/**
- * Resources section with external links
- */
-function ResourcesSection() {
-    const navigate = useNavigate();
-    const wallet = useWallet();
-    const explorerUrl = wallet.explorerEndpoint;
-    const open = (link: string) => window.open(link, "_blank");
-
-    const isBeta = typeof explorerUrl === 'string' && explorerUrl.includes("beta");
-    const exchangeLink = isBeta ? "https://exchange.beta.carmentis.io" : "https://exchange.alpha.carmentis.io";
-
-    const resources = [
-        {
-            title: 'Documentation',
-            icon: <MenuBook />,
-            description: "Read the official Carmentis documentation",
-            link: 'https://docs.carmentis.io'
-        },
-        {
-            title: 'Blockchain Explorer',
-            icon: <Search />,
-            description: "Explore the Carmentis blockchain",
-            link: explorerUrl
-        },
-        {
-            title: 'Token Exchange',
-            icon: <AddCard />,
-            description: "Purchase Carmentis tokens",
-            link: exchangeLink
-        },
-        {
-            title: 'Proof Checker',
-            icon: <CheckCircle />,
-            description: "Verify blockchain proofs",
-            link: `${explorerUrl}/proofChecker`
-        }
-    ];
-
-    return (
-        <Grid container spacing={3}>
-            {resources.map((resource, index) => (
-                <Grid size={4} key={resource.title}>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                    >
-                        <ResourceCard
-                            title={resource.title}
-                            icon={resource.icon}
-                            description={resource.description}
-                            onClick={() => open(resource.link)}
-                        />
-                    </motion.div>
-                </Grid>
-            ))}
-        </Grid>
-    );
-}
-
-/**
- * Resource card component for external resources
- */
-function ResourceCard({ title, icon, description, onClick, color = "blue" }) {
-    // Always use blue for consistency with onboarding style
-    const iconClass = "bg-blue-50 text-blue-600";
-
-    return (
-        <motion.div
-            className="h-full cursor-pointer"
-            onClick={onClick}
-        >
-            <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-200">
-                <CardContent className="p-5 flex flex-col items-center text-center">
-                    <Box className={`p-3 rounded-full mb-3 ${iconClass} border border-blue-100`}>
-                        {icon}
-                    </Box>
-
-                    <Typography variant="h6" className="font-semibold text-gray-800 mb-2">
-                        {title}
-                    </Typography>
-
-                    <Typography variant="body2" className="text-gray-500 mb-3">
-                        {description}
-                    </Typography>
-
-                    <Chip
-                        label="Open External Link"
-                        size="small"
-                        className="mt-auto bg-blue-50 border border-blue-200 text-blue-600"
-                        clickable
-                        icon={<ArrowForward fontSize="small" />}
-                    />
-                </CardContent>
-            </Card>
-        </motion.div>
-    );
-}
 
 export default Dashboard;
