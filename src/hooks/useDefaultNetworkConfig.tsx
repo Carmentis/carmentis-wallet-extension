@@ -15,8 +15,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-const DEFAULT_NODE_ENDPOINT = "https://dev-node.beta.carmentis.io"
-const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.beta.carmentis.io"
+const DEFAULT_NODE_ENDPOINT = "https://aphrodite.testnet.carmentis.io"
+const DEFAULT_EXPLORER_ENDPOINT = "https://explorer.testnet.carmentis.io"
 
 export function useDefaultNetworkConfig() {
     return {
