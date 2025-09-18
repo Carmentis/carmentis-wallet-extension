@@ -64,7 +64,7 @@ import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 import {AccountEdition} from "@/entrypoints/main/parameters/components/AccountEdition.tsx";
-import {SDKVersion} from "@/entrypoints/main/parameters/components/SDKVersion.tsx";
+import {Versions} from "@/entrypoints/main/parameters/components/Versions.tsx";
 
 // Define schemas for form validation
 const personalInfoSchema = z.object({
@@ -478,7 +478,7 @@ export default function Parameters() {
 
                         {/* Versions Tab */}
                         <TabPanel value={tabValue} index={2}>
-                            <SDKVersion/>
+                            <Versions/>
                         </TabPanel>
 
 
