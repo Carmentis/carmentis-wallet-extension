@@ -14,7 +14,7 @@
     "compile": "tsc --noEmit",
     "tailwind": "npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/main/global.css && npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/popup/global.css",
     "postinstall": "wxt prepare",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
     "@cmts-dev/carmentis-sdk": "^1.13",
