@@ -381,15 +381,6 @@ export default function Parameters() {
                             indicatorColor="primary"
                             textColor="primary"
                         >
-                            {/*
-                                  <Tab
-                                icon={<AccountCircle />}
-                                iconPosition="start"
-                                label="Personal Info"
-                                {...a11yProps(0)}
-                                className="font-medium"
-                            />
-                            */}
                             <Tab
                                 icon={<Info />}
                                 iconPosition="start"
@@ -414,7 +405,7 @@ export default function Parameters() {
                         <TabPanel value={tabValue} index={0}>
                             <form onSubmit={handleAccountInfoSubmit(onSaveAccountInfo)}>
                                 <Grid container spacing={4}>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
                                             Account Information
                                         </Typography>
@@ -424,7 +415,7 @@ export default function Parameters() {
                                     </Grid>
 
                                     {wallet?.accounts.map((account, index) => (
-                                        <Grid item xs={12} key={account.id}>
+                                        <Grid size={12} key={account.id}>
                                             <Paper elevation={0} className="p-6 border border-gray-100 rounded-lg mb-4">
                                                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
                                                     <Box display="flex" alignItems="center">
@@ -514,7 +505,7 @@ export default function Parameters() {
                                                 </AnimatePresence>
 
                                                 <Grid container spacing={3}>
-                                                    <Grid item xs={12} md={6}>
+                                                    <Grid size={6}>
                                                         <Controller
                                                             name={`${account.id}.pseudo`}
                                                             control={accountInfoControl}
@@ -537,7 +528,7 @@ export default function Parameters() {
                                                             )}
                                                         />
                                                     </Grid>
-                                                    <Grid item xs={12} md={6}>
+                                                    <Grid size={6}>
                                                         <Controller
                                                             name={`${account.id}.nonce`}
                                                             control={accountInfoControl}
@@ -567,7 +558,7 @@ export default function Parameters() {
                                                     </Grid>
 
                                                     {accountTaggedPublicKeys[account.id] && (
-                                                        <Grid item xs={12}>
+                                                        <Grid size={12}>
                                                             <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2">
                                                                 Public Key
                                                             </Typography>
@@ -607,10 +598,9 @@ export default function Parameters() {
 
                                                     {/* Private Key Field */}
                                                     {accountPrivateKeys[account.id] && (
-                                                        <Grid item xs={12} className="mt-4">
+                                                        <Grid size={12} className="mt-4">
                                                             <Typography variant="subtitle2" className="font-medium text-gray-700 mb-2 flex items-center">
                                                                 Private Key
-
                                                             </Typography>
                                                             <TextField
                                                                 fullWidth
@@ -686,7 +676,7 @@ export default function Parameters() {
                         <TabPanel value={tabValue} index={1}>
                             <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)}>
                                 <Grid container spacing={4}>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
                                             Network Configuration
                                         </Typography>
@@ -695,7 +685,7 @@ export default function Parameters() {
                                         </Typography>
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Controller
                                             name="nodeEndpoint"
                                             control={networkControl}
@@ -719,7 +709,7 @@ export default function Parameters() {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Controller
                                             name="explorerEndpoint"
                                             control={networkControl}
