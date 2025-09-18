@@ -1,3 +1,5 @@
+## [0.17.15](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.14...v0.17.15) (2025-09-18)
+
 ## [0.17.14](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.13...v0.17.14) (2025-09-17)
 
 
