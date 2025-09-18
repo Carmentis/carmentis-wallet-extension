@@ -319,7 +319,7 @@ function DashboardOverview() {
             {/* Stats Cards */}
             <motion.div variants={itemVariants}>
                 <Grid container spacing={4}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={4}>
                         <StatsCard
                             title="Balance"
                             icon={<AccountBalance className="text-blue-500" />}
@@ -328,7 +328,7 @@ function DashboardOverview() {
                             subtitle="Your current token balance"
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={4}>
                         <StatsCard
                             title="Activities"
                             icon={<BarChart className="text-blue-500" />}
@@ -346,7 +346,7 @@ function DashboardOverview() {
                     Quick Actions
                 </Typography>
                 <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={4}>
                         <QuickActionCard
                             title="Transfer Tokens"
                             icon={<SwapHoriz />}
@@ -354,7 +354,7 @@ function DashboardOverview() {
                             link="/transfer"
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={4}>
                         <QuickActionCard
                             title="View Activity"
                             icon={<Storage />}
@@ -362,7 +362,7 @@ function DashboardOverview() {
                             link="/activity"
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={4}>
                         <QuickActionCard
                             title="Account Settings"
                             icon={<Settings />}
@@ -393,7 +393,6 @@ function StatsCard({ title, icon, value, subtitle, color = "blue" }) {
 
     return (
         <motion.div
-            whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2 } }}
             className="h-full"
         >
             <Card className="border border-gray-100 h-full overflow-hidden rounded-xl shadow-sm">
@@ -433,8 +432,6 @@ function QuickActionCard({ title, icon, description, link, color = "blue" }) {
 
     return (
         <motion.div
-            whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-            whileTap={{ scale: 0.98 }}
             onClick={() => navigate(link)}
             className="cursor-pointer h-full"
         >
@@ -508,7 +505,7 @@ function ResourcesSection() {
     return (
         <Grid container spacing={3}>
             {resources.map((resource, index) => (
-                <Grid item xs={12} md={6} lg={3} key={resource.title}>
+                <Grid size={4} key={resource.title}>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -536,8 +533,6 @@ function ResourceCard({ title, icon, description, onClick, color = "blue" }) {
 
     return (
         <motion.div
-            whileHover={{ scale: 1.03, y: -5, transition: { duration: 0.2 } }}
-            whileTap={{ scale: 0.97 }}
             className="h-full cursor-pointer"
             onClick={onClick}
         >
