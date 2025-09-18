@@ -291,8 +291,8 @@ function DashboardOverview() {
             {/* Welcome Section */}
             <motion.div variants={itemVariants} className="mb-8">
                 <Box className="bg-linear-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-8 shadow-sm">
-                    <Grid container spacing={4} alignItems="center">
-                        <Grid item xs={12} md={8}>
+                    <Grid container alignItems="center" width={"100%"} display="flex" flexDirection="row" justifyContent="space-between" >
+                        <Grid size={4}>
                             <Typography variant="h4" className="font-bold text-gray-800 mb-3">
                                 Welcome, {activeAccount.pseudo}!
                             </Typography>
@@ -301,7 +301,7 @@ function DashboardOverview() {
                             </Typography>
 
                         </Grid>
-                        <Grid item xs={12} md={4} className="flex justify-end">
+                        <Grid size={4} className="flex justify-end">
                             <div className="relative">
                                 <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
                                 <Avatar
