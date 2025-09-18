@@ -110,10 +110,9 @@ export function AccountEdition(props: AccountEditionProps) {
             });
 
 
-
             return {...wallet, accounts};
         });
-    })
+    }, [pseudo, nonce])
 
     if (isDeleting) {
         return <>Deleting account...</>
