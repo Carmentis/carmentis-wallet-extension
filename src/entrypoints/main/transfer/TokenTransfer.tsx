@@ -100,10 +100,10 @@ export default function TokenTransferPage() {
             </Box>
 
             <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
+                <Grid size={6}>
                     <TransferForm />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={6}>
                     <TransferGraphic />
                 </Grid>
             </Grid>
