@@ -230,6 +230,7 @@ export function PseudoPasswordCreation() {
                   <input
                     id="password"
                     type="password"
+                    autoComplete="off"
                     placeholder="Create a strong password"
                     className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${
                       errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
@@ -291,6 +292,7 @@ export function PseudoPasswordCreation() {
                   <input
                     id="confirmPassword"
                     type="password"
+                    autoComplete="off"
                     placeholder="Confirm your password"
                     className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${
                       errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
