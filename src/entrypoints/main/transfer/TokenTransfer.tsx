@@ -45,8 +45,7 @@ import {tokenTransferState} from "@/entrypoints/main/transfer/states.ts";
 // Define the form schema with Zod
 const transferSchema = z.object({
     publicKey: z.string()
-        .min(1, "Public key is required")
-        .regex(/^[0-9A-Fa-f]{64,}$/, "Invalid public key format"),
+        .min(1, "Public key is required"),
     amount: z.number()
         .min(1, "Amount must be at least 1")
         .int("Amount must be a whole number")
