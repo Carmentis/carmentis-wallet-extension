@@ -32,7 +32,8 @@ export function useTokenTransfer() {
             const parsedReceiverPublicKey = signatureEncoder.decodePublicKey(receiverPublicKey);
             const transferContext = new AccountTransferPublicationExecutionContext()
                 .withTransferToPublicKey(senderPrivateKey, parsedReceiverPublicKey)
-                .withAmount(CMTSToken.createCMTS(tokenAmount));
+                .withAmount(CMTSToken.createCMTS(tokenAmount))
+                .withGasPrice(CMTSToken.oneCMTS());
             await blockchain.publishTokenTransfer(transferContext);
         } catch (e) {
             throw e;
