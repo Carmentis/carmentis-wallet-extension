@@ -17,7 +17,7 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@cmts-dev/carmentis-sdk": "^1.13",
+    "@cmts-dev/carmentis-sdk": "^1.13.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.1",
