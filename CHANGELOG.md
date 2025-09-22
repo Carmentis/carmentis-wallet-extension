@@ -1,3 +1,11 @@
+## [0.17.16](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.15...v0.17.16) (2025-09-22)
+
+
+### Bug Fixes
+
+* invalid input for valid public during transfer ([0552de7](https://github.com/Carmentis/carmentis-wallet-extension/commit/0552de788af5494dc1cd8388325b2bc6d2c20ae7))
+* takes into account new values ([1f46b7f](https://github.com/Carmentis/carmentis-wallet-extension/commit/1f46b7f5689d22bd1d2b9c33dedeb6dc98e86c6f))
+
 ## [0.17.15](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.14...v0.17.15) (2025-09-18)
 
 ## [0.17.14](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.13...v0.17.14) (2025-09-17)
