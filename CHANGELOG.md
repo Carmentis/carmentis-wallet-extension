@@ -1,3 +1,12 @@
+## [0.17.17](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.16...v0.17.17) (2025-09-22)
+
+
+### Bug Fixes
+
+* infinite login loop when providing invalid password ([3414584](https://github.com/Carmentis/carmentis-wallet-extension/commit/3414584fc0ee998d1a5e48a5c18747c0083bc560))
+* invalid input for valid public during transfer ([8830a4a](https://github.com/Carmentis/carmentis-wallet-extension/commit/8830a4abba5d08a0c944d91cf280ff0d8d6754f4))
+* takes into account new values ([d8903ba](https://github.com/Carmentis/carmentis-wallet-extension/commit/d8903ba49ed41e5659b8c8330cacdcd51300ba56))
+
 ## [0.17.16](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.15...v0.17.16) (2025-09-22)
 
 
