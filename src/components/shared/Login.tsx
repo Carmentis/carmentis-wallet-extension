@@ -45,6 +45,8 @@ function Login() {
         resolver: zodResolver(loginSchema)
     });
 
+    console.log(errors, isSubmitting)
+
     // Error state
     const [authError, setAuthError] = useState<string | null>(null);
 

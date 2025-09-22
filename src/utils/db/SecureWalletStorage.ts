@@ -40,13 +40,18 @@ export class SecureWalletStorage {
             };
 
             request.onsuccess = (event) => {
-                const db = (event.target as IDBOpenDBRequest).result;
+                try {
+                    const db = (event.target as IDBOpenDBRequest).result;
 
-                // Open a transaction on the "encryptedWallet" table
-                const transaction = db.transaction("encryptedWallet", "readwrite");
-                const store = transaction.objectStore("encryptedWallet");
+                    // Open a transaction on the "encryptedWallet" table
+                    const transaction = db.transaction("encryptedWallet", "readwrite");
+                    const store = transaction.objectStore("encryptedWallet");
 
-                resolve(store);
+                    resolve(store);
+                } catch (e) {
+                    reject(e)
+                }
+
             };
 
             request.onupgradeneeded = () => {
@@ -113,13 +118,17 @@ export class SecureWalletStorage {
                     reject()
                 }
                 getResult.onsuccess = async () => {
-                    // decrypt the wallet
-                    const ciphertext = getResult.result;
-                    const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
-                    const textDecoder = new TextDecoder();
-                    const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
-                    console.log("Wallet obtained from storage:", wallet)
-                    resolve(wallet)
+                    try {
+                        // decrypt the wallet
+                        const ciphertext = getResult.result;
+                        const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
+                        const textDecoder = new TextDecoder();
+                        const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
+                        console.log("Wallet obtained from storage:", wallet)
+                        resolve(wallet)
+                    } catch (e) {
+                        reject(e)
+                    }
                 }
             } catch (e) {
                 console.error(e)
