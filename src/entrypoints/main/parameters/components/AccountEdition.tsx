@@ -7,7 +7,7 @@ import {
     Chip,
     Grid,
     IconButton,
-    InputAdornment,
+    InputAdornment, Link,
     Paper,
     Stack,
     TextField,
@@ -22,7 +22,7 @@ import {useRecoilValue, useSetRecoilState} from "recoil";
 import {walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAsync, useAsyncFn, useBoolean} from "react-use";
-import {StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
+import {BlockchainFacade, StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Pencil} from "react-bootstrap-icons";
 
@@ -43,20 +43,28 @@ export function AccountEdition(props: AccountEditionProps) {
     const {account, index: accountIndex} = props;
     const toast = useToast();
     const [isPrivateKeyVisible, setIsPrivateKeyVisible] = useBoolean(false);
+    const blockchain = BlockchainFacade.createFromNodeUrl(wallet.nodeEndpoint);
 
     // define account information that will be edited
     const accountId = account.id;
     const [pseudo, setPseudo] = useState(account.pseudo);
     const [nonce, setNonce] = useState(account.nonce);
 
-    // compute the encoded key pair for the provided account
-    const {value: encodedKeyPair} = useAsync(async () => {
+    // compute the encoded key pair associated to the provided account
+    const {value: encodedKeyPair, error} = useAsync(async () => {
         const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
         const keyPair = await getUserKeyPair(wallet, account);
+        //const accountHash = (await blockchain.getAccountHashFromPublicKey(keyPair.publicKey)).encode();
         const encodedPublicKey = encoder.encodePublicKey(keyPair.publicKey);
         const encodedPrivateKey = encoder.encodePrivateKey(keyPair.privateKey);
         return { encodedPublicKey, encodedPrivateKey };
-    }, [wallet, account])
+    }, [wallet, account]);
+
+    // compute the account hash associated with the provided account
+    const {value: accountHash, error: accountHashError} = useAsync(async () => {
+        const keyPair = await getUserKeyPair(wallet, account);
+        return (await blockchain.getAccountHashFromPublicKey(keyPair.publicKey)).encode();
+    }, [wallet, account]);
 
 
 
@@ -234,6 +242,16 @@ export function AccountEdition(props: AccountEditionProps) {
                     <Typography variant="caption" color="text.secondary" className="mt-1 block">
                         This is the public key associated with this account and its current nonce.
                         Providing this key with a system is useful to identity the used scheme.
+                        {
+                            accountHash &&
+                            <>
+                                Note: Your account hash is <Link target={'_blank'} href={wallet.explorerEndpoint + `/accounts/hash/${accountHash}`}>
+                                    <Typography component={"span"} variant={"caption"} fontSize={"10pt"}>
+                                        {accountHash}
+                                    </Typography>
+                                </Link>
+                            </>
+                        }
                     </Typography>
                 </Grid>
 

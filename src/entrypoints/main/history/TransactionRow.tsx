@@ -110,7 +110,7 @@ export function TransactionRow({
                             >
                                 <Box className="p-4 bg-gray-50">
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} md={6}>
+                                        <Grid size={6}>
                                             <Typography variant="subtitle2" className="text-gray-700">
                                                 Transaction Details
                                             </Typography>
