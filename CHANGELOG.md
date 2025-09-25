@@ -1,3 +1,10 @@
+## [0.17.20](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.19...v0.17.20) (2025-09-25)
+
+
+### Bug Fixes
+
+* issue when displaying the key pair in the setting when no account onchain ([3800883](https://github.com/Carmentis/carmentis-wallet-extension/commit/3800883711883c89f929dcd87cbdd5dd90f40903))
+
 ## [0.17.19](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.18...v0.17.19) (2025-09-22)
 
 ## [0.17.18](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.17...v0.17.18) (2025-09-22)
