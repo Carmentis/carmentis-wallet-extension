@@ -1,3 +1,10 @@
+## [0.17.22](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.21...v0.17.22) (2025-10-03)
+
+
+### Bug Fixes
+
+* security issues on dependencies resolved ([c82cf6a](https://github.com/Carmentis/carmentis-wallet-extension/commit/c82cf6af9a2c42843cad0b518724fdf2064be47f))
+
 ## [0.17.21](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.20...v0.17.21) (2025-10-03)
 
 ## [0.17.20](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.19...v0.17.20) (2025-09-25)
