@@ -105,7 +105,8 @@ function Login() {
                             <input
                                 id="password"
                                 type="password"
-                                autoComplete="current-password"
+                                aria-autocomplete={'none'}
+                                autoComplete="off"
                                 autoFocus
                                 className={`block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset 
                   ${errors.password || authError ? 'ring-red-300 focus:ring-red-500' : 'ring-gray-300 focus:ring-blue-500'} 
