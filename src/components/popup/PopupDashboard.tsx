@@ -19,10 +19,11 @@ import React, {PropsWithChildren, ReactElement, useState} from "react";
 import "react-loading-skeleton/dist/skeleton.css";
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {Box, Button, Typography} from "@mui/material";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {getAccountSignatureKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {
     EncoderFactory,
     StringSignatureEncoder,
+    WalletCrypto,
     wiExtensionWallet,
     WIRQ_AUTH_BY_PUBLIC_KEY,
     WIRQ_DATA_APPROVAL,
@@ -86,11 +87,11 @@ export const useAccept = () => {
     }
 }
 
-export const useUserKeyPair = () =>  {
+export const useAccountKeyPair = () =>  {
     const wallet = useWallet();
     const activeAccount = useActiveAccount();
     return async () => {
-        const keyPair = await getUserKeyPair(wallet!, activeAccount!);
+        const keyPair = await getAccountSignatureKeyPair(wallet!, activeAccount!);
         return keyPair
     }
 }
@@ -453,7 +454,7 @@ function PopupIdleBody() {
 function PopupAuthByPublicKeyBody() {
     const maskAsAccepted = useAccept();
     const {clientRequest} = useClientRequest();
-    const genKeyPair = useUserKeyPair()
+    const genKeyPair = useAccountKeyPair()
 
 
     async function accept() {

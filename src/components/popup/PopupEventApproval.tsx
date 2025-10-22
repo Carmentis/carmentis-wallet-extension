@@ -5,10 +5,11 @@ import {
     EncoderFactory,
     Hash,
     ProviderFactory,
-    wiExtensionWallet
+    wiExtensionWallet,
+    WalletCrypto
 } from "@cmts-dev/carmentis-sdk/client";
 import React, {useEffect, useRef, useState} from "react";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {getAccountSignatureKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {motion} from "framer-motion";
 import {Box, Button, Typography} from "@mui/material";
 import {Code, KeyboardBackspace} from "@mui/icons-material";
@@ -22,7 +23,7 @@ import {
     useAccept,
     useActiveAccount,
     useClearClientRequest,
-    useUserKeyPair
+    useAccountKeyPair,
 } from "@/components/popup/PopupDashboard.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
@@ -42,7 +43,7 @@ import {clientRequestSessionState} from "@/states/globals.tsx";
 export default function PopupEventApproval() {
     const clearRequest = useClearClientRequest();
     const maskAsAccepted = useAccept();
-    const genKeyPair = useUserKeyPair();
+    const getAccountKeyPair = useAccountKeyPair();
     const wallet = useWallet();
     const activeAccount = useActiveAccount();
     const [ready, setReady] = useState(false);
@@ -59,11 +60,13 @@ export default function PopupEventApproval() {
     useEffect(() => {
         setDataViewEnabled(true);
         const loadRequest = async () => {
-            const keyPair = await genKeyPair();
+            const keyPair = await getAccountKeyPair();
             const encoder = EncoderFactory.defaultBytesToStringEncoder();
             const walletSeed = encoder.decode(wallet.seed);
+            const walletCrypto = WalletCrypto.fromSeed(walletSeed);
+            const accountCrypto = walletCrypto.getAccount(activeAccount!.nonce);
 
-            wiWallet.getApprovalData(keyPair.privateKey, walletSeed, req.object)
+            wiWallet.getApprovalData(accountCrypto, req.object)
                 .then(async (microblockData) => {
 
                     // check the received microblock
@@ -95,7 +98,7 @@ export default function PopupEventApproval() {
 
     async function accept() {
         // derive the actor key from the private key and the genesis seed
-        const keyPair = await getUserKeyPair(wallet!, activeAccount!);
+        const keyPair = await getAccountSignatureKeyPair(wallet!, activeAccount!);
         const vb = applicationLedger.getVirtualBlockchain();
         const signature = await vb.signAsEndorser(keyPair.privateKey); // TODO: derive key pair
 

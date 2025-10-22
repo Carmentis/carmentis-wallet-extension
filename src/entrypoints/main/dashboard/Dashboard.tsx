@@ -44,7 +44,7 @@ import axios from 'axios';
 import { useRecoilValue } from 'recoil';
 //import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
 import NotificationRightBar from "@/entrypoints/main/dashboard/NotificationRightBar.tsx";
-import { getUserKeyPair } from "@/entrypoints/main/wallet.tsx";
+import { getAccountCrypto } from "@/entrypoints/main/wallet.tsx";
 import ActivityPage from "@/entrypoints/main/activity/Activity.tsx";
 import VirtualBlockchainViewer from "@/entrypoints/main/activity/VirtualBlockchainViewer.tsx";
 import ProofChecker from "@/entrypoints/main/proofChecker/ProofChecker.tsx";

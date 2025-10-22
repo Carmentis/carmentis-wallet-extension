@@ -37,7 +37,7 @@ import {
     Typography
 } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
+import { getAccountCrypto } from '@/entrypoints/main/wallet.tsx';
 import Skeleton from "react-loading-skeleton";
 import {
     AccountCircle,
@@ -189,7 +189,7 @@ export default function Parameters() {
     useEffect(() => {
         if (!wallet || !activeAccount) return;
         const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-        getUserKeyPair(wallet, activeAccount)
+        getAccountCrypto(wallet, activeAccount)
             .then(keyPair => {
                 setUserKeys({
                     privateKey: encoder.encodePrivateKey(keyPair.privateKey),
@@ -211,7 +211,7 @@ export default function Parameters() {
             for (const account of wallet.accounts) {
                 try {
                     const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-                    const keyPair = await getUserKeyPair(wallet, account);
+                    const keyPair = await getAccountCrypto(wallet, account);
                     taggedPublicKeys[account.id] = encoder.encodePublicKey(keyPair.publicKey);
                     publicKeys[account.id] = keyPair.publicKey.getPublicKeyAsString();
                     privateKeys[account.id] = keyPair.privateKey.getPrivateKeyAsString();

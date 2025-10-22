@@ -44,7 +44,7 @@ import Skeleton from "react-loading-skeleton";
 import {useParams} from "react-router";
 import {Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator} from "@mui/lab";
 import { timelineItemClasses } from '@mui/lab/TimelineItem';
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {getAccountCrypto} from "@/entrypoints/main/wallet.tsx";
 import {useRecoilValue} from "recoil";
 import {useAsync, useAsyncFn} from "react-use";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,7 +67,7 @@ export default function VirtualBlockchainViewer() {
     const wallet = useWallet();
     const activeAccount = useRecoilValue(activeAccountState);
     const {loading: keyPairLoading, value: keyPair} = useAsync(async () => {
-        return getUserKeyPair(wallet, activeAccount!)
+        return getAccountCrypto(wallet, activeAccount!)
     })
     const [state, startTransition] = useAsyncFn(async () => {
         if (keyPairLoading || !keyPair) return
@@ -364,7 +364,7 @@ function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
 
             setIsLoading(true);
             setError(null);
-            const keyPair = await getUserKeyPair(wallet!, activeAccount!);
+            const keyPair = await getAccountCrypto(wallet!, activeAccount!);
             const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet?.nodeEndpoint as string);
             const explorer = Blockchain.createFromProvider(provider);
             const vb = await explorer.loadApplicationLedger(Hash.from(chainId));

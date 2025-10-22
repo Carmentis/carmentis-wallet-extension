@@ -21,7 +21,6 @@ import {useNavigate} from "react-router";
 import React, {useEffect, useState} from "react";
 import {EmptyStateMessage} from "@/entrypoints/main/activity/EmptyStateMessage.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Blockchain, Explorer, Hash, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {Avatar, Box, Button, Chip, CircularProgress, Paper, Typography} from "@mui/material";
 import {ArrowRight, Business, Refresh, Schedule, Storage, Timeline} from "@mui/icons-material";
@@ -48,15 +47,7 @@ export function TableOfChains() {
             setError(null);
 
             const db = await AccountDataStorage.connectDatabase(activeAccount!);
-            const keyPair = await getUserKeyPair(wallet!, activeAccount!);
             const chains = await db.getAllApplicationVirtualBlockchainId(offset, limit);
-            /*
-            sdk.blockchain.blockchainCore.setUser(
-                sdk.blockchain.ROLES.OPERATOR,
-                sdk.utils.encoding.toHexa(keyPair.privateKey)
-            );
-
-             */
 
             setChains(chains.map(c => c.virtualBlockchainId));
         } catch (err) {
