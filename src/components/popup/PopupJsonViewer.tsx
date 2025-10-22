@@ -298,7 +298,7 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
 
       <Paper elevation={0} className="border border-gray-100 rounded-md overflow-hidden">
         <Box className="p-2">
-          {Object.keys(shownData).length === 0 ? (
+          {shownData === undefined || Object.keys(shownData).length === 0 ? (
             renderEmptyState()
           ) : (
             Object.entries(shownData).map(([key, value], index) => 

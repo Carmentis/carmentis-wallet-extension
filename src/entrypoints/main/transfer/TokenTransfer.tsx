@@ -29,7 +29,7 @@ import {
     Typography
 } from '@mui/material';
 import {useRecoilState, useRecoilValue} from 'recoil';
-import {getAccountCrypto} from '@/entrypoints/main/wallet.tsx';
+import {getAccountSignatureKeyPair} from '@/entrypoints/main/wallet.tsx';
 import {motion} from "framer-motion";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -155,7 +155,7 @@ function TransferForm() {
 
         try {
             // key pair for the organisation
-            const userKeyPair = await getAccountCrypto(wallet, activeAccount);
+            const userKeyPair = await getAccountSignatureKeyPair(wallet, activeAccount);
             await transferTokensToPublicKey(
                 wallet.nodeEndpoint,
                 userKeyPair.privateKey,
