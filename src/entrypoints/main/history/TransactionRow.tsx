@@ -20,13 +20,14 @@ import {Box, Chip, Grid, IconButton, TableCell, TableRow, Tooltip, Typography} f
 import {ArrowDownward, ArrowUpward, KeyboardArrowDown, KeyboardArrowUp} from "@mui/icons-material";
 import {AnimatePresence, motion} from "framer-motion";
 import React from "react";
+import {AccountTransaction} from '@cmts-dev/carmentis-sdk/client';
 
 export function TransactionRow({
                                    transaction,
                                    isExpanded,
                                    onToggleExpand
                                }: {
-    transaction: Transaction;
+    transaction: AccountTransaction;
     isExpanded: boolean;
     onToggleExpand: () => void;
 }) {
@@ -73,7 +74,7 @@ export function TransactionRow({
                 </TableCell>
                 <TableCell>
                     <Chip
-                        label={formatTransactionType(transaction)}
+                        label={transaction.getTransactionTypeLabel()}
                         size="small"
                         className={isPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
                         icon={isPositive ? <ArrowUpward className="text-green-500" fontSize="small"/> :
@@ -158,21 +159,4 @@ export function TransactionRow({
             </TableRow>
         </>
     );
-}
-
-/**
- * Formats transaction type as a string.
- *
- * @param transaction The transaction to format.
- */
-function formatTransactionType(transaction: Transaction) {
-    if (transaction.isPurchase()) return "Purchase";
-    if (transaction.isSale()) return "Sale";
-    if (transaction.isEarnedFees()) return "Earned fees";
-    if (transaction.isPaidFees()) return "Paid fees";
-    if (transaction.isSentPayment()) return "Sent payment";
-    if (transaction.isReceivedPayment()) return "Received payment";
-    if (transaction.isSentIssuance()) return "Sent issuance"
-    if (transaction.isReceivedIssuance()) return "Received issuance"
-    return ""
 }

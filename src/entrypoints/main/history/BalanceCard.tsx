@@ -23,9 +23,10 @@ import {Avatar, Box, CardContent, Paper, Typography} from "@mui/material";
 import {AccountBalance} from "@mui/icons-material";
 import Skeleton from "react-loading-skeleton";
 import React from "react";
+import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
 
 export function BalanceCard() {
-    const balanceResponse = useOptimizedAccountBalance();
+    const balanceBreakdownResponse = useAccountBalanceBreakdown();
     const activeAccount = useAuthenticatedAccount();
 
     // Animation variants
@@ -42,9 +43,10 @@ export function BalanceCard() {
         }
     };
 
-    if (balanceResponse.error) {
+    if (balanceBreakdownResponse.breakdownLoadingError) {
         return <NoTokenAccount/>
     }
+
 
     return (
         <motion.div variants={cardVariants}>
@@ -59,12 +61,12 @@ export function BalanceCard() {
                 </Box>
 
                 <CardContent className="p-6 flex flex-col items-center justify-center">
-                    {balanceResponse.isLoading ? (
+                    {balanceBreakdownResponse.isLoadingBreakdown ? (
                         <Skeleton height={60} width={200}/>
                     ) : (
                         <>
                             <Typography variant="h3" className="font-bold text-gray-800 mb-2">
-                                {balanceResponse.data?.toString()}
+                                {balanceBreakdownResponse.breakdown?.getBalance().toString()}
                             </Typography>
                             <Typography variant="body2" className="text-gray-500">
                                 {activeAccount?.pseudo}'s balance

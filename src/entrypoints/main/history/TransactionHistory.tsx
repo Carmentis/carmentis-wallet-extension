@@ -16,7 +16,6 @@
  */
 
 import React, {useState} from "react";
-import {useAccountTransactionHistoryHook} from "@/hooks/useAccountTransactionHistoryHook.tsx";
 import {
     Avatar,
     Box,
@@ -34,6 +33,7 @@ import Skeleton from "react-loading-skeleton";
 import {motion} from "framer-motion";
 import {CalendarToday, Label, Person, SwapHoriz} from "@mui/icons-material";
 import {TransactionRow} from "@/entrypoints/main/history/TransactionRow.tsx";
+import {useAccountHistory} from "@/hooks/useAccountHistory.tsx";
 
 const INITIAL_MAX_ENTRIES = 10;
 
@@ -41,7 +41,7 @@ export function TransactionHistory() {
     const [maxEntries, setMaxEntries] = useState(INITIAL_MAX_ENTRIES);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(INITIAL_MAX_ENTRIES);
-    const {data, isLoading, error} = useAccountTransactionHistoryHook(0, maxEntries);
+    const { accountHistory, isLoadingAccountHistory, accountHistoryLoadingError } = useAccountHistory(0, maxEntries);
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
     // Animation variants
@@ -79,7 +79,7 @@ export function TransactionHistory() {
         setExpandedRow(expandedRow === id ? null : id);
     };
 
-    if (isLoading) {
+    if (isLoadingAccountHistory) {
         return (
             <Box className="mb-8">
                 <Skeleton height={400}/>
@@ -87,7 +87,7 @@ export function TransactionHistory() {
         );
     }
 
-    if (error || !data) {
+    if (accountHistoryLoadingError || !accountHistory) {
         return (
             <Box className="mb-8 p-6 bg-red-50 rounded-lg border border-red-100">
                 <Typography variant="h6" className="text-red-700 mb-2">
@@ -95,13 +95,13 @@ export function TransactionHistory() {
                 </Typography>
                 <Typography variant="body2" className="text-red-600">
                     There was an error loading your transaction history. Please try again later.
-                    Reason: {error.message}
+                    Reason: {accountHistoryLoadingError?.message || 'unknown'}
                 </Typography>
             </Box>
         );
     }
 
-    if (!data.containsTransactions()) {
+    if (!accountHistory.containsTransactions()) {
         return (
             <Box className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-100 text-center">
                 <Typography variant="h6" className="text-gray-700 mb-2">
@@ -153,8 +153,7 @@ export function TransactionHistory() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {data.getTransactionHeights()
-                                .map(height => data.getTransactionAtHeight(height))
+                            {accountHistory.getTransactions()
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((transaction, index) => (
                                     <TransactionRow
@@ -171,7 +170,7 @@ export function TransactionHistory() {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
-                    count={data.getNumberOfTransactions()}
+                    count={accountHistory.getTransactions().length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}

@@ -15,7 +15,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {BlockchainFacade, CMTSToken, PublicSignatureKey} from '@cmts-dev/carmentis-sdk/client';
+import {CMTSToken, ProviderFactory, PublicSignatureKey} from '@cmts-dev/carmentis-sdk/client';
+import useAccountState from "@/hooks/useAccountState.ts";
+import {useAsync} from "react-use";
 
 /**
  * Fetches the account balance for the given account's public key from the specified node URL.
@@ -25,24 +27,16 @@ import {BlockchainFacade, CMTSToken, PublicSignatureKey} from '@cmts-dev/carment
  * @return {Promise<number>} A promise that resolves to the account balance as a number.
  * @throws {Error} If there is an issue retrieving the account information or balance.
  */
-export async function useAccountBalance(accountPublicKey: PublicSignatureKey, nodeUrl: string): Promise<CMTSToken> {
-    try {
-        /*
-        // create the explorer
-        const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(nodeUrl);
-        const explorer = Explorer.createFromProvider(provider);
+export function useAccountBalance() {
+    const accountState = useAccountState();
+    const { loading: isLoadingBalance, value: balance, error } = useAsync(async () => {
+        if (accountState.data) {
+            return CMTSToken.createAtomic(accountState.data.balance);
+        } else {
+            return null;
+        }
 
-        // load the hash of the account
-        const accountHash = await explorer.getAccountByPublicKey(accountPublicKey);
-        const accountState = await explorer.getAccountState(accountHash);
-        return accountState.balance / TOKEN;
+    }, [accountState.data])
 
-         */
-        const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
-        const accountHash = await blockchain.getAccountHashFromPublicKey(accountPublicKey);
-        return blockchain.getAccountBalance(accountHash);
-    } catch (e) {
-        console.log("Cannot proceed to the account's balance data:", e)
-        return CMTSToken.zero()
-    }
+    return { balance, isLoadingBalance, balanceLoadingError: error || accountState.error }
 }

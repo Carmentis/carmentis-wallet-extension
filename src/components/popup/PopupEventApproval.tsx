@@ -1,9 +1,9 @@
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {
     ApplicationLedger,
-    Blockchain,
     EncoderFactory,
     Hash,
+    Provider,
     ProviderFactory,
     wiExtensionWallet
 } from "@cmts-dev/carmentis-sdk/client";
@@ -52,9 +52,7 @@ export default function PopupEventApproval() {
     const wiWallet = new wiExtensionWallet();
     const clientRequest = useRecoilValue(clientRequestSessionState);
     const req = wiWallet.getRequestFromMessage(clientRequest.data);
-    const blockchain = Blockchain.createFromProvider(
-        ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint)
-    );
+    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
 
     useEffect(() => {
         setDataViewEnabled(true);
@@ -67,7 +65,7 @@ export default function PopupEventApproval() {
                 .then(async (microblockData) => {
 
                     // check the received microblock
-                    const importer = blockchain.getMicroblockImporter(microblockData);
+                    const importer = provider.getMicroblockImporter(microblockData);
                     const isValidMicroBlock = await importer.isValidMicroBlock();
                     if (!isValidMicroBlock) throw new Error("Invalid microblock received");
 

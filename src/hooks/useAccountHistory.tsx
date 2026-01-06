@@ -15,7 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {AccountHistoryView, BlockchainFacade, PublicSignatureKey} from '@cmts-dev/carmentis-sdk/client';
+import {
+    AccountHistoryView,
+    AccountTransactions,
+    ProviderFactory,
+    PublicSignatureKey
+} from '@cmts-dev/carmentis-sdk/client';
+import {useAsync} from "react-use";
+import useAccountState from "@/hooks/useAccountState.ts";
 
 /**
  * Fetches the account history for a given account public key by querying
@@ -28,19 +35,22 @@ import {AccountHistoryView, BlockchainFacade, PublicSignatureKey} from '@cmts-de
  * @return {Promise<AccountHistoryView>} A promise that resolves to the account history object.
  * @throws {Error} Throws an error if unable to fetch the account history.
  */
-export async function useAccountHistory(
-    nodeUrl: string,
-    accountPublicKey: PublicSignatureKey,
+export function useAccountHistory(
     offset = 0,
     maxRecords = 50,
-): Promise<AccountHistoryView> {
-    try {
-
-        const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
-        const accountHash = await blockchain.getAccountHashFromPublicKey(accountPublicKey);
-        return blockchain.getAccountHistory(accountHash);
-    } catch (e) {
-        console.log(`Cannot load the history of transaction: ${e}`);
-        throw new Error(`${e}`)
-    }
+) {
+    const provider = useProvider();
+    const {accountPublicKey} = useAccountPublicKey();
+    const accountStateResponse = useAccountState();
+    const {value: accountHistory, loading: isLoadingAccountHistory, error: accountHistoryLoadingError} = useAsync(async () => {
+       if (accountStateResponse.data && accountPublicKey) {
+           const accountState = accountStateResponse.data;
+           const accountHash = await provider.getAccountIdByPublicKey(accountPublicKey);
+           const accountHistory = await provider.getAccountHistory(accountHash, accountState.lastHistoryHash, maxRecords);
+           return AccountTransactions.createFromAbciResponse(accountHistory);
+       } else {
+           return undefined;
+       }
+    }, [accountStateResponse.data]);
+    return { accountHistory, isLoadingAccountHistory, accountHistoryLoadingError };
 }

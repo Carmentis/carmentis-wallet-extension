@@ -19,18 +19,18 @@ import { useState } from "react";
 import { SecureWalletStorage } from "@/utils/db/SecureWalletStorage.ts";
 import { CarmentisProvider } from "@/utils/CarmentisProvider.tsx";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import * as v from "valibot";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { Lock } from "react-bootstrap-icons";
 import { motion } from "framer-motion";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
 
-// Define the form schema with Zod
-const loginSchema = z.object({
-    password: z.string().min(1, "Password is required")
+// Define the form schema with Valibot
+const loginSchema = v.object({
+    password: v.pipe(v.string(), v.minLength(1, "Password is required"))
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = v.InferOutput<typeof loginSchema>;
 
 function Login() {
     // recover the wallet update from the context
@@ -42,7 +42,7 @@ function Login() {
         handleSubmit,
         formState: { errors, isSubmitting }
     } = useForm<LoginFormData>({
-        resolver: zodResolver(loginSchema)
+        resolver: valibotResolver(loginSchema)
     });
 
     console.log(errors, isSubmitting)

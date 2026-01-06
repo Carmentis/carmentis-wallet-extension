@@ -1,0 +1,10 @@
+node_modules
+dist
+.wxt
+coverage
+*.config.js
+*.config.ts
+.output
+.cache
+build
+public

@@ -37,7 +37,7 @@ import {ErrorBoundary} from "react-error-boundary";
 import {ErrorFallback} from "@/components/shared/ErrorFallback.tsx";
 import {passwordState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
-import {Wallet} from "@/types/Wallet.ts";
+import {useAsync} from "react-use";
 
 const resources = {
     fr: {
@@ -69,73 +69,68 @@ export const LoggerContext = createContext(logger);
 function AuthenticationDataAccess({children}: PropsWithChildren) {
     const [wallet, setWallet] = useRecoilState(walletState);
     const password = useRecoilValue(passwordState);
-    const [isLoading, setLoading] = useState(true);
-
-
-
     const {
         setAccountCreated,
     } = useApplicationStatus();
 
 
-    // store the wallet locally when the wallet has changed
-    useEffect(() => {
-        // prevent local storage clearing when the wallet is updated to an empty one
-        setLoading(true);
+    const {loading: isLoading} = useAsync(async () => {
+        const provider = new CarmentisProvider();
+        const secureStore = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
         if (wallet) {
             console.log('[context page] an update of the wallet has been detected: store the wallet in local and session');
-            const provider = new CarmentisProvider();
-            SecureWalletStorage.CreateSecureWalletStorage(provider, password).then(storage => {
-                storage.writeWalletToStorage(wallet).then(() => {
-                    setAccountCreated();
-                }).catch(error => {
-                    console.error(error);
-                });
-            });
-        }
 
-    }, [wallet]);
-
-    const applicationStartup = async () => {
-        // no locally stored wallet => need to setup
-        const walletIsInStorage = !(await SecureWalletStorage.IsEmpty());
-        console.log("Wallet in storage?", walletIsInStorage)
-        console.log("Wallet in session?", wallet !== undefined)
-
-        if (!wallet && !walletIsInStorage) {
-            console.log("No wallet found in storage and nowhere else: Onboarding required")
-            setLoading(false);
-            return;
-        } else if (!wallet && walletIsInStorage) {
-            console.log("Wallet found in storage but not found in session or state: Login required");
-            setAccountCreated()
-            setLoading(false)
-        } else if (wallet && walletIsInStorage) {
-            console.log("wallet found in state and in session: Running")
-            setLoading(false);
+            await secureStore.writeWalletToStorage(wallet);
+            setAccountCreated();
         } else {
-            console.log(`Strange state detected:, ${wallet !== undefined}, ${walletIsInStorage}`)
+            const walletIsInStorage = !(await SecureWalletStorage.IsEmpty());
+            console.log("Wallet in storage?", walletIsInStorage)
+            console.log("Wallet in session?", wallet !== undefined)
+
+            if (!wallet && !walletIsInStorage) {
+                console.log("No wallet found in storage and nowhere else: Onboarding required")
+                return;
+            } else if (!wallet && walletIsInStorage) {
+                console.log("Wallet found in storage but not found in session or state: Login required");
+                setAccountCreated()
+            } else if (wallet && walletIsInStorage) {
+                console.log("wallet found in state and in session: Running")
+            } else {
+                console.log(`Strange state detected:, ${wallet !== undefined}, ${walletIsInStorage}`)
+            }
+
         }
+    }, [wallet])
 
 
-    }
 
-    applicationStartup();
 
     if (isLoading) return <Splashscreen/>
     return <>
-
         {children}
     </>;
 }
 
 
+import {SWRConfig, SWRConfiguration} from 'swr';
+
+export const swrConfig: SWRConfiguration = {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: false,
+    shouldRetryOnError: false,
+    errorRetryInterval: 10_000,
+    errorRetryCount: 3,
+    refreshInterval: 10,
+    refreshWhenOffline: false,
+};
+
 export function AuthenticationManager({children}: PropsWithChildren) {
     let logger = useContext(LoggerContext);
 
-    return <RecoilRoot>
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <Suspense fallback={<Splashscreen/>}>
+    return <SWRConfig value={swrConfig}>
+        <RecoilRoot>
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+                <Suspense fallback={<Splashscreen/>}>
                     <LoggerContext.Provider value={logger}>
                         <ToastContainer/>
                         <AuthenticationContextProvider>
@@ -146,8 +141,9 @@ export function AuthenticationManager({children}: PropsWithChildren) {
                             </ApplicationStatusContextProvider>
                         </AuthenticationContextProvider>
                     </LoggerContext.Provider>
-            </Suspense>
-        </ErrorBoundary>
-    </RecoilRoot>;
+                </Suspense>
+            </ErrorBoundary>
+        </RecoilRoot>
+    </SWRConfig>;
 
 }

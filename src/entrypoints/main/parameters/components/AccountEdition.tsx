@@ -22,7 +22,7 @@ import {useRecoilValue, useSetRecoilState} from "recoil";
 import {walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAsync, useAsyncFn, useBoolean} from "react-use";
-import {BlockchainFacade, StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
+import {CryptoEncoderFactory, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {Pencil} from "react-bootstrap-icons";
 
@@ -43,7 +43,7 @@ export function AccountEdition(props: AccountEditionProps) {
     const {account, index: accountIndex} = props;
     const toast = useToast();
     const [isPrivateKeyVisible, setIsPrivateKeyVisible] = useBoolean(false);
-    const blockchain = BlockchainFacade.createFromNodeUrl(wallet.nodeEndpoint);
+    const blockchain = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
 
     // define account information that will be edited
     const accountId = account.id;
@@ -52,18 +52,18 @@ export function AccountEdition(props: AccountEditionProps) {
 
     // compute the encoded key pair associated to the provided account
     const {value: encodedKeyPair, error} = useAsync(async () => {
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         const keyPair = await getUserKeyPair(wallet, account);
         //const accountHash = (await blockchain.getAccountHashFromPublicKey(keyPair.publicKey)).encode();
-        const encodedPublicKey = encoder.encodePublicKey(keyPair.publicKey);
-        const encodedPrivateKey = encoder.encodePrivateKey(keyPair.privateKey);
+        const encodedPublicKey = await encoder.encodePublicKey(keyPair.publicKey);
+        const encodedPrivateKey = await encoder.encodePrivateKey(keyPair.privateKey);
         return { encodedPublicKey, encodedPrivateKey };
     }, [wallet, account]);
 
     // compute the account hash associated with the provided account
     const {value: accountHash, error: accountHashError} = useAsync(async () => {
         const keyPair = await getUserKeyPair(wallet, account);
-        return (await blockchain.getAccountHashFromPublicKey(keyPair.publicKey)).encode();
+        return await blockchain.getAccountIdByPublicKey(keyPair.publicKey);
     }, [wallet, account]);
 
 

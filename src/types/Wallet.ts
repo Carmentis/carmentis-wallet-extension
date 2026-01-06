@@ -15,14 +15,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {Account} from "@/types/Account.ts";
+import * as v from 'valibot';
+import {AccountSchema} from "@/types/Account.ts";
 
-export interface Wallet {
-    explorerEndpoint: string;
-    seed: string;
-    password?: string,
-    counter: number;
-    accounts: Account[];
-    activeAccountId?: string;
-    nodeEndpoint: string;
-}
+export const WalletSchema = v.object({
+    explorerEndpoint: v.string(),
+    seed: v.string(),
+    password: v.optional(v.string()),
+    counter: v.number(),
+    accounts: v.array(AccountSchema),
+    activeAccountId: v.optional(v.string()),
+    nodeEndpoint: v.string(),
+});
+
+export type Wallet = v.InferOutput<typeof WalletSchema>;

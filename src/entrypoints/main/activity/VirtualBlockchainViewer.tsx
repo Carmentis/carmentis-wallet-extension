@@ -34,10 +34,9 @@ import {
 import React, {useEffect, useState, useTransition} from "react";
 import {
     ApplicationLedgerVb,
-    Blockchain, BlockchainFacade,
     EncoderFactory,
-    Explorer,
     Hash,
+    Provider,
     ProviderFactory
 } from "@cmts-dev/carmentis-sdk/client";
 import Skeleton from "react-loading-skeleton";
@@ -72,8 +71,7 @@ export default function VirtualBlockchainViewer() {
     const [state, startTransition] = useAsyncFn(async () => {
         if (keyPairLoading || !keyPair) return
         const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet.nodeEndpoint);
-        const blockchain = Blockchain.createFromProvider(provider);
-        const vb = await blockchain.loadApplicationLedger(Hash.from(hash as string));
+        const vb = await provider.loadApplicationLedger(Hash.from(hash as string));
         const proof = await vb.exportProof({ author: activeAccount?.pseudo as string })
 
         const json = JSON.stringify(proof, null, 2);
@@ -194,7 +192,6 @@ export default function VirtualBlockchainViewer() {
 function SingleChain({ chainId }: { chainId: string }) {
     const wallet = useWallet();
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
-    const blockchain = Blockchain.createFromProvider(provider);
     const vb = new ApplicationLedgerVb({provider})
     const [height, setHeight] = useState<number|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
@@ -202,7 +199,7 @@ function SingleChain({ chainId }: { chainId: string }) {
 
     async function loadChain() {
         try {
-            const applicationLedger = await blockchain.loadApplicationLedger(Hash.from(chainId));
+            const applicationLedger = await provider.loadApplicationLedger(Hash.from(chainId));
             const vb = applicationLedger.getVirtualBlockchain();
             setIsLoading(true);
             setError(null);
@@ -366,8 +363,7 @@ function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
             setError(null);
             const keyPair = await getUserKeyPair(wallet!, activeAccount!);
             const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet?.nodeEndpoint as string);
-            const explorer = Blockchain.createFromProvider(provider);
-            const vb = await explorer.loadApplicationLedger(Hash.from(chainId));
+            const vb = await provider.loadApplicationLedger(Hash.from(chainId));
             const record = await vb.getRecord(index);
             setRecord(record);
         } catch (err) {

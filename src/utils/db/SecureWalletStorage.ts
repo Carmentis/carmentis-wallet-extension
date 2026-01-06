@@ -15,15 +15,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-import {SecretEncryptionKey} from '@/types/SecretEncryptionKey.ts';
-
+import {openDB, deleteDB, wrap, unwrap, IDBPDatabase, IDBPTransaction, StoreNames} from 'idb';
 import {Wallet} from "@/types/Wallet.ts";
 import {ProviderInterface} from "@/types/ProviderInterface.ts";
 import {SymmetricEncryptionKey} from "@cmts-dev/carmentis-sdk/client";
+import {ExtensionWalletBinaryEncoder, ExtensionWalletEncoder} from "@/types/ExtensionWalletEncoder.ts";
 
-const ENCRYPTED_WALLET = "encryptedWallet"
-const ENCRYPTED_WALLET_DB_VERSION = 1;
+const ENCRYPTED_WALLET_DB = "encryptedWallet"
+const ENCRYPTED_WALLET_DB_INITIAL_VERSION = 1;
+const ENCRYPTED_WALLET_DB_VERSION = ENCRYPTED_WALLET_DB_INITIAL_VERSION;
+const ENCRYPTED_WALLET_TABLE = 'wallet';
+const ENCRYPTED_WALLET_ENTRY = 1;
+
+
+interface WalletDatabaseEntry {
+    walletId: number,
+    encryptedWallet: Uint8Array<ArrayBufferLike>,
+}
+
 export class SecureWalletStorage {
 
 
@@ -31,36 +40,19 @@ export class SecureWalletStorage {
 
     }
 
-    private  static  OpenDatabase() : Promise<IDBObjectStore> {
-        return new Promise(async (resolve, reject) => {
-            const request = indexedDB.open(ENCRYPTED_WALLET, ENCRYPTED_WALLET_DB_VERSION);
-
-            request.onerror = () => {
-                reject(new Error("Failed to open the encryptedWallet database."));
-            };
-
-            request.onsuccess = (event) => {
-                try {
-                    const db = (event.target as IDBOpenDBRequest).result;
-
-                    // Open a transaction on the "encryptedWallet" table
-                    const transaction = db.transaction("encryptedWallet", "readwrite");
-                    const store = transaction.objectStore("encryptedWallet");
-
-                    resolve(store);
-                } catch (e) {
-                    reject(e)
+    private static  OpenDatabase() : Promise<IDBPDatabase<WalletDatabaseEntry>> {
+        return openDB<WalletDatabaseEntry>(ENCRYPTED_WALLET_DB, ENCRYPTED_WALLET_DB_VERSION, {
+            upgrade(database: IDBPDatabase<WalletDatabaseEntry>, oldVersion: number, newVersion: number | null, transaction: IDBPTransaction<WalletDatabaseEntry, StoreNames<WalletDatabaseEntry>[], "versionchange">, event: IDBVersionChangeEvent) {
+                // we currently have nothing to do here
+                console.log(`Upgrading database from ${oldVersion} to ${newVersion}`)
+                if (newVersion === ENCRYPTED_WALLET_DB_INITIAL_VERSION) {
+                    console.log("Creating encryptedWallet table")
+                    database.createObjectStore(ENCRYPTED_WALLET_TABLE, {
+                        keyPath: 'walletId'
+                    });
                 }
-
-            };
-
-            request.onupgradeneeded = () => {
-                var db = request.result;
-
-                // create the encrypted wallet table
-                db.createObjectStore(ENCRYPTED_WALLET);
-            };
-        })
+            }
+        });
     }
 
     /**
@@ -70,25 +62,9 @@ export class SecureWalletStorage {
      *
      */
     static async IsEmpty() : Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            // Open a connection to the "encryptedWallet" database
-            try {
-                // Check if the "wallet" key exists
-                const store = await SecureWalletStorage.OpenDatabase();
-                const getRequest = store.get("wallet");
-
-                getRequest.onsuccess = () => {
-                    resolve(getRequest.result === undefined);
-                };
-
-                getRequest.onerror = () => {
-                    reject(new Error("Failed to retrieve the key from the encryptedWallet table."));
-                };
-            } catch (e) {
-                console.error(e)
-                reject(e)
-            }
-        })
+        const db = await SecureWalletStorage.OpenDatabase();
+        const foundNumberOfWallets = await db.count(ENCRYPTED_WALLET_TABLE);
+        return foundNumberOfWallets === 0;
     }
 
     /**
@@ -101,64 +77,46 @@ export class SecureWalletStorage {
      * @param password
      * @constructor
      */
-    static async CreateSecureWalletStorage(provider: ProviderInterface, password: string | undefined): Promise<SecureWalletStorage> {
-        if (!password) throw new Error('Cannot access to the wallet using an undefined password')
+    static async CreateSecureWalletStorage(provider: ProviderInterface, password: string): Promise<SecureWalletStorage> {
+        if (typeof password !== 'string') throw new Error('Cannot access to the wallet using an undefined password')
         const secretKey = await provider.deriveSecretKeyFromPassword(password);
         return new SecureWalletStorage(secretKey);
     }
 
     async readWalletFromStorage() : Promise<Wallet> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // read the encrypted wallet
-                const store = await SecureWalletStorage.OpenDatabase();
-                const getResult = store.get('wallet')
-                getResult.onerror = (error) => {
-                    console.error('Error while reading wallet:', error)
-                    reject()
-                }
-                getResult.onsuccess = async () => {
-                    try {
-                        // decrypt the wallet
-                        const ciphertext = getResult.result;
-                        const plaintext = await this.secretKey.decrypt(Uint8Array.from(ciphertext));
-                        const textDecoder = new TextDecoder();
-                        const wallet : Wallet = JSON.parse(textDecoder.decode(plaintext));
-                        console.log("Wallet obtained from storage:", wallet)
-                        resolve(wallet)
-                    } catch (e) {
-                        reject(e)
-                    }
-                }
-            } catch (e) {
-                console.error(e)
-                reject(e)
-            }
-        });
+        try {
+            // read the encrypted wallet
+            const store = await SecureWalletStorage.OpenDatabase();
+            const encryptedWallets = await store.getAll(ENCRYPTED_WALLET_TABLE);
+            if (encryptedWallets.length === 0) throw new Error('No wallet found in the encryptedWallet database.');
+            if (encryptedWallets.length > 1) throw new Error('More than one wallet found in the encryptedWallet database.');
+
+            // decrypt the wallet
+            const databaseEntry: WalletDatabaseEntry = encryptedWallets[0];
+            const plaintext = await this.secretKey.decrypt(databaseEntry.encryptedWallet);
+            return ExtensionWalletBinaryEncoder.decode(plaintext);
+        } catch (e) {
+            console.error(e)
+            throw new Error(`Cannot read the wallet from the encryptedWallet database: ${e}.`)
+        }
     }
 
     async writeWalletToStorage(wallet : Wallet) : Promise<void> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // encrypt the wallet
-                const textEncoder = new TextEncoder();
-                const plaintext = textEncoder.encode(JSON.stringify(wallet));
-                const ciphertext = this.secretKey.encrypt(plaintext);
+        try {
+            // encrypt the wallet
+            const plaintext = ExtensionWalletBinaryEncoder.encode(wallet);
+            const ciphertext = await this.secretKey.encrypt(plaintext);
 
-                // store the encrypted wallet
-                const store = await SecureWalletStorage.OpenDatabase();
-                const putResult = store.put(ciphertext, 'wallet')
-
-                putResult.onsuccess = () => resolve()
-                putResult.onerror = () => reject()
-
-
-                resolve()
-            } catch (e) {
-                console.error(e)
-                reject(e)
-            }
-        });
+            // store the encrypted wallet
+            const store = await SecureWalletStorage.OpenDatabase();
+            await store.put(ENCRYPTED_WALLET_TABLE, {
+                walletId: ENCRYPTED_WALLET_ENTRY,
+                encryptedWallet: ciphertext,
+            });
+        } catch (e) {
+            console.error(e)
+            throw new Error("Cannot write the wallet to the encryptedWallet database: " + e + ".")
+        }
 
      }
 }

@@ -1,15 +1,15 @@
-import {Avatar, Box, Grid, Typography} from '@mui/material';
+import {Grid, Paper, Typography} from '@mui/material';
 import React from 'react';
 import NoTokenAccount from '@/components/shared/NoTokenAccount.tsx';
 import {Splashscreen} from "@/components/shared/Splashscreen.tsx";
 import {motion} from "framer-motion";
-import {History as HistoryIcon} from "@mui/icons-material";
-import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 import {TransactionHistory} from "@/entrypoints/main/history/TransactionHistory.tsx";
-import {BalanceCard} from "@/entrypoints/main/history/BalanceCard.tsx";
+import {BalanceAvailability, CMTSToken} from "@cmts-dev/carmentis-sdk/client";
+import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
+import {PageHeader} from "@/components/shared/PageHeader.tsx";
 
 export default function HistoryPage() {
-    const balanceResponse = useOptimizedAccountBalance();
+    const balanceResponse = useAccountBalanceBreakdown()
 
     // Animation variants
     const pageVariants = {
@@ -31,8 +31,8 @@ export default function HistoryPage() {
         }
     };
 
-    if (balanceResponse.isLoading) return <Splashscreen />
-    if (balanceResponse.error) {
+    if (balanceResponse.isLoadingBreakdown) return <Splashscreen />
+    if (balanceResponse.breakdownLoadingError) {
         return <NoTokenAccount />
     }
 
@@ -44,28 +44,15 @@ export default function HistoryPage() {
             className="max-w-4xl mx-auto"
         >
             {/* Header */}
-            <motion.div variants={itemVariants} className="mb-8">
-                <Box className="flex items-center mb-4">
-                    <Avatar className="bg-purple-100 text-purple-600 mr-3">
-                        <HistoryIcon />
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            Transaction History
-                        </Typography>
-                        <Typography variant="body1" className="text-gray-600">
-                            View your account balance and transaction history
-                        </Typography>
-                    </Box>
-                </Box>
-            </motion.div>
+            <PageHeader
+                title="Transaction History"
+                subtitle="View your account balance and transaction history"
+            />
 
-            {/* Balance and Graph Cards */}
+            {/* Token Cards */}
             <motion.div variants={itemVariants}>
                 <Grid container spacing={4} className="mb-6">
-                    <Grid item xs={12} md={6}>
-                        <BalanceCard />
-                    </Grid>
+                    <TokenCards breakdown={balanceResponse.breakdown} />
                 </Grid>
             </motion.div>
 
@@ -74,6 +61,33 @@ export default function HistoryPage() {
                 <TransactionHistory />
             </motion.div>
         </motion.div>
+    );
+}
+
+function TokenCards(input: { breakdown: BalanceAvailability }) {
+    const breakdown = input.breakdown.getBreakdown();
+
+    const tokens = [
+        { label: 'Spendable', amount: breakdown.spendable },
+        { label: 'Staked', amount: breakdown.staked },
+        { label: 'Vested', amount: breakdown.vested },
+    ];
+
+    return (
+        <>
+            {tokens.map(({ label, amount }) => (
+                <Grid item xs={12} sm={4} key={label}>
+                    <Paper elevation={0} className="border border-gray-200 rounded-lg p-6">
+                        <Typography variant="body2" className="text-gray-500 mb-2">
+                            {label}
+                        </Typography>
+                        <Typography variant="h5" className="font-semibold text-gray-900">
+                            {CMTSToken.createAtomic(amount).toString()}
+                        </Typography>
+                    </Paper>
+                </Grid>
+            ))}
+        </>
     );
 }
 

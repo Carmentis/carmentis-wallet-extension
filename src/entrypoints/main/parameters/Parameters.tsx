@@ -57,9 +57,9 @@ import {
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/client";
+import { valibotResolver } from "@hookform/resolvers/valibot";
+import * as v from "valibot";
+import {CryptoEncoderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
@@ -67,32 +67,42 @@ import {AccountEdition} from "@/entrypoints/main/parameters/components/AccountEd
 import {Versions} from "@/entrypoints/main/parameters/components/Versions.tsx";
 
 // Define schemas for form validation
-const personalInfoSchema = z.object({
-  pseudo: z.string().min(1, "Account name is required"),
-  nonce: z.number().int().optional()
+const personalInfoSchema = v.object({
+  pseudo: v.pipe(v.string(), v.minLength(1, "Account name is required")),
+  nonce: v.optional(v.pipe(v.number(), v.integer()))
 });
 
-const networkSchema = z.object({
-    nodeEndpoint: z.string().url("Must be a valid URL"),
-    explorerEndpoint: z.string().url("Must be a valid URL")
+const networkSchema = v.object({
+    nodeEndpoint: v.pipe(v.string(), v.url("Must be a valid URL")),
+    explorerEndpoint: v.pipe(v.string(), v.url("Must be a valid URL"))
 });
 
 // Schema for account information form
-const accountInfoSchema = z.record(z.string(), z.object({
-    pseudo: z.string().min(1, "Account name is required"),
-    nonce: z.number().int().optional()
-}));
+const accountInfoSchema = v.record(
+  v.string(),
+  v.object({
+    pseudo: v.pipe(v.string(), v.minLength(1, "Account name is required")),
+    nonce: v.optional(v.pipe(v.number(), v.integer()))
+  })
+);
 
-const deleteAccountSchema = z.object({
-    confirmName: z.string()
-}).refine((data) => data.confirmName === "", {
-    message: "Name doesn't match",
-    path: ["confirmName"]
-});
+const deleteAccountSchema = v.pipe(
+  v.object({
+    confirmName: v.string()
+  }),
+  v.forward(
+    v.partialCheck(
+      [["confirmName"]],
+      (input) => input.confirmName === "",
+      "Name doesn't match"
+    ),
+    ["confirmName"]
+  )
+);
 
-type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
-type NetworkFormData = z.infer<typeof networkSchema>;
-type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
+type PersonalInfoFormData = v.InferOutput<typeof personalInfoSchema>;
+type NetworkFormData = v.InferOutput<typeof networkSchema>;
+type AccountInfoFormData = v.InferOutput<typeof accountInfoSchema>;
 
 // Tab panel component
 interface TabPanelProps {
@@ -152,7 +162,7 @@ export default function Parameters() {
 
     // Forms
     const personalInfoForm = useForm<PersonalInfoFormData>({
-        resolver: zodResolver(personalInfoSchema),
+        resolver: valibotResolver(personalInfoSchema),
         defaultValues: {
             pseudo: activeAccount?.pseudo || '',
             nonce: activeAccount?.nonce
@@ -160,7 +170,7 @@ export default function Parameters() {
     });
 
     const networkForm = useForm<NetworkFormData>({
-        resolver: zodResolver(networkSchema),
+        resolver: valibotResolver(networkSchema),
         defaultValues: {
             nodeEndpoint: wallet?.nodeEndpoint || '',
             explorerEndpoint: wallet?.explorerEndpoint || ''
@@ -177,7 +187,7 @@ export default function Parameters() {
     }, {} as Record<string, { pseudo: string, nonce?: number }>);
 
     const accountInfoForm = useForm<AccountInfoFormData>({
-        resolver: zodResolver(accountInfoSchema),
+        resolver: valibotResolver(accountInfoSchema),
         defaultValues: initialAccountInfoValues || {}
     });
 
@@ -188,7 +198,7 @@ export default function Parameters() {
     // Load user keys
     useEffect(() => {
         if (!wallet || !activeAccount) return;
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         getUserKeyPair(wallet, activeAccount)
             .then(keyPair => {
                 setUserKeys({
@@ -210,7 +220,7 @@ export default function Parameters() {
 
             for (const account of wallet.accounts) {
                 try {
-                    const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+                    const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
                     const keyPair = await getUserKeyPair(wallet, account);
                     taggedPublicKeys[account.id] = encoder.encodePublicKey(keyPair.publicKey);
                     publicKeys[account.id] = keyPair.publicKey.getPublicKeyAsString();

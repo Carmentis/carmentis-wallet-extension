@@ -27,6 +27,7 @@ import {
 import {CheckCircle} from "react-bootstrap-icons";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
 import {useWalletBuilder} from "@/hooks/useWalletBuilder.tsx";
+import {useAsync} from "react-use";
 
 
 /**
@@ -41,7 +42,6 @@ import {useWalletBuilder} from "@/hooks/useWalletBuilder.tsx";
  */
 export function SetupWallet() {
 
-    const [installed, setInstalled] = useState<boolean>(false);
     const authentication = useAuthenticationContext();
     const {buildWallet} = useWalletBuilder();
 
@@ -50,57 +50,44 @@ export function SetupWallet() {
     const password = useRecoilValue(onboardingPasswordAtom);
     const seed = useRecoilValue(onboardingSeedAtom);
 
-    // create the wallet
-    const walletContext = buildWallet(accountName, seed, password);
+    const {value: installed, loading: isInstalling, error: installationError} = useAsync(async () => {
 
 
-    function redirectToMainPage() {
-        (async () => {
-            const openMainRequest : BackgroundRequest = {
-                backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
-                payload: {
-                    location: "main"
-                }
+        // create the wallet
+        const walletContext = buildWallet(accountName, seed, password);
+
+        // store the seed in the wallet
+        const provider = new CarmentisProvider();
+        const walletStore = await SecureWalletStorage.CreateSecureWalletStorage(provider, password);
+        await walletStore.writeWalletToStorage(walletContext);
+
+        // attempt to read the wallet to ensure that it is correctly installed
+        const wallet = await walletStore.readWalletFromStorage()
+        authentication.connect(walletContext);
+
+        return true;
+    }, [authentication]);
+
+
+    async function redirectToMainPage() {
+        const openMainRequest : BackgroundRequest = {
+            backgroundRequestType: BACKGROUND_REQUEST_TYPE.BROWSER_OPEN_ACTION,
+            payload: {
+                location: "main"
             }
-            browser.runtime.sendMessage(openMainRequest)
-                .then(
-                closeCurrentTab
-            );
-        })();
+        }
+        await browser.runtime.sendMessage(openMainRequest)
     }
+
 
     function closeCurrentTab() {
         window.close()
     }
 
-    // store the seed in the wallet
-    const provider = new CarmentisProvider();
-    SecureWalletStorage.CreateSecureWalletStorage(provider, password)
-        .then(storage => {
-            storage.writeWalletToStorage(walletContext)
-                .then(async () => {
-
-                    // attempt to read the wallet to ensure that it is correctly installed
-                    await storage.readWalletFromStorage()
-                        .then(_ => {
-                            authentication.connect(walletContext);
-                            setInstalled(true);
-                            redirectToMainPage()
-                        }).catch(_ => {
-                    });
 
 
 
-                }).catch(error => {
-                console.log("Wallet error in local storage", error);
-            });
-        }).catch(error => {
-        console.error("wallet storage creation failure", error);
-    });
-
-
-
-    if (!installed) {
+    if (isInstalling) {
         return (
             <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
                 {/* Left column - Explanation */}
@@ -145,6 +132,79 @@ export function SetupWallet() {
             </div>
         );
     }
+    
+    if (typeof installed === 'undefined' || installationError) {
+        console.error("Failed to install wallet: ", installationError);
+        return (
+            <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
+                {/* Left column - Explanation */}
+                <div className="flex flex-col md:w-1/2 md:border-r md:border-gray-100 md:pr-6 pb-6 md:pb-0">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Installation Failed</h1>
+                    <p className="text-gray-600 mb-6">
+                        We encountered an issue while setting up your wallet. This could be due to missing information
+                        or a technical error.
+                    </p>
+
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-medium text-gray-800">What went wrong?</h2>
+                        {installationError ? (
+                            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <h3 className="text-sm font-medium text-red-800 mb-2">Error Details:</h3>
+                                <p className="text-sm text-red-700">{installationError.message}</p>
+                            </div>
+                        ) : (
+                            <p className="text-gray-600">
+                                Required setup information is missing. Please restart the onboarding process.
+                            </p>
+                        )}
+
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mt-4">
+                            <h3 className="text-sm font-medium text-gray-700 mb-2">Possible solutions:</h3>
+                            <ul className="text-sm text-gray-600 space-y-2">
+                                <li className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    Return to the home page and start over
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    Ensure you've completed all previous steps
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    Check your browser's console for additional details
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right column - Error status */}
+                <div className="flex flex-col items-center justify-center md:w-1/2 md:pl-2 text-center">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Wallet installation failed</h2>
+                    <div className="flex flex-col gap-3 w-full max-w-xs">
+                        <button
+                            className="py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm transition-all duration-200"
+                            onClick={() => window.location.href = '/'}
+                        >
+                            Return to Home
+                        </button>
+                        <button
+                            className="py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-all duration-200"
+                            onClick={closeCurrentTab}
+                        >
+                            Close Tab
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col md:flex-row md:items-stretch md:gap-8">
@@ -152,7 +212,7 @@ export function SetupWallet() {
             <div className="flex flex-col md:w-1/2 md:border-r md:border-gray-100 md:pr-6 pb-6 md:pb-0">
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">You are ready!</h1>
                 <p className="text-gray-600 mb-6">
-                    Your wallet has been successfully installed and set up. You can now start using Carmentis to manage your digital assets.
+                    Your wallet has been successfully installed and set up.
                 </p>
 
                 <div className="space-y-4">
@@ -189,7 +249,7 @@ export function SetupWallet() {
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Wallet successfully installed</h2>
                 <button 
                     className="py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center"
-                    onClick={closeCurrentTab}
+                    onClick={redirectToMainPage}
                 >
                     Get Started
                 </button>

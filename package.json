@@ -14,7 +14,9 @@
     "compile": "tsc --noEmit",
     "tailwind": "npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/main/global.css && npx @tailwindcss/cli -i src/entrypoints/global.css  -o src/entrypoints/popup/global.css",
     "postinstall": "wxt prepare",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@cmts-dev/carmentis-sdk": "^1.13.3",
@@ -37,6 +39,7 @@
     "framer-motion": "^12.23.12",
     "i18next": "^25.3.4",
     "i18next-browser-languagedetector": "^8.2.0",
+    "idb": "^8.0.3",
     "pino": "^9.8.0",
     "react": "^18",
     "react-bootstrap-icons": "^1.11.6",
@@ -52,12 +55,13 @@
     "recoil": "^0.7.7",
     "secure-webstore": "^1.3.7",
     "swr": "^2.3.5",
+    "valibot": "^1.2.0",
     "webext-storage": "^2.0.1",
-    "webextension-polyfill": "^0.12.0",
-    "zod": "^4.0.17"
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.27.1",
+    "@eslint/js": "^9.39.2",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/exec": "^7.1.0",
     "@testing-library/dom": "^10.4.1",
@@ -65,8 +69,15 @@
     "@types/jest": "^30.0.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
     "@wxt-dev/module-react": "^1.1.3",
     "conventional-changelog-conventionalcommits": "^9.1.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "flow-jsdoc": "^0.3.1",
     "jest": "^30.0.5",
     "jsdoc-plugin-typescript": "^3.2.0",

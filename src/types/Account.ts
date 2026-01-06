@@ -15,19 +15,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import * as v from 'valibot';
+
 /**
  * Represents an Account entity with its related properties.
- *
- * @interface Account
  *
  * @property {string} id - A unique identifier for the account.
  * @property {number} nonce - A numeric value used for keeping track of transaction or operation state.
  * @property {string} pseudo - The pseudonym associated with the account.
  * @property {string} [accountVirtualBlockchainId] - An optional identifier associated with the virtual blockchain of the account.
  */
-export interface Account {
-    id: string;
-    nonce: number;
-    pseudo: string;
-    accountVirtualBlockchainId?: string;
-}
+export const AccountSchema = v.object({
+    id: v.string(),
+    nonce: v.number(),
+    pseudo: v.string(),
+    accountVirtualBlockchainId: v.optional(v.string()),
+});
+
+export type Account = v.InferOutput<typeof AccountSchema>;

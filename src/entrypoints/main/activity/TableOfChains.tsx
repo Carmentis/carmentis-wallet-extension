@@ -22,7 +22,7 @@ import React, {useEffect, useState} from "react";
 import {EmptyStateMessage} from "@/entrypoints/main/activity/EmptyStateMessage.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
-import {Blockchain, Explorer, Hash, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {Hash, Provider, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {Avatar, Box, Button, Chip, CircularProgress, Paper, Typography} from "@mui/material";
 import {ArrowRight, Business, Refresh, Schedule, Storage, Timeline} from "@mui/icons-material";
 import {LoadingState} from "@/entrypoints/main/activity/LoadingState.tsx";
@@ -83,19 +83,17 @@ export function TableOfChains() {
 
     async function renderRow(chain: string, index: number) {
         try {
-            // creating the explorer and the blockchain
+            // creating the provider
             const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet?.nodeEndpoint as string);
-            const explorer = Explorer.createFromProvider(provider);
-            const blockchain = new Blockchain(provider);
 
             // loading the organisation, application and application ledger
             console.log("Loading application ledger...")
-            const applicationLedger = await blockchain.loadApplicationLedger(Hash.from(chain));
+            const applicationLedger = await provider.loadApplicationLedger(Hash.from(chain));
             console.log("Loading application...")
-            const application = await blockchain.loadApplication(applicationLedger.getApplicationId());
+            const application = await provider.loadApplication(applicationLedger.getApplicationId());
             const organisationId = await application.getOrganizationId();
             console.log("Loading organisation...")
-            const organisation = await blockchain.loadOrganization(organisationId);
+            const organisation = await provider.loadOrganization(organisationId);
             const applicationDescription = await application.getDescription();
             const organisationDescription = await organisation.getDescription();
             const height = applicationLedger.getHeight();

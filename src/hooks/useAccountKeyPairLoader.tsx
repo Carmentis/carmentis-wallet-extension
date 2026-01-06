@@ -15,7 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {EncoderFactory, SignatureAlgorithmId, Wallet as CarmentisWallet} from "@cmts-dev/carmentis-sdk/client";
+import {EncoderFactory, SignatureSchemeId, WalletCrypto} from "@cmts-dev/carmentis-sdk/client";
 import {SignatureKeyPair} from "@/types/SignatureKeyPair.tsx";
 import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
@@ -25,15 +25,13 @@ export function useAccountKeyPairLoader() {
 }
 
 async function loadAccountKeyPair(wallet : Wallet, account : Account) : Promise<SignatureKeyPair>  {
-    return new Promise((resolve, reject) => {
-        const hexEncoder = EncoderFactory.bytesToHexEncoder();
-        let seed = hexEncoder.decode(wallet.seed);
-        const carmentisWallet = CarmentisWallet.fromSeed(seed);
-        const privateKey = carmentisWallet.getAccountPrivateSignatureKey(SignatureAlgorithmId.SECP256K1, account.nonce);
-        const publicKey = privateKey.getPublicKey();
-        resolve({
-            privateKey: privateKey,
-            publicKey: publicKey
-        })
-    })
+    const hexEncoder = EncoderFactory.bytesToHexEncoder();
+    let seed = hexEncoder.decode(wallet.seed);
+    const carmentisWallet = WalletCrypto.fromSeed(seed);
+    const privateKey = await carmentisWallet.getAccountPrivateSignatureKey(SignatureSchemeId.SECP256K1, account.nonce);
+    const publicKey = await privateKey.getPublicKey();
+    return {
+        privateKey: privateKey,
+        publicKey: publicKey
+    }
 }

@@ -32,8 +32,8 @@ import {useRecoilState, useRecoilValue} from 'recoil';
 import {getUserKeyPair} from '@/entrypoints/main/wallet.tsx';
 import {motion} from "framer-motion";
 import {Controller, useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {z} from "zod";
+import {valibotResolver} from "@hookform/resolvers/valibot";
+import * as v from "valibot";
 import {AccountBalance, CheckCircle, Key, Send, SwapHoriz} from "@mui/icons-material";
 import React, {useState} from "react";
 import {useTokenTransfer} from "@/hooks/useTokenTransfer.tsx";
@@ -41,17 +41,19 @@ import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {TransferGraphic} from "@/entrypoints/main/transfer/TransferGraphic.tsx";
 import {tokenTransferState} from "@/entrypoints/main/transfer/states.ts";
+import {useAsyncFn} from "react-use";
 
-// Define the form schema with Zod
-const transferSchema = z.object({
-    publicKey: z.string()
-        .min(1, "Public key is required"),
-    amount: z.number()
-        .min(1, "Amount must be at least 1")
-        .int("Amount must be a whole number")
+// Define the form schema with Valibot
+const transferSchema = v.object({
+    publicKey: v.pipe(v.string(), v.minLength(1, "Public key is required")),
+    amount: v.pipe(
+        v.number(),
+        v.minValue(1, "Amount must be at least 1"),
+        v.integer("Amount must be a whole number")
+    )
 });
 
-type TransferFormData = z.infer<typeof transferSchema>;
+type TransferFormData = v.InferOutput<typeof transferSchema>;
 
 export default function TokenTransferPage() {
     // Animation variants
@@ -116,8 +118,36 @@ function TransferForm() {
     const activeAccount = useRecoilValue(activeAccountState);
     const toast = useToast();
     const [tokenTransfer, setTokenTransfer] = useRecoilState(tokenTransferState);
-    const [isTransferring, setIsTransferring] = useState(false);
-    const transferTokensToPublicKey = useTokenTransfer();
+    const [ transferringState, transferTokensToPublicKey ] = useTokenTransfer();
+    const isTransferring = transferringState.loading;
+
+    // Form submission handler
+    const [submissionState, onSubmit] = useAsyncFn(async (data: TransferFormData) => {
+        if (!wallet || !activeAccount) return false;
+
+        const userKeyPair = await getUserKeyPair(wallet, activeAccount);
+        await transferTokensToPublicKey(
+            userKeyPair.privateKey,
+            userKeyPair.publicKey,
+            data.publicKey,
+            data.amount
+        );
+        return true;
+    });
+
+    useEffect(() => {
+        toast.success("Tokens successfully transferred");
+        setValue("amount", 0);
+    }, [submissionState.value]);
+
+    useEffect(() => {
+        if (transferringState.error) {
+            console.error(transferringState.error);
+            toast.error(`An error occurred while processing your transfer: ${transferringState.error.message}`);
+        }
+    }, [transferringState.error]);
+
+
 
     // Form handling with react-hook-form
     const {
@@ -127,13 +157,15 @@ function TransferForm() {
         watch,
         setValue
     } = useForm<TransferFormData>({
-        resolver: zodResolver(transferSchema),
+        resolver: valibotResolver(transferSchema),
         mode: "onChange",
         defaultValues: {
             publicKey: tokenTransfer.publicKey,
             amount: tokenTransfer.tokenAmount || undefined
         }
     });
+
+
 
     // Watch form values to update the transfer graphic
     const publicKey = watch("publicKey");
@@ -147,32 +179,7 @@ function TransferForm() {
         });
     }, [publicKey, amount, setTokenTransfer]);
 
-    // Form submission handler
-    const onSubmit = async (data: TransferFormData) => {
-        if (!wallet || !activeAccount) return;
 
-        setIsTransferring(true);
-
-        try {
-            // key pair for the organisation
-            const userKeyPair = await getUserKeyPair(wallet, activeAccount);
-            await transferTokensToPublicKey(
-                wallet.nodeEndpoint,
-                userKeyPair.privateKey,
-                userKeyPair.publicKey,
-                data.publicKey,
-                data.amount
-            );
-
-            // Reset form after successful transfer
-            toast.success("Tokens successfully transferred");
-            setValue("amount", 0);
-        } catch (e) {
-            toast.error(`An error occurred: ${e}`);
-        } finally {
-            setIsTransferring(false);
-        }
-    };
 
     // Animation variants
     const cardVariants = {

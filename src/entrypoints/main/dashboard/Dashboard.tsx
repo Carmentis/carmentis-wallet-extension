@@ -86,6 +86,8 @@ import {
     NodeConnectionStatusSidebarItem
 } from "@/entrypoints/main/dashboard/components/NodeConnectionStatusSidebarItem.tsx";
 import {StatsCard} from "@/entrypoints/main/dashboard/components/StatsCard.tsx";
+import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
+import {CMTSToken} from "@cmts-dev/carmentis-sdk/client";
 
 const EXPLORER_DOMAIN = "http://explorer.themis.carmentis.io"
 
@@ -192,7 +194,7 @@ function DashboardHome() {
  */
 function DashboardOverview() {
     const activeAccount = useAuthenticatedAccount();
-    const {data: balance, isLoading, error} = useOptimizedAccountBalance();
+    const balanceBreakdownResponse = useAccountBalanceBreakdown();
     const numberVb = useAsync(async () => {
         const db = await AccountDataStorage.connectDatabase(activeAccount);
         return db.getNumberOfApplicationVirtualBlockchainId();
@@ -226,52 +228,40 @@ function DashboardOverview() {
             className="space-y-8"
         >
             {/* Welcome Section */}
-            <motion.div variants={itemVariants} className="mb-8">
-                <Box className="bg-linear-to-r from-blue-50 to-blue-100/30 rounded-xl border border-blue-100 p-8 shadow-sm">
-                    <Grid container alignItems="center" width={"100%"} display="flex" flexDirection="row" justifyContent="space-between" >
-                        <Grid size={4}>
-                            <Typography variant="h4" className="font-bold text-gray-800 mb-3">
-                                Welcome, {activeAccount.pseudo}!
-                            </Typography>
-                            <Typography variant="body1" className="text-gray-600 mb-4">
-                                Here's an overview of your Carmentis wallet activity and balance
-                            </Typography>
-
-                        </Grid>
-                        <Grid size={4} className="flex justify-end">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
-                                <Avatar
-                                    className="bg-blue-50 text-blue-600 w-20 h-20 text-3xl font-bold border-2 border-blue-100 relative shadow-md"
-                                    sx={{ width: 80, height: 80 }}
-                                >
-                                    {activeAccount?.pseudo?.charAt(0) || ''}
-                                </Avatar>
-                            </div>
-                        </Grid>
-                    </Grid>
-                </Box>
+            <motion.div variants={itemVariants} className="mb-6">
+                <Typography variant="h5" className="font-semibold text-gray-800 mb-1">
+                    Welcome, {activeAccount.pseudo}
+                </Typography>
+                <Typography variant="body2" className="text-gray-500">
+                    Overview of your wallet
+                </Typography>
             </motion.div>
 
             {/* Stats Cards */}
             <motion.div variants={itemVariants}>
-                <Grid container spacing={4}>
+                <Grid container spacing={3}>
                     <Grid size={4}>
                         <StatsCard
-                            title="Balance"
-                            icon={<AccountBalance className="text-blue-500" />}
-                            value={isLoading ? <Skeleton height={40} width={120} /> :
-                                balance ?  balance.toString() : "--" }
-                            subtitle="Your current token balance"
+                            title="Spendable"
+                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
+                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().spendable).toString() : "--" }
+                            subtitle="Available"
                         />
                     </Grid>
                     <Grid size={4}>
                         <StatsCard
-                            title="Activities"
-                            icon={<BarChart className="text-blue-500" />}
-                            value={numberVb.loading ? <Skeleton height={40} width={80} /> :
-                                numberVb.error || typeof numberVb.value !== 'number' ? "--" : numberVb.value}
-                            subtitle="Total blockchain activities"
+                            title="Staked"
+                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
+                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().staked).toString() : "--" }
+                            subtitle="Locked in staking"
+                        />
+                    </Grid>
+                    <Grid size={4}>
+                        <StatsCard
+                            title="Vested"
+                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
+                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().vested).toString() : "--" }
+                            subtitle="Time-locked"
                         />
                     </Grid>
                 </Grid>

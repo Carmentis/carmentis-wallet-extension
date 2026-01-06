@@ -56,9 +56,9 @@ import {
 } from "@mui/icons-material";
 import { useAsync } from "react-use";
 import {
-    BlockchainFacade,
+    Provider,
     Proof,
-    ProofVerificationResult,
+    ProofVerificationResult, ProviderFactory,
 } from "@cmts-dev/carmentis-sdk/client";
 import { BlockViewer } from "@/components/dashboard/BlockViewer.tsx";
 import { ErrorBoundary } from "react-error-boundary";
@@ -452,7 +452,7 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     );
 }
 
-async function importProof(blockchain: BlockchainFacade, proof: Proof): Promise<{ records: object[], result: ProofVerificationResult }> {
+async function importProof(blockchain: Provider, proof: Proof): Promise<{ records: object[], result: ProofVerificationResult }> {
     const result = await blockchain.verifyProofFromJson(proof);
     const records = await Promise.all(result.getInvolvedBlockHeights().map(h => result.getRecordContainedInBlockAtHeight<any>(h)))
     return {result,  records}
@@ -460,7 +460,7 @@ async function importProof(blockchain: BlockchainFacade, proof: Proof): Promise<
 
 function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any }) {
     const wallet = useWallet();
-    const blockchain = BlockchainFacade.createFromNodeUrl(wallet.nodeEndpoint)
+    const blockchain = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint)
     const state = useAsync(async () => importProof(blockchain, proof));
 
     // Animation variants

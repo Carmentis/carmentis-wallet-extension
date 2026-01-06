@@ -58,6 +58,8 @@ import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
 import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
 import carmentisLogoDarkUrl from '~/assets/carmentis-logo-dark.svg';
 import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
+import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
+import {CMTSToken} from "@cmts-dev/carmentis-sdk/client";
 
 /**
  * Renders the navigation bar for the dashboard including account selection,
@@ -148,8 +150,7 @@ export function DashboardNavbar() {
                     {/* Right side - Actions */}
                     <motion.div variants={itemVariants} className="flex items-center space-x-3">
                         <NodeConnectionStatus />
-                        <ExplorerConnectionStatus />
-                        <BalanceChip />
+                        <BalanceChips />
                         <NotificationsButton />
 
                         {/* Menu Button */}
@@ -285,77 +286,15 @@ function NodeConnectionStatus() {
     );
 }
 
-/**
- * Explorer connection status component
- */
-function ExplorerConnectionStatus() {
-    const wallet = useRecoilValue(walletState);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isConnected, setIsConnected] = useState(false);
-    const explorerUrl = wallet?.explorerEndpoint || '';
-
-    useEffect(() => {
-        const checkConnection = async () => {
-            setIsLoading(true);
-            try {
-                await axios.get(explorerUrl);
-                setIsConnected(true);
-            } catch (error) {
-                console.error("Explorer connection error:", error);
-                setIsConnected(false);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (explorerUrl) {
-            checkConnection();
-        }
-    }, [explorerUrl]);
-
-    if (isLoading) {
-        return (
-            <MuiTooltip title={`Connecting to ${explorerUrl}...`}>
-                <div className="flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium">
-                    <div className="w-4 h-4 mr-1">
-                        <SpinningWheel />
-                    </div>
-                    <Typography variant="body2" className="font-medium text-blue-700">
-                        Explorer
-                    </Typography>
-                </div>
-            </MuiTooltip>
-        );
-    }
-
-    const statusColor = isConnected ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]";
-    const tooltipText = isConnected ? `Connected to explorer: ${explorerUrl}` : `Failed to connect to explorer: ${explorerUrl}`;
-
-    return (
-        <MuiTooltip title={tooltipText}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-            >
-                <div className={`flex items-center gap-1.5 rounded-full ${statusColor} py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium`}>
-                    <Search fontSize="small" />
-                    <Typography variant="body2" className="font-medium">
-                        Explorer
-                    </Typography>
-                </div>
-            </motion.div>
-        </MuiTooltip>
-    );
-}
 
 /**
  * Balance chip component showing the user's token balance
  */
-function BalanceChip() {
-    const balance = useOptimizedAccountBalance();
+function BalanceChips() {
+    const { breakdown, isLoadingBreakdown, breakdownLoadingError } = useAccountBalanceBreakdown();
+    //const balance = useOptimizedAccountBalance();
 
-    if (balance.isLoading) {
+    if (isLoadingBreakdown) {
         return (
             <div className={"flex animate-pulse items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
                 <Typography variant="body2" className="font-medium text-blue-700">
@@ -365,8 +304,34 @@ function BalanceChip() {
         );
     }
 
-    if (!balance.data) return null;
+    if (breakdownLoadingError) {
+        return (
+            <MuiTooltip title={`Failed to load balance: ${breakdownLoadingError?.message || 'Unknown error'}`}>
+                <motion.div
+                    initial={{opacity: 0, scale: 0.9}}
+                    animate={{opacity: 1, scale: 1}}
+                    transition={{duration: 0.3}}
+                >
+                    <div
+                        className={"flex items-center gap-1.5 rounded-full bg-[#FFEBEE] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#C62828] hover:bg-[#FFCDD2]"}>
+                        <Typography variant="body2" className="font-medium">
+                            Error loading balance
+                        </Typography>
+                    </div>
+                </motion.div>
+            </MuiTooltip>
+        );
+    }
 
+
+    if (!breakdown) return null;
+
+    const { spendable, staked, vested } = breakdown.getBreakdown();
+    const chipsToCreate: [string, number][] = [
+        [ 'balance', spendable ],
+        [ 'staked', staked ],
+        [ 'vested', vested ],
+    ]
 
     return (
         <motion.div
@@ -374,12 +339,17 @@ function BalanceChip() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
         >
-            <div className={"flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
-                <Typography variant="body2" className="font-medium text-blue-700">
-                    {balance.data.toString()}
-                </Typography>
+            <div className={"flex flex-row space-x-1"}>
+                {
+                    chipsToCreate.map(([label, amount]) => (
+                        <div className={"flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
+                            <Typography variant="body2" className="font-medium text-blue-700">
+                                {label}:  {CMTSToken.createAtomic(amount).toString()}
+                            </Typography>
+                        </div>
+                    ))
+                }
             </div>
-
         </motion.div>
     );
 }

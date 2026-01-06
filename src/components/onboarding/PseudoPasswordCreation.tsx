@@ -22,30 +22,39 @@ import {
   onboardingPasswordAtom
 } from "@/components/onboarding/onboarding.state.ts";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import * as v from "valibot";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { motion } from "framer-motion";
 import { Person, Lock, ShieldLock, CheckCircle, ArrowRight } from "react-bootstrap-icons";
 
-// Define the form schema with Zod
-const formSchema = z.object({
-  accountName: z.string().min(1, "Account name is required"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
-  confirmPassword: z.string(),
-  consent: z.literal(true, {
-    errorMap: () => ({ message: "You must acknowledge this statement" }),
+// Define the form schema with Valibot
+const formSchema = v.pipe(
+  v.object({
+    accountName: v.pipe(v.string(), v.minLength(1, "Account name is required")),
+    password: v.pipe(
+      v.string(),
+      v.minLength(8, "Password must be at least 8 characters"),
+      v.regex(/[A-Z]/, "Password must contain at least one uppercase letter"),
+      v.regex(/[a-z]/, "Password must contain at least one lowercase letter"),
+      v.regex(/[0-9]/, "Password must contain at least one number")
+    ),
+    confirmPassword: v.string(),
+    consent: v.pipe(
+      v.boolean(),
+      v.literal(true, "You must acknowledge this statement")
+    ),
   }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+  v.forward(
+    v.partialCheck(
+      [["password"], ["confirmPassword"]],
+      (input) => input.password === input.confirmPassword,
+      "Passwords do not match"
+    ),
+    ["confirmPassword"]
+  )
+);
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = v.InferOutput<typeof formSchema>;
 
 export function PseudoPasswordCreation() {
   // Recoil state
@@ -65,7 +74,7 @@ export function PseudoPasswordCreation() {
     watch,
     formState: { errors, isSubmitting, isValid, touchedFields },
   } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: valibotResolver(formSchema),
     mode: "onChange",
     defaultValues: {
       accountName: accountName,
