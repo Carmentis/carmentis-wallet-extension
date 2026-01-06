@@ -21,11 +21,6 @@ import { useNavigate } from "react-router";
 import { DropdownAccountSelection } from "@/components/shared/DropdownAccountSelection.tsx";
 import {
     Badge,
-    Chip,
-    Typography,
-    AppBar,
-    Toolbar,
-    Box,
     IconButton,
     Menu,
     MenuItem,
@@ -36,27 +31,20 @@ import {
     Tooltip as MuiTooltip
 } from "@mui/material";
 import {
-    Email,
-    MoreVert,
     Settings,
     Logout,
     Help,
-    AccountBalance as AccountBalanceIcon,
     Notifications,
-    NetworkCheck,
-    Search
+    NetworkCheck
 } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
 import { useRecoilValue } from "recoil";
 import axios from 'axios';
 import { useEffect, useState } from "react";
 import { SpinningWheel } from "@/components/shared/SpinningWheel.tsx";
-import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
 import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
 import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
-import carmentisLogoDarkUrl from '~/assets/carmentis-logo-dark.svg';
 import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
 import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
 import {CMTSToken} from "@cmts-dev/carmentis-sdk/client";
@@ -104,128 +92,74 @@ export function DashboardNavbar() {
         window.open('https://docs.carmentis.io', '_blank');
     }
 
-    // Animation variants
-    const navbarVariants = {
-        hidden: { opacity: 0, y: -20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.3,
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: -10 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        }
-    };
-
     return (
-        <motion.div
-            variants={navbarVariants}
-            initial="hidden"
-            animate="visible"
-            className="w-full"
-        >
-            <AppBar position="static" elevation={0} color={"transparent"} className="bg-white border-b border-gray-200">
-                <Toolbar className="flex justify-between items-center">
-                    {/* Left side - Logo and Account Selection */}
-                    <motion.div variants={itemVariants} className="flex items-center">
-                        <Box className="mr-4">
-                            <CarmentisLogoDark className={"h-8"}/>
-                        </Box>
-                        <DropdownAccountSelection allowAccountCreation={true} large={true} />
-                    </motion.div>
+        <div className="w-full bg-white border-b border-gray-200">
+            <div className="flex justify-between items-center h-16 px-6">
+                {/* Left - Logo and Account */}
+                <div className="flex items-center gap-4">
+                    <CarmentisLogoDark className="h-6"/>
+                    <DropdownAccountSelection allowAccountCreation={true} large={false} />
+                </div>
 
-                    {/* Right side - Actions */}
-                    <motion.div variants={itemVariants} className="flex items-center space-x-3">
-                        <NodeConnectionStatus />
-                        <BalanceChips />
-                        <NotificationsButton />
+                {/* Right - Balance, Status, Notifications, Menu */}
+                <div className="flex items-center gap-3">
+                    <BalanceDisplay />
+                    <NodeStatusIcon />
+                    <NotificationsButton />
 
-                        {/* Menu Button */}
-                        <MuiTooltip title="Account menu">
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <IconButton
-                                    onClick={handleMenuClick}
-                                    size="small"
-                                    edge="end"
-                                    aria-label="account menu"
-                                    aria-controls={menuOpen ? 'account-menu' : undefined}
-                                    aria-haspopup="true"
-                                    aria-expanded={menuOpen ? 'true' : undefined}
-                                    className="ml-1"
-                                >
-                                    <Avatar
-                                        className="bg-green-100 text-green-600"
-                                        sx={{ width: 32, height: 32 }}
-                                    >
-                                        {activeAccount?.pseudo?.charAt(0) || ''}
-                                    </Avatar>
-                                </IconButton>
-                            </motion.div>
-                        </MuiTooltip>
-
-                        {/* Dropdown Menu */}
-                        <Menu
-                            id="account-menu"
-                            anchorEl={menuAnchorEl}
-                            open={menuOpen}
-                            onClose={handleMenuClose}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                            PaperProps={{
-                                elevation: 2,
-                                className: "mt-1.5 rounded-md border border-gray-100"
-                            }}
+                    {/* Account Menu */}
+                    <MuiTooltip title="Account">
+                        <IconButton
+                            onClick={handleMenuClick}
+                            size="small"
+                            className="text-gray-600"
                         >
-                            <MenuItem onClick={goToParameters} className="py-2">
-                                <ListItemIcon>
-                                    <Settings fontSize="small" className="text-gray-600" />
-                                </ListItemIcon>
-                                <ListItemText primary="Settings" />
-                            </MenuItem>
+                            <Avatar
+                                className="bg-gray-100 text-gray-700"
+                                sx={{ width: 32, height: 32 }}
+                            >
+                                {activeAccount?.pseudo?.charAt(0) || '?'}
+                            </Avatar>
+                        </IconButton>
+                    </MuiTooltip>
 
-                            <MenuItem onClick={goToHelp} className="py-2">
-                                <ListItemIcon>
-                                    <Help fontSize="small" className="text-gray-600" />
-                                </ListItemIcon>
-                                <ListItemText primary="Help & Documentation" />
-                            </MenuItem>
-
-                            <Divider />
-
-                            <MenuItem onClick={logout} className="py-2 text-red-600">
-                                <ListItemIcon>
-                                    <Logout fontSize="small" className="text-red-600" />
-                                </ListItemIcon>
-                                <ListItemText primary="Logout" className="text-red-600" />
-                            </MenuItem>
-                        </Menu>
-                    </motion.div>
-                </Toolbar>
-            </AppBar>
-        </motion.div>
+                    <Menu
+                        anchorEl={menuAnchorEl}
+                        open={menuOpen}
+                        onClose={handleMenuClose}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    >
+                        <MenuItem onClick={goToParameters}>
+                            <ListItemIcon>
+                                <Settings fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary="Settings" />
+                        </MenuItem>
+                        <MenuItem onClick={goToHelp}>
+                            <ListItemIcon>
+                                <Help fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary="Help" />
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem onClick={logout}>
+                            <ListItemIcon>
+                                <Logout fontSize="small" className="text-red-600" />
+                            </ListItemIcon>
+                            <ListItemText primary="Logout" className="text-red-600" />
+                        </MenuItem>
+                    </Menu>
+                </div>
+            </div>
+        </div>
     );
 }
 
 /**
- * Node connection status component
+ * Simplified node status icon
  */
-function NodeConnectionStatus() {
+function NodeStatusIcon() {
     const wallet = useRecoilValue(walletState);
     const [isLoading, setIsLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
@@ -238,7 +172,6 @@ function NodeConnectionStatus() {
                 await axios.get(nodeUrl);
                 setIsConnected(true);
             } catch (error) {
-                console.error("Node connection error:", error);
                 setIsConnected(false);
             } finally {
                 setIsLoading(false);
@@ -250,107 +183,49 @@ function NodeConnectionStatus() {
         }
     }, [nodeUrl]);
 
-    if (isLoading) {
-        return (
-            <MuiTooltip title={`Connecting to ${nodeUrl}...`}>
-                <div className="flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium">
-                    <div className="w-4 h-4 mr-1">
-                        <SpinningWheel />
-                    </div>
-                    <Typography variant="body2" className="font-medium text-blue-700">
-                        Node
-                    </Typography>
-                </div>
-            </MuiTooltip>
-        );
-    }
-
-    const statusColor = isConnected ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]";
-    const tooltipText = isConnected ? `Connected to node: ${nodeUrl}` : `Failed to connect to node: ${nodeUrl}`;
+    const tooltipText = isLoading ? 'Connecting...' : isConnected ? 'Node connected' : 'Node disconnected';
+    const iconColor = isLoading ? 'text-gray-400' : isConnected ? 'text-green-600' : 'text-red-600';
 
     return (
         <MuiTooltip title={tooltipText}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-            >
-                <div className={`flex items-center gap-1.5 rounded-full ${statusColor} py-1.5 ps-3 pe-3.5 mr-2 text-sm font-medium`}>
-                    <NetworkCheck fontSize="small" />
-                    <Typography variant="body2" className="font-medium">
-                        Node
-                    </Typography>
-                </div>
-            </motion.div>
+            <div className={iconColor}>
+                {isLoading ? <SpinningWheel /> : <NetworkCheck fontSize="small" />}
+            </div>
         </MuiTooltip>
     );
 }
 
 
 /**
- * Balance chip component showing the user's token balance
+ * Simple balance display showing total spendable balance
  */
-function BalanceChips() {
+function BalanceDisplay() {
     const { breakdown, isLoadingBreakdown, breakdownLoadingError } = useAccountBalanceBreakdown();
-    //const balance = useOptimizedAccountBalance();
 
     if (isLoadingBreakdown) {
         return (
-            <div className={"flex animate-pulse items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
-                <Typography variant="body2" className="font-medium text-blue-700">
-                    --,-- CMTS
-                </Typography>
+            <div className="text-sm text-gray-500 animate-pulse">
+                Loading...
             </div>
         );
     }
 
-    if (breakdownLoadingError) {
+    if (breakdownLoadingError || !breakdown) {
         return (
-            <MuiTooltip title={`Failed to load balance: ${breakdownLoadingError?.message || 'Unknown error'}`}>
-                <motion.div
-                    initial={{opacity: 0, scale: 0.9}}
-                    animate={{opacity: 1, scale: 1}}
-                    transition={{duration: 0.3}}
-                >
-                    <div
-                        className={"flex items-center gap-1.5 rounded-full bg-[#FFEBEE] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#C62828] hover:bg-[#FFCDD2]"}>
-                        <Typography variant="body2" className="font-medium">
-                            Error loading balance
-                        </Typography>
-                    </div>
-                </motion.div>
+            <MuiTooltip title="Failed to load balance">
+                <div className="text-sm text-red-600">
+                    Error
+                </div>
             </MuiTooltip>
         );
     }
 
-
-    if (!breakdown) return null;
-
-    const { spendable, staked, vested } = breakdown.getBreakdown();
-    const chipsToCreate: [string, number][] = [
-        [ 'balance', spendable ],
-        [ 'staked', staked ],
-        [ 'vested', vested ],
-    ]
+    const { spendable } = breakdown.getBreakdown();
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-        >
-            <div className={"flex flex-row space-x-1"}>
-                {
-                    chipsToCreate.map(([label, amount]) => (
-                        <div className={"flex items-center gap-1.5 rounded-full bg-[#F1F1FB] py-1.5 ps-3 pe-3.5 text-sm font-medium text-[#5D5BD0] hover:bg-[#E4E4F6] dark:bg-[#373669] dark:text-[#DCDBF6] dark:hover:bg-[#414071]"}>
-                            <Typography variant="body2" className="font-medium text-blue-700">
-                                {label}:  {CMTSToken.createAtomic(amount).toString()}
-                            </Typography>
-                        </div>
-                    ))
-                }
-            </div>
-        </motion.div>
+        <div className="text-sm font-medium text-gray-900 px-3 py-1.5 bg-gray-50 rounded-lg">
+            {CMTSToken.createAtomic(spendable).toString()}
+        </div>
     );
 }
 
@@ -364,24 +239,19 @@ function NotificationsButton() {
 
     return (
         <MuiTooltip title="Notifications">
-            <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+            <IconButton
+                onClick={() => actions.showNotifications()}
+                size="small"
+                className="text-gray-600"
             >
-                <IconButton
-                    onClick={() => actions.showNotifications()}
-                    size="medium"
-                    className="text-gray-600"
+                <Badge
+                    badgeContent={badgeContent}
+                    color="primary"
+                    overlap="circular"
                 >
-                    <Badge
-                        badgeContent={badgeContent}
-                        color="primary"
-                        overlap="circular"
-                    >
-                        <Notifications />
-                    </Badge>
-                </IconButton>
-            </motion.div>
+                    <Notifications fontSize="small" />
+                </Badge>
+            </IconButton>
         </MuiTooltip>
     );
 }

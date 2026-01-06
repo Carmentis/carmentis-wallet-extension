@@ -15,22 +15,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {Transaction} from "@cmts-dev/carmentis-sdk/client";
-import {Box, Chip, Grid, IconButton, TableCell, TableRow, Tooltip, Typography} from "@mui/material";
-import {ArrowDownward, ArrowUpward, KeyboardArrowDown, KeyboardArrowUp} from "@mui/icons-material";
-import {AnimatePresence, motion} from "framer-motion";
+import {ArrowDownward, ArrowUpward} from "@mui/icons-material";
 import React from "react";
 import {AccountTransaction} from '@cmts-dev/carmentis-sdk/client';
 
-export function TransactionRow({
-                                   transaction,
-                                   isExpanded,
-                                   onToggleExpand
-                               }: {
-    transaction: AccountTransaction;
-    isExpanded: boolean;
-    onToggleExpand: () => void;
-}) {
+export function TransactionRow({transaction}: { transaction: AccountTransaction }) {
     const isPositive = transaction.isPositive()
     const date = transaction.transferredAt();
     const linkedAccount = transaction.getLinkedAccount()
@@ -48,115 +37,39 @@ export function TransactionRow({
         minute: '2-digit'
     });
 
-    return (
-        <>
-            <TableRow
-                hover
-                onClick={onToggleExpand}
-                className="cursor-pointer transition-colors duration-200 hover:bg-gray-50"
-                sx={{'&:last-child td, &:last-child th': {border: 0}}}
-            >
-                <TableCell>
-                    <IconButton size="small" onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleExpand();
-                    }}>
-                        {isExpanded ? <KeyboardArrowUp/> : <KeyboardArrowDown/>}
-                    </IconButton>
-                </TableCell>
-                <TableCell>
-                    <Typography variant="body2" className="font-medium">
-                        {formattedDate}
-                    </Typography>
-                    <Typography variant="caption" className="text-gray-500">
-                        {formattedTime}
-                    </Typography>
-                </TableCell>
-                <TableCell>
-                    <Chip
-                        label={transaction.getTransactionTypeLabel()}
-                        size="small"
-                        className={isPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
-                        icon={isPositive ? <ArrowUpward className="text-green-500" fontSize="small"/> :
-                            <ArrowDownward className="text-red-500" fontSize="small"/>}
-                    />
-                </TableCell>
-                <TableCell>
-                    <Tooltip title={linkedAccount.encode()}>
-                        <Typography variant="body2" className="max-w-[150px] truncate">
-                            {linkedAccount.encode()}
-                        </Typography>
-                    </Tooltip>
-                </TableCell>
-                <TableCell align="right">
-                    <Typography
-                        variant="body2"
-                        className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
-                    >
-                        {transaction.getAmount().toString()}
-                    </Typography>
-                </TableCell>
-            </TableRow>
+    // Truncate linked account
+    const truncatedAccount = linkedAccount.encode().length > 20
+        ? linkedAccount.encode().slice(0, 10) + '...' + linkedAccount.encode().slice(-8)
+        : linkedAccount.encode();
 
-            {/* Expanded details */}
-            <TableRow>
-                <TableCell style={{padding: 0}} colSpan={6}>
-                    <AnimatePresence>
-                        {isExpanded && (
-                            <motion.div
-                                initial={{opacity: 0, height: 0}}
-                                animate={{opacity: 1, height: 'auto'}}
-                                exit={{opacity: 0, height: 0}}
-                                transition={{duration: 0.3}}
-                            >
-                                <Box className="p-4 bg-gray-50">
-                                    <Grid container spacing={2}>
-                                        <Grid size={6}>
-                                            <Typography variant="subtitle2" className="text-gray-700">
-                                                Transaction Details
-                                            </Typography>
-                                            <Box className="mt-2 space-y-2">
-                                                <Box className="flex justify-between">
-                                                    <Typography variant="body2"
-                                                                className="text-gray-600">Type:</Typography>
-                                                    <Typography variant="body2" className="font-medium"></Typography>
-                                                </Box>
-                                                <Box className="flex justify-between">
-                                                    <Typography variant="body2"
-                                                                className="text-gray-600">Date:</Typography>
-                                                    <Typography variant="body2"
-                                                                className="font-medium">{date.toLocaleString()}</Typography>
-                                                </Box>
-                                                <Box className="flex justify-between">
-                                                    <Typography variant="body2"
-                                                                className="text-gray-600">Amount:</Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}
-                                                    >
-                                                        {transaction.getAmount().toString()}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <Typography variant="subtitle2" className="text-gray-700">
-                                                Linked Account
-                                            </Typography>
-                                            <Box className="mt-2">
-                                                <Typography variant="body2"
-                                                            className="break-all font-mono bg-gray-100 p-2 rounded">
-                                                    {linkedAccount.encode()}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </TableCell>
-            </TableRow>
-        </>
+    return (
+        <tr className="hover:bg-gray-50 transition-colors">
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{formattedDate}</div>
+                <div className="text-xs text-gray-500">{formattedTime}</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                    {isPositive ? (
+                        <ArrowUpward className="text-green-500" fontSize="inherit" />
+                    ) : (
+                        <ArrowDownward className="text-red-500" fontSize="inherit" />
+                    )}
+                    {transaction.getTransactionTypeLabel()}
+                </div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="text-sm text-gray-900 font-mono" title={linkedAccount.encode()}>
+                    {truncatedAccount}
+                </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+                <div className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                    {transaction.getAmount().toString()}
+                </div>
+            </td>
+        </tr>
     );
 }

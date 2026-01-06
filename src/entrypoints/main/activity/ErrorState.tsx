@@ -15,8 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {motion} from "framer-motion";
-import {Avatar, Button, Paper, Typography} from "@mui/material";
 import {Error as ErrorIcon, Refresh} from "@mui/icons-material";
 import React from "react";
 
@@ -25,33 +23,27 @@ import React from "react";
  */
 export function ErrorState({message, onRetry}: { message: string, onRetry: () => void }) {
     return (
-        <motion.div
-            initial={{opacity: 0, scale: 0.9}}
-            animate={{opacity: 1, scale: 1}}
-            className="flex flex-col items-center justify-center py-12"
-        >
-            <Paper elevation={0} className="border border-red-100 rounded-lg p-8 max-w-md mx-auto text-center">
-                <Avatar className="mx-auto mb-4 bg-red-50 text-red-500 w-20 h-20">
-                    <ErrorIcon fontSize="large"/>
-                </Avatar>
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ErrorIcon className="text-red-600" sx={{ fontSize: 32 }} />
+            </div>
 
-                <Typography variant="h5" className="font-bold text-gray-800 mb-2">
-                    Something Went Wrong
-                </Typography>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Something Went Wrong
+            </h3>
 
-                <Typography variant="body1" className="text-gray-600 mb-6">
-                    {message}
-                </Typography>
+            <p className="text-sm text-gray-600 mb-6">
+                {message}
+            </p>
 
-                <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Refresh/>}
-                    onClick={onRetry}
-                >
-                    Try Again
-                </Button>
-            </Paper>
-        </motion.div>
+            <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center px-4 py-2 bg-white border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
+            >
+                <Refresh fontSize="small" className="mr-2" />
+                Try Again
+            </button>
+        </div>
     );
 }

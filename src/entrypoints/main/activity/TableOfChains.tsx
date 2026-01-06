@@ -163,35 +163,39 @@ export function TableOfChains() {
     }
 
     return (
-        <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-            <Box className="p-4 bg-blue-50 border-b border-gray-100 flex justify-between items-center">
-                <Box className="flex items-center">
-                    <Avatar className="bg-blue-100 text-blue-600 mr-3">
-                        <Storage/>
-                    </Avatar>
-                    <Typography variant="h6" className="font-semibold text-gray-800">
-                        Virtual Blockchains
-                    </Typography>
-                </Box>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-900">Virtual Blockchains</h2>
                 <Button
                     variant="outlined"
-                    startIcon={isRefreshing ? <CircularProgress size={20}/> : <Refresh/>}
+                    size="small"
+                    startIcon={isRefreshing ? <CircularProgress size={16}/> : <Refresh />}
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className="text-blue-600"
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                        borderColor: '#d1d5db',
+                        color: '#374151',
+                        '&:hover': {
+                            borderColor: '#9ca3af',
+                            backgroundColor: '#f9fafb'
+                        }
+                    }}
                 >
                     {isRefreshing ? "Refreshing..." : "Refresh"}
                 </Button>
-            </Box>
+            </div>
 
-            <Box className="p-4">
+            <div className="p-6">
                 <DynamicTableComponent
                     header={["Application", "Organisation", "Blockchain Height", "Time Range"]}
                     data={chains}
                     renderRow={renderRow}
                     onRowClicked={(hash) => navigateToVirtualBlockchainView(hash)}
                 />
-            </Box>
-        </Paper>
+            </div>
+        </div>
     );
 }

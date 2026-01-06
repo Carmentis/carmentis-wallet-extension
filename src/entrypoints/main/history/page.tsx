@@ -1,35 +1,12 @@
-import {Grid, Paper, Typography} from '@mui/material';
 import React from 'react';
 import NoTokenAccount from '@/components/shared/NoTokenAccount.tsx';
 import {Splashscreen} from "@/components/shared/Splashscreen.tsx";
-import {motion} from "framer-motion";
 import {TransactionHistory} from "@/entrypoints/main/history/TransactionHistory.tsx";
 import {BalanceAvailability, CMTSToken} from "@cmts-dev/carmentis-sdk/client";
 import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
-import {PageHeader} from "@/components/shared/PageHeader.tsx";
 
 export default function HistoryPage() {
     const balanceResponse = useAccountBalanceBreakdown()
-
-    // Animation variants
-    const pageVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 300, damping: 24 }
-        }
-    };
 
     if (balanceResponse.isLoadingBreakdown) return <Splashscreen />
     if (balanceResponse.breakdownLoadingError) {
@@ -37,34 +14,30 @@ export default function HistoryPage() {
     }
 
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={pageVariants}
-            className="max-w-4xl mx-auto"
-        >
+        <div className="max-w-6xl mx-auto space-y-6">
             {/* Header */}
-            <PageHeader
-                title="Transaction History"
-                subtitle="View your account balance and transaction history"
-            />
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                    Transaction History
+                </h1>
+                <p className="text-sm text-gray-500">
+                    View your account balance and transaction history
+                </p>
+            </div>
 
             {/* Token Cards */}
-            <motion.div variants={itemVariants}>
-                <Grid container spacing={4} className="mb-6">
-                    <TokenCards breakdown={balanceResponse.breakdown} />
-                </Grid>
-            </motion.div>
+            <div className="grid grid-cols-3 gap-4">
+                <TokenCards breakdown={balanceResponse.breakdown} />
+            </div>
 
             {/* Transaction History */}
-            <motion.div variants={itemVariants}>
-                <TransactionHistory />
-            </motion.div>
-        </motion.div>
+            <TransactionHistory />
+        </div>
     );
 }
 
 function TokenCards(input: { breakdown: BalanceAvailability }) {
+    if (input.breakdown === undefined) return <></>
     const breakdown = input.breakdown.getBreakdown();
 
     const tokens = [
@@ -76,16 +49,14 @@ function TokenCards(input: { breakdown: BalanceAvailability }) {
     return (
         <>
             {tokens.map(({ label, amount }) => (
-                <Grid item xs={12} sm={4} key={label}>
-                    <Paper elevation={0} className="border border-gray-200 rounded-lg p-6">
-                        <Typography variant="body2" className="text-gray-500 mb-2">
-                            {label}
-                        </Typography>
-                        <Typography variant="h5" className="font-semibold text-gray-900">
-                            {CMTSToken.createAtomic(amount).toString()}
-                        </Typography>
-                    </Paper>
-                </Grid>
+                <div key={label} className="bg-white border border-gray-200 rounded-lg p-5">
+                    <div className="text-xs font-medium text-gray-500 mb-3">
+                        {label}
+                    </div>
+                    <div className="text-2xl font-semibold text-gray-900 tracking-tight">
+                        {CMTSToken.createAtomic(amount).toString()}
+                    </div>
+                </div>
             ))}
         </>
     );

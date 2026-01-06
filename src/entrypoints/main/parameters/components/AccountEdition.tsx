@@ -1,30 +1,21 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
-    Alert,
-    Avatar,
-    Box,
     Button,
-    Chip,
-    Grid,
     IconButton,
-    InputAdornment, Link,
-    Paper,
-    Stack,
+    InputAdornment,
+    Link,
     TextField,
-    Tooltip,
-    Typography
+    Tooltip
 } from '@mui/material';
-import {Badge, ContentCopy, DeleteForever, LockReset, Visibility, VisibilityOff} from "@mui/icons-material";
-import {AnimatePresence, motion} from "framer-motion";
-import {Controller} from "react-hook-form";
+import {Badge, ContentCopy, DeleteForever, LockReset, Visibility, VisibilityOff, Save} from "@mui/icons-material";
 import {Account} from "@/types/Account.ts";
-import {useRecoilValue, useSetRecoilState} from "recoil";
+import {useSetRecoilState} from "recoil";
 import {walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAsync, useAsyncFn, useBoolean} from "react-use";
 import {CryptoEncoderFactory, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
-import {Pencil} from "react-bootstrap-icons";
+import {useToast} from "@/hooks/useToast.tsx";
 
 export interface AccountEditionProps {
     account: Account,
@@ -123,183 +114,213 @@ export function AccountEdition(props: AccountEditionProps) {
     }, [pseudo, nonce])
 
     if (isDeleting) {
-        return <>Deleting account...</>
+        return <div className="text-sm text-gray-600">Deleting account...</div>
     }
 
-    return <Grid size={12} key={account.id}>
-        <Paper elevation={0} className="p-6 border border-gray-100 rounded-lg mb-4">
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                <Box display="flex" alignItems="center">
-                    <Avatar
-                        className="bg-blue-100 text-blue-600 mr-4"
-                        sx={{ width: 48, height: 48 }}
-                    >
-                        {pseudo.charAt(0) || ''}
-                    </Avatar>
-                    <Typography variant="h6" className="font-semibold text-gray-800">
+    return <div key={account.id} className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-medium">
+                    {pseudo.charAt(0) || '?'}
+                </div>
+                <div>
+                    <h3 className="text-base font-semibold text-gray-900">
                         Account {accountIndex + 1}
-                        {account.id === wallet.activeAccountId && (
-                            <Chip
-                                label="Active"
-                                size="small"
-                                className="ml-2 bg-green-100 text-green-600 font-medium"
-                            />
-                        )}
-                    </Typography>
-                </Box>
-                <>
-                    <Button
-                        onClick={saveAccount}
-                        disabled={isSaving}
-                        size="small"
-                    >
-                        <Pencil fontSize="small" className="mr-2" />
-                        Save
-                    </Button>
-                </>
+                    </h3>
+                    {account.id === wallet.activeAccountId && (
+                        <span className="inline-block text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                            Active
+                        </span>
+                    )}
+                </div>
+            </div>
+            <div className="flex gap-2">
+                <Button
+                    onClick={saveAccount}
+                    disabled={isSaving}
+                    variant="contained"
+                    size="small"
+                    startIcon={<Save fontSize="small" />}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                        boxShadow: 'none',
+                        '&:hover': { boxShadow: 'none' }
+                    }}
+                >
+                    Save
+                </Button>
                 {wallet?.accounts.length > 1 && (
-                   <>
-                       <Button
-                           color="error"
-                           onClick={deleteAccount}
-                           disabled={isDeleting}
-                           size="small"
-                           className="text-red-500 hover:bg-red-50"
-                       >
-                           <DeleteForever fontSize="small" />
-                           Delete
-                       </Button>
-                   </>
+                    <Button
+                        color="error"
+                        onClick={deleteAccount}
+                        disabled={isDeleting}
+                        size="small"
+                        startIcon={<DeleteForever fontSize="small" />}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            fontSize: '0.875rem'
+                        }}
+                    >
+                        Delete
+                    </Button>
                 )}
-            </Box>
-            <Grid container spacing={3}>
-                <Grid size={6}>
+            </div>
+        </div>
+
+        {/* Form fields */}
+        <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Name</label>
                     <TextField
-                        label="Account Name"
                         variant="outlined"
                         fullWidth
+                        size="small"
                         value={pseudo}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <Badge fontSize="small" />
+                                    <Badge fontSize="small" className="text-gray-400" />
                                 </InputAdornment>
                             ),
                         }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '0.5rem',
+                                '& fieldset': { borderColor: '#e5e7eb' },
+                                '&:hover fieldset': { borderColor: '#d1d5db' },
+                                '&.Mui-focused fieldset': { borderColor: '#93c5fd', borderWidth: '1px' },
+                            }
+                        }}
                         onChange={(e) => setPseudo(e.target.value)}
                     />
-                </Grid>
-                <Grid size={6}>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Account Nonce</label>
                     <TextField
-                        label="Account Nonce"
                         variant="outlined"
                         fullWidth
+                        size="small"
                         type="number"
                         value={nonce}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <LockReset fontSize="small" />
+                                    <LockReset fontSize="small" className="text-gray-400" />
                                 </InputAdornment>
                             ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '0.5rem',
+                                '& fieldset': { borderColor: '#e5e7eb' },
+                                '&:hover fieldset': { borderColor: '#d1d5db' },
+                                '&.Mui-focused fieldset': { borderColor: '#93c5fd', borderWidth: '1px' },
+                            }
                         }}
                         onChange={(e) => {
                             const value = e.target.value;
                             setNonce(Number.parseInt(value))
                         }}
                     />
-                </Grid>
+                </div>
+            </div>
 
-                <Grid size={12}>
-                    <TextField
-                        label={"Public Key"}
-                        fullWidth
-                        variant="outlined"
-                        value={shownPublicKey}
-                        InputProps={{
-                            readOnly: true,
-                            className: "font-mono text-sm",
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Tooltip title="Copy to clipboard">
-                                        <IconButton
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(shownPublicKey);
-                                                toast.success("Public key copied to clipboard");
-                                            }}
-                                            edge="end"
-                                        >
-                                            <ContentCopy />
-                                        </IconButton>
-                                    </Tooltip>
-                                </InputAdornment>
-                            ),
-                        }}
-                        sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                        }}
-                    />
-                    <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                        This is the public key associated with this account and its current nonce.
-                        Providing this key with a system is useful to identity the used scheme.
-                        {
-                            accountHash &&
-                            <>
-                                Note: Your account hash is <Link target={'_blank'} href={wallet.explorerEndpoint + `/accounts/hash/${accountHash}`}>
-                                    <Typography component={"span"} variant={"caption"} fontSize={"10pt"}>
-                                        {accountHash}
-                                    </Typography>
-                                </Link>
-                            </>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Public Key</label>
+                <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    value={shownPublicKey}
+                    InputProps={{
+                        readOnly: true,
+                        className: "font-mono text-sm bg-gray-50",
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <Tooltip title="Copy to clipboard">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(shownPublicKey);
+                                            toast.success("Public key copied to clipboard");
+                                        }}
+                                    >
+                                        <ContentCopy fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '0.5rem',
+                            backgroundColor: '#f9fafb',
+                            '& fieldset': { borderColor: '#e5e7eb' },
                         }
-                    </Typography>
-                </Grid>
+                    }}
+                />
+                <div className="text-xs text-gray-500 mt-1.5">
+                    Public key for this account.
+                    {accountHash && (
+                        <> Account hash: <Link target="_blank" href={wallet.explorerEndpoint + `/accounts/hash/${accountHash}`} className="text-blue-600 hover:underline">
+                            {accountHash}
+                        </Link></>
+                    )}
+                </div>
+            </div>
 
-                {/* Private Key Field */}
-                <Grid size={12} >
-                    <TextField
-                        label={"Private key"}
-                        fullWidth
-                        variant="outlined"
-                        type={isPrivateKeyVisible ? 'text' : 'password'}
-                        value={shownPrivateKey}
-                        InputProps={{
-                            readOnly: true,
-                            className: "font-mono text-sm",
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Tooltip title={isPrivateKeyVisible ? "Hide private key" : "Show private key"}>
-                                        <IconButton
-                                            onClick={() => setIsPrivateKeyVisible(!isPrivateKeyVisible)}
-                                            edge="end"
-                                        >
-                                            {isPrivateKeyVisible ? <VisibilityOff /> : <Visibility />}
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Copy to clipboard">
-                                        <IconButton
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(shownPrivateKey);
-                                                toast.success("Private key copied to clipboard");
-                                            }}
-                                            edge="end"
-                                        >
-                                            <ContentCopy />
-                                        </IconButton>
-                                    </Tooltip>
-                                </InputAdornment>
-                            ),
-                        }}
-                        sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                        }}
-                    />
-                    <Typography variant="caption" color="text.secondary" className="mt-1 block">
-                        <strong>Warning:</strong> Never share your private key with anyone. It provides full access to your account.
-                    </Typography>
-                </Grid>
-
-            </Grid>
-        </Paper>
-    </Grid>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Private Key</label>
+                <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    type={isPrivateKeyVisible ? 'text' : 'password'}
+                    value={shownPrivateKey}
+                    InputProps={{
+                        readOnly: true,
+                        className: "font-mono text-sm bg-gray-50",
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <Tooltip title={isPrivateKeyVisible ? "Hide" : "Show"}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setIsPrivateKeyVisible(!isPrivateKeyVisible)}
+                                    >
+                                        {isPrivateKeyVisible ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Copy">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(shownPrivateKey);
+                                            toast.success("Private key copied to clipboard");
+                                        }}
+                                    >
+                                        <ContentCopy fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '0.5rem',
+                            backgroundColor: '#f9fafb',
+                            '& fieldset': { borderColor: '#e5e7eb' },
+                        }
+                    }}
+                />
+                <div className="text-xs text-red-600 mt-1.5">
+                    <strong>Warning:</strong> Never share your private key. It provides full access to your account.
+                </div>
+            </div>
+        </div>
+    </div>
 }

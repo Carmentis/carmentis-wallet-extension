@@ -16,57 +16,23 @@
  */
 
 import React from "react";
-import {Box, Typography} from "@mui/material";
-import {motion} from "framer-motion";
 import {TableOfChains} from "@/entrypoints/main/activity/TableOfChains.tsx";
 
 export default function ActivityPage() {
-    // Animation variants
-    const pageVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        }
-    };
-
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={pageVariants}
-            className="max-w-6xl mx-auto"
-        >
-            <motion.div variants={itemVariants}>
-                <Box className="mb-6">
-                    <Typography variant="h4" className="font-bold text-gray-800 mt-4 mb-2">
-                        Blockchain Activity
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-600">
-                        View your virtual blockchains and transaction history on the Carmentis network
-                    </Typography>
-                </Box>
-            </motion.div>
+        <div className="max-w-6xl mx-auto space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                    Blockchain Activity
+                </h1>
+                <p className="text-sm text-gray-500">
+                    View your virtual blockchains and transaction history on the Carmentis network
+                </p>
+            </div>
 
-            <motion.div variants={itemVariants}>
-                <TableOfChains />
-            </motion.div>
-        </motion.div>
+            <TableOfChains />
+        </div>
     );
 }
 

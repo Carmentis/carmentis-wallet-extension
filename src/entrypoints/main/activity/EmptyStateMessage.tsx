@@ -15,8 +15,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {motion} from "framer-motion";
-import {Alert, Avatar, Typography} from "@mui/material";
 import {Info} from "@mui/icons-material";
 import React from "react";
 
@@ -25,26 +23,18 @@ import React from "react";
  */
 export function EmptyStateMessage({message}: { message: string }) {
     return (
-        <motion.div
-            initial={{opacity: 0, y: 20}}
-            animate={{opacity: 1, y: 0}}
-            className="flex flex-col items-center justify-center py-16 text-center"
-        >
-            <Avatar className="mx-auto mb-4 bg-blue-50 text-blue-500 w-20 h-20">
-                <Info fontSize="large"/>
-            </Avatar>
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Info className="text-blue-600" sx={{ fontSize: 32 }} />
+            </div>
 
-            <Typography variant="h5" className="font-bold text-gray-800 mb-2">
-                No Activity Found
-            </Typography>
-
-            <Typography variant="body1" className="text-gray-600 max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {message}
-            </Typography>
+            </h3>
 
-            <Alert severity="info" className="mt-6 max-w-md">
+            <p className="text-sm text-gray-600">
                 Activity will appear here once you interact with applications on the Carmentis network.
-            </Alert>
-        </motion.div>
+            </p>
+        </div>
     );
 }

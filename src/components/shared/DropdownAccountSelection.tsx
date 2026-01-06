@@ -18,21 +18,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { AccountCreationModal } from "@/components/shared/AccountCreationModal.tsx";
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { motion, AnimatePresence } from "framer-motion";
 import {
-    Box,
-    Button,
-    Chip,
-    Typography,
     Avatar,
     Divider,
-    Paper,
-    ClickAwayListener,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    ListItemButton
+    ClickAwayListener
 } from "@mui/material";
 import {
     KeyboardArrowDown,
@@ -124,159 +113,95 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
         }
     }
 
-    // Animation variants
-    const dropdownVariants = {
-        hidden: { opacity: 0, y: -5, scale: 0.95 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.25,
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        },
-        exit: {
-            opacity: 0,
-            y: -5,
-            scale: 0.95,
-            transition: {
-                duration: 0.2,
-                ease: "easeIn"
-            }
-        }
-    };
-
     return (
         <ClickAwayListener onClickAway={() => setIsOpen(false)}>
-            <Box ref={dropdownRef} className="relative">
+            <div ref={dropdownRef} className="relative">
                 {/* Selected account button */}
-                <Button
+                <button
+                    type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    variant="text"
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200 border border-gray-100 shadow-sm ${
-                        input.large ? "min-w-52" : "min-w-40"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 bg-white ${
+                        input.large ? "min-w-[180px]" : "min-w-[140px]"
                     }`}
-                    endIcon={
-                        <motion.div
-                            animate={{ rotate: isOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-blue-500"
-                        >
-                            <KeyboardArrowDown />
-                        </motion.div>
-                    }
                 >
-                    <Box className="flex items-center">
-                        <Avatar
-                            className="bg-blue-50 text-blue-600 mr-2.5 border border-blue-100"
-                            sx={{ width: 32, height: 32 }}
-                        >
-                            {activeAccount?.pseudo?.charAt(0) || ''}
-                        </Avatar>
-                        <Box>
-                            <Typography
-                                variant="body2"
-                                className="font-medium text-gray-800 truncate"
-                                sx={{ maxWidth: input.large ? 120 : 80 }}
-                            >
-                                {activeAccount?.pseudo || ''}
-                            </Typography>
-
-                        </Box>
-                    </Box>
-                </Button>
+                    <Avatar
+                        className="bg-gray-100 text-gray-700"
+                        sx={{ width: 28, height: 28, fontSize: '0.875rem' }}
+                    >
+                        {activeAccount?.pseudo?.charAt(0) || '?'}
+                    </Avatar>
+                    <span className="text-sm font-medium text-gray-900 truncate flex-1 text-left">
+                        {activeAccount?.pseudo || 'Account'}
+                    </span>
+                    <KeyboardArrowDown
+                        className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        fontSize="small"
+                    />
+                </button>
 
                 {/* Dropdown menu */}
-                <AnimatePresence>
-                    {isOpen && (
-                        <motion.div
-                            variants={dropdownVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="absolute left-0 mt-2 z-50 min-w-56"
-                        >
-                            <Paper
-                                elevation={0}
-                                className="border border-gray-100 rounded-xl overflow-hidden shadow-md"
-                            >
-                                {/* Header */}
-                                <Box className="py-3 px-4 bg-gray-50 border-b border-gray-100">
-                                    <Typography variant="subtitle2" className="text-gray-700 font-medium">
-                                        Select Account
-                                    </Typography>
-                                </Box>
+                {isOpen && (
+                    <div className="absolute left-0 mt-2 z-50 min-w-[240px] bg-white border border-gray-200 rounded-lg shadow-lg">
+                        {/* Header */}
+                        <div className="px-3 py-2 border-b border-gray-100">
+                            <div className="text-xs font-medium text-gray-500">Switch Account</div>
+                        </div>
 
-                                {/* Account list */}
-                                <List className="py-1">
-                                    {inactiveAccounts.map(account => (
-                                        <ListItemButton
-                                            key={account.id}
-                                            onClick={() => selectInactiveAccount(account.id)}
-                                            className="py-2 px-4 hover:bg-blue-50 transition-colors"
-                                        >
-                                            <ListItemAvatar className="min-w-0 mr-2">
-                                                <Avatar
-                                                    className="bg-blue-50 text-blue-600 border border-blue-100"
-                                                    sx={{ width: 32, height: 32 }}
-                                                >
-                                                    {account.pseudo?.charAt(0) || ''}
-                                                </Avatar>
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={
-                                                    <Typography variant="body2" className="font-medium text-gray-800">
-                                                        {account.pseudo || ''}
-                                                    </Typography>
-                                                }
-                                                secondary={
-                                                    <Typography variant="caption" className="text-gray-500">
-                                                        Switch to this account
-                                                    </Typography>
-                                                }
-                                            />
-                                        </ListItemButton>
-                                    ))}
-                                </List>
+                        {/* Account list */}
+                        <div className="py-1">
+                            {inactiveAccounts.map(account => (
+                                <button
+                                    type="button"
+                                    key={account.id}
+                                    onClick={() => selectInactiveAccount(account.id)}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left bg-white"
+                                >
+                                    <Avatar
+                                        className="bg-gray-100 text-gray-700"
+                                        sx={{ width: 32, height: 32, fontSize: '1rem' }}
+                                    >
+                                        {account.pseudo?.charAt(0) || '?'}
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            {account.pseudo}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            Click to switch
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
 
-                                {/* Add new account button */}
-                                {allowAccountCreation && (
-                                    <>
-                                        <Divider className="my-1" />
-                                        <ListItemButton
-                                            onClick={() => setShowAccountCreation(true)}
-                                            className="py-2.5 px-4 text-blue-600 hover:bg-blue-50 transition-colors"
-                                        >
-                                            <ListItemAvatar className="min-w-0 mr-2">
-                                                <Avatar
-                                                    className="bg-blue-50 text-blue-600 border border-blue-100"
-                                                    sx={{ width: 32, height: 32 }}
-                                                >
-                                                    <PersonAdd fontSize="small" />
-                                                </Avatar>
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={
-                                                    <Typography variant="body2" className="font-medium text-blue-600">
-                                                        Add new account
-                                                    </Typography>
-                                                }
-                                                secondary={
-                                                    <Typography variant="caption" className="text-blue-400">
-                                                        Create a new identity
-                                                    </Typography>
-                                                }
-                                            />
-                                        </ListItemButton>
-                                    </>
-                                )}
-                            </Paper>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        {/* Add new account button */}
+                        {allowAccountCreation && (
+                            <>
+                                <Divider />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAccountCreation(true)}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 transition-colors text-left bg-white"
+                                >
+                                    <Avatar
+                                        className="bg-blue-50 text-blue-600"
+                                        sx={{ width: 32, height: 32 }}
+                                    >
+                                        <PersonAdd fontSize="small" />
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="text-sm font-medium text-blue-600">
+                                            Add Account
+                                        </div>
+                                        <div className="text-xs text-blue-500">
+                                            Create new identity
+                                        </div>
+                                    </div>
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
 
                 {/* Account creation modal */}
                 {showAccountCreation && (
@@ -292,7 +217,7 @@ export function DropdownAccountSelection(input: { allowAccountCreation: boolean,
                         }}
                     />
                 )}
-            </Box>
+            </div>
         </ClickAwayListener>
     );
 }

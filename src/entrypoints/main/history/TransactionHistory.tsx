@@ -16,168 +16,103 @@
  */
 
 import React, {useState} from "react";
-import {
-    Avatar,
-    Box,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    Typography
-} from "@mui/material";
 import Skeleton from "react-loading-skeleton";
-import {motion} from "framer-motion";
-import {CalendarToday, Label, Person, SwapHoriz} from "@mui/icons-material";
 import {TransactionRow} from "@/entrypoints/main/history/TransactionRow.tsx";
 import {useAccountHistory} from "@/hooks/useAccountHistory.tsx";
 
-const INITIAL_MAX_ENTRIES = 10;
+const INITIAL_MAX_ENTRIES = 50;
 
 export function TransactionHistory() {
     const [maxEntries, setMaxEntries] = useState(INITIAL_MAX_ENTRIES);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(INITIAL_MAX_ENTRIES);
     const { accountHistory, isLoadingAccountHistory, accountHistoryLoadingError } = useAccountHistory(0, maxEntries);
-    const [expandedRow, setExpandedRow] = useState<string | null>(null);
-
-    // Animation variants
-    const tableVariants = {
-        hidden: {opacity: 0, y: 20},
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24,
-                delay: 0.2
-            }
-        }
-    };
-
-    const handleChangePage = (_event: unknown, newPage: number) => {
-        setPage(newPage);
-        if ((newPage + 1) * rowsPerPage > maxEntries) {
-            setMaxEntries(maxEntries + INITIAL_MAX_ENTRIES);
-        }
-    };
-
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newRowsPerPage = parseInt(event.target.value, 10);
-        setRowsPerPage(newRowsPerPage);
-        setPage(0);
-        if (newRowsPerPage > maxEntries) {
-            setMaxEntries(newRowsPerPage);
-        }
-    };
-
-    const toggleRowExpand = (id: string) => {
-        setExpandedRow(expandedRow === id ? null : id);
-    };
 
     if (isLoadingAccountHistory) {
         return (
-            <Box className="mb-8">
+            <div className="mb-8">
                 <Skeleton height={400}/>
-            </Box>
+            </div>
         );
     }
 
     if (accountHistoryLoadingError || !accountHistory) {
         return (
-            <Box className="mb-8 p-6 bg-red-50 rounded-lg border border-red-100">
-                <Typography variant="h6" className="text-red-700 mb-2">
+            <div className="mb-8 p-6 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-base font-semibold text-red-700 mb-2">
                     Error Loading Transactions
-                </Typography>
-                <Typography variant="body2" className="text-red-600">
+                </div>
+                <div className="text-sm text-red-600">
                     There was an error loading your transaction history. Please try again later.
                     Reason: {accountHistoryLoadingError?.message || 'unknown'}
-                </Typography>
-            </Box>
+                </div>
+            </div>
         );
     }
 
     if (!accountHistory.containsTransactions()) {
         return (
-            <Box className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-100 text-center">
-                <Typography variant="h6" className="text-gray-700 mb-2">
+            <div className="mb-8 p-8 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                <div className="text-base font-semibold text-gray-700 mb-2">
                     No Transactions Yet
-                </Typography>
-                <Typography variant="body2" className="text-gray-600">
+                </div>
+                <div className="text-sm text-gray-600">
                     You haven't made any transactions yet. When you do, they'll appear here.
-                </Typography>
-            </Box>
+                </div>
+            </div>
         );
     }
 
+    const transactions = accountHistory.getTransactions();
+
     return (
-        <motion.div variants={tableVariants} className="mb-8">
-            <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-                <Box className="p-4 bg-gray-50 border-b border-gray-100 flex items-center">
-                    <Avatar className="bg-gray-100 text-gray-600 mr-3">
-                        <SwapHoriz/>
-                    </Avatar>
-                    <Typography variant="h6" className="font-semibold text-gray-800">
-                        Transaction History
-                    </Typography>
-                </Box>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Transactions</h2>
+            </div>
 
-                <TableContainer>
-                    <Table aria-label="transaction history table">
-                        <TableHead className="bg-gray-50">
-                            <TableRow>
-                                <TableCell width="40px"></TableCell>
-                                <TableCell>
-                                    <Box className="flex items-center">
-                                        <CalendarToday fontSize="small" className="mr-1 text-gray-500"/>
-                                        Date
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Box className="flex items-center">
-                                        <Label fontSize="small" className="mr-1 text-gray-500"/>
-                                        Type
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Box className="flex items-center">
-                                        <Person fontSize="small" className="mr-1 text-gray-500"/>
-                                        Linked Account
-                                    </Box>
-                                </TableCell>
-                                <TableCell align="right">Amount</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {accountHistory.getTransactions()
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((transaction, index) => (
-                                    <TransactionRow
-                                        key={`${transaction.getTimestamp()}-${index}`}
-                                        transaction={transaction}
-                                        isExpanded={expandedRow === `${transaction.getTimestamp()}-${index}`}
-                                        onToggleExpand={() => toggleRowExpand(`${transaction.getTimestamp()}-${index}`)}
-                                    />
-                                ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+            {/* Table */}
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Linked Account
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {transactions.map((transaction, index) => (
+                            <TransactionRow
+                                key={`${transaction.getTimestamp()}-${index}`}
+                                transaction={transaction}
+                            />
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={accountHistory.getTransactions().length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Paper>
-        </motion.div>
+            {/* Show more button */}
+            {transactions.length >= maxEntries && (
+                <div className="px-6 py-4 border-t border-gray-200 text-center">
+                    <button
+                        type="button"
+                        onClick={() => setMaxEntries(maxEntries + 50)}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                        Load More Transactions
+                    </button>
+                </div>
+            )}
+        </div>
     );
 }
 

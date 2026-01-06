@@ -17,45 +17,18 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Avatar,
-    Box,
     Button,
-    Chip,
-    Container,
-    Divider,
-    Grid,
-    IconButton,
     InputAdornment,
-    Paper,
-    Snackbar,
-    Stack,
-    Tab,
-    Tabs,
-    TextField,
-    Tooltip,
-    Typography
+    TextField
 } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { getUserKeyPair } from '@/entrypoints/main/wallet.tsx';
-import Skeleton from "react-loading-skeleton";
 import {
-    AccountCircle,
-    Badge,
-    ContentCopy,
-    DeleteForever,
-    Email as EmailIcon,
-    Key,
     Language,
-    LockReset,
     Save,
     Settings as SettingsIcon,
-    Visibility,
-    VisibilityOff,
-    Warning,
     Info
 } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import * as v from "valibot";
@@ -65,6 +38,7 @@ import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
 import {AccountEdition} from "@/entrypoints/main/parameters/components/AccountEdition.tsx";
 import {Versions} from "@/entrypoints/main/parameters/components/Versions.tsx";
+import {useAsync} from "react-use";
 
 // Define schemas for form validation
 const personalInfoSchema = v.object({
@@ -196,17 +170,15 @@ export default function Parameters() {
     const { control: accountInfoControl, handleSubmit: handleAccountInfoSubmit, formState: { errors: accountInfoErrors, isDirty: isAccountInfoDirty } } = accountInfoForm;
 
     // Load user keys
-    useEffect(() => {
+    useAsync(async () => {
         if (!wallet || !activeAccount) return;
         const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
-        getUserKeyPair(wallet, activeAccount)
-            .then(keyPair => {
-                setUserKeys({
-                    privateKey: encoder.encodePrivateKey(keyPair.privateKey),
-                    publicKey: encoder.encodePublicKey(keyPair.publicKey),
-                });
-            });
-    }, [wallet, activeAccount]);
+        const keyPair = await getUserKeyPair(wallet, activeAccount);
+        setUserKeys({
+            privateKey: await encoder.encodePrivateKey(keyPair.privateKey),
+            publicKey: await encoder.encodePublicKey(keyPair.publicKey),
+        });
+    }, [wallet, activeAccount])
 
     // Load public and private keys for all accounts
     useEffect(() => {
@@ -222,9 +194,9 @@ export default function Parameters() {
                 try {
                     const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
                     const keyPair = await getUserKeyPair(wallet, account);
-                    taggedPublicKeys[account.id] = encoder.encodePublicKey(keyPair.publicKey);
-                    publicKeys[account.id] = keyPair.publicKey.getPublicKeyAsString();
-                    privateKeys[account.id] = keyPair.privateKey.getPrivateKeyAsString();
+                    taggedPublicKeys[account.id] = await encoder.encodePublicKey(keyPair.publicKey);
+                    publicKeys[account.id] = await encoder.encodePublicKey(keyPair.publicKey);
+                    privateKeys[account.id] = await encoder.encodePrivateKey(keyPair.privateKey);
                     visibilityState[account.id] = false; // Default to hidden
                 } catch (error) {
                     console.error(`Failed to load keys for account ${account.id}:`, error);
@@ -298,215 +270,198 @@ export default function Parameters() {
     };
 
 
-    // Page animations
-    const pageVariants = {
-        initial: { opacity: 0 },
-        animate: {
-            opacity: 1,
-            transition: { duration: 0.5 }
-        },
-        exit: { opacity: 0 }
-    };
-
-    // Header animations
-    const headerVariants = {
-        initial: { opacity: 0, y: -20 },
-        animate: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.5 }
-        }
-    };
-
     return (
-        <Container maxWidth="lg">
-            <motion.div
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-            >
-                {/* Header */}
-                <motion.div variants={headerVariants} className="mb-8">
-                    <Box display="flex" alignItems="center" mb={2}>
-                        <SettingsIcon fontSize="large" className="text-gray-700 mr-3" />
-                        <Typography variant="h4" component="h1" className="font-bold text-gray-800">
-                            Settings
-                        </Typography>
-                    </Box>
-                    <Typography variant="body1" color="text.secondary">
-                        Manage your account information, security settings, and network configuration
-                    </Typography>
-                </motion.div>
+        <div className="max-w-4xl mx-auto space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                    Settings
+                </h1>
+                <p className="text-sm text-gray-500">
+                    Manage your account information, security settings, and network configuration
+                </p>
+            </div>
 
-                {/* Main content */}
-                <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-                    {/* Tabs */}
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs
-                            value={tabValue}
-                            onChange={handleTabChange}
-                            aria-label="settings tabs"
-                            className="px-4"
-                            indicatorColor="primary"
-                            textColor="primary"
+            {/* Main content */}
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                {/* Tabs */}
+                <div className="border-b border-gray-200">
+                    <div className="flex">
+                        <button
+                            type="button"
+                            onClick={() => setTabValue(0)}
+                            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                tabValue === 0
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
                         >
-                            <Tab
-                                icon={<Info />}
-                                iconPosition="start"
-                                label="Accounts"
-                                {...a11yProps(1)}
-                                className="font-medium"
-                            />
-                            <Tab
-                                icon={<Language />}
-                                iconPosition="start"
-                                label="Network"
-                                {...a11yProps(2)}
-                                className="font-medium"
-                            />
-                            <Tab
-                                icon={<SettingsIcon />}
-                                iconPosition="start"
-                                label="Versions"
-                                {...a11yProps(3)}
-                                className="font-medium"
-                            />
-                        </Tabs>
-                    </Box>
+                            <Info fontSize="small" />
+                            Accounts
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setTabValue(1)}
+                            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                tabValue === 1
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            <Language fontSize="small" />
+                            Network
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setTabValue(2)}
+                            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                tabValue === 2
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            <SettingsIcon fontSize="small" />
+                            Versions
+                        </button>
+                    </div>
+                </div>
 
-                    {/* Tab panels */}
-                    <Box className="p-6">
+                {/* Tab panels */}
+                <div className="p-6">
+                    {/* Information Tab */}
+                    {tabValue === 0 && (
+                        <form onSubmit={handleAccountInfoSubmit(onSaveAccountInfo)} className="space-y-6">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                                    Account Information
+                                </h2>
+                                <p className="text-sm text-gray-500">
+                                    Quickly modify information for all your accounts in one place
+                                </p>
+                            </div>
 
-                        {/* Information Tab */}
-                        <TabPanel value={tabValue} index={0}>
-                            <form onSubmit={handleAccountInfoSubmit(onSaveAccountInfo)}>
-                                <Grid container spacing={4}>
-                                    <Grid size={12}>
-                                        <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                                            Account Information
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" className="mb-4">
-                                            Quickly modify information for all your accounts in one place
-                                        </Typography>
-                                    </Grid>
+                            {wallet?.accounts.map((account, index) => (
+                                <AccountEdition key={account.id} account={account} index={index}/>
+                            ))}
+                        </form>
+                    )}
 
-                                    {wallet?.accounts.map((account, index) => (
-                                        <AccountEdition account={account} index={index}/>
-                                    ))}
-                                </Grid>
-                            </form>
-                        </TabPanel>
+                    {/* Network Tab */}
+                    {tabValue === 1 && (
+                        <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)} className="space-y-6">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                                    Network Configuration
+                                </h2>
+                                <p className="text-sm text-gray-500">
+                                    Configure the network endpoints for connecting to the Carmentis blockchain and explorer.
+                                </p>
+                            </div>
 
-                        {/* Network Tab */}
-                        <TabPanel value={tabValue} index={1}>
-                            <form onSubmit={handleNetworkSubmit(onSaveNetworkSettings)}>
-                                <Grid container spacing={4}>
-                                    <Grid size={12}>
-                                        <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                                            Network Configuration
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" className="mb-4">
-                                            Configure the network endpoints for connecting to the Carmentis blockchain and explorer.
-                                        </Typography>
-                                    </Grid>
+                            <div className="space-y-4">
+                                <Controller
+                                    name="nodeEndpoint"
+                                    control={networkControl}
+                                    render={({ field }) => (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Carmentis Node Endpoint
+                                            </label>
+                                            <TextField
+                                                {...field}
+                                                variant="outlined"
+                                                fullWidth
+                                                error={!!networkErrors.nodeEndpoint}
+                                                helperText={networkErrors.nodeEndpoint?.message || "The endpoint of the Carmentis node server"}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <Language fontSize="small" className="text-gray-400" />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '0.5rem',
+                                                        '& fieldset': { borderColor: '#e5e7eb' },
+                                                        '&:hover fieldset': { borderColor: '#d1d5db' },
+                                                        '&.Mui-focused fieldset': { borderColor: '#93c5fd', borderWidth: '1px' },
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                />
 
-                                    <Grid size={12}>
-                                        <Controller
-                                            name="nodeEndpoint"
-                                            control={networkControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Carmentis Node Endpoint"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    error={!!networkErrors.nodeEndpoint}
-                                                    helperText={networkErrors.nodeEndpoint?.message || "The endpoint of the Carmentis node server"}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Language fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
+                                <Controller
+                                    name="explorerEndpoint"
+                                    control={networkControl}
+                                    render={({ field }) => (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Carmentis Explorer Endpoint
+                                            </label>
+                                            <TextField
+                                                {...field}
+                                                variant="outlined"
+                                                fullWidth
+                                                error={!!networkErrors.explorerEndpoint}
+                                                helperText={networkErrors.explorerEndpoint?.message || "The endpoint of the blockchain explorer"}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <Language fontSize="small" className="text-gray-400" />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '0.5rem',
+                                                        '& fieldset': { borderColor: '#e5e7eb' },
+                                                        '&:hover fieldset': { borderColor: '#d1d5db' },
+                                                        '&.Mui-focused fieldset': { borderColor: '#93c5fd', borderWidth: '1px' },
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                />
+                            </div>
 
-                                    <Grid size={12}>
-                                        <Controller
-                                            name="explorerEndpoint"
-                                            control={networkControl}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Carmentis Explorer Endpoint"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    error={!!networkErrors.explorerEndpoint}
-                                                    helperText={networkErrors.explorerEndpoint?.message || "The endpoint of the blockchain explorer"}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Language fontSize="small" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
+                            <div className="flex justify-end">
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    disabled={!isNetworkDirty}
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
+                                    sx={{
+                                        textTransform: 'none',
+                                        fontWeight: 500,
+                                        fontSize: '0.875rem',
+                                        padding: '0.625rem 1rem',
+                                        borderRadius: '0.5rem',
+                                        boxShadow: 'none',
+                                        '&:hover': { boxShadow: 'none' }
+                                    }}
+                                >
+                                    <Save fontSize="small" className="mr-2" />
+                                    Save Network Settings
+                                </Button>
+                            </div>
+                        </form>
+                    )}
 
-                                    <Grid size={12}>
-                                        <Box display="flex" justifyContent="flex-end">
-                                            <motion.div
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                <Button
-                                                    type="submit"
-                                                    variant="contained"
-                                                    color="primary"
-                                                    startIcon={<Save />}
-                                                    disabled={!isNetworkDirty}
-                                                    className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
-                                                >
-                                                    Save Network Settings
-                                                </Button>
-                                            </motion.div>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                            </form>
-
-
-
-
-                        </TabPanel>
-
-                        {/* Versions Tab */}
-                        <TabPanel value={tabValue} index={2}>
-                            <Versions/>
-                        </TabPanel>
-
-
-                    </Box>
-                </Paper>
-            </motion.div>
+                    {/* Versions Tab */}
+                    {tabValue === 2 && <Versions/>}
+                </div>
+            </div>
 
             {/* Success message snackbar */}
-            <Snackbar
-                open={!!successMessage}
-                autoHideDuration={4000}
-                onClose={() => setSuccessMessage(null)}
-                message={successMessage}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                ContentProps={{
-                    className: "bg-green-500"
-                }}
-            />
-        </Container>
+            {successMessage && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg">
+                    {successMessage}
+                </div>
+            )}
+        </div>
     );
 }

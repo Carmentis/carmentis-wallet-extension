@@ -17,7 +17,6 @@
 
 import {useLocation, useNavigate} from "react-router";
 import {Tooltip} from "@mui/material";
-import {motion} from "framer-motion";
 import {ReactNode} from "react";
 
 export interface SidebarLinkProps {
@@ -32,24 +31,17 @@ export function SidebarItem({icon, text, link, activeRegex}: SidebarLinkProps) {
     const location = useLocation();
     const isActive = activeRegex.test(location.pathname);
 
-    function go() {
-        navigate(link);
-    }
-
     return (
         <Tooltip title={text} placement="right">
-            <motion.div
-                onClick={go}
-                whileHover={{scale: 1.05}}
-                whileTap={{scale: 0.95}}
-                className={`flex w-full justify-center items-center h-11 cursor-pointer transition-colors duration-200 ${
-                    isActive ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:text-blue-500"
+            <button
+                type="button"
+                onClick={() => navigate(link)}
+                className={`flex w-full justify-center items-center h-12 cursor-pointer transition-colors border-0 ${
+                    isActive ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900 bg-transparent"
                 }`}
             >
-                <div className="text-lg">
-                    {icon}
-                </div>
-            </motion.div>
+                {icon}
+            </button>
         </Tooltip>
     );
 }

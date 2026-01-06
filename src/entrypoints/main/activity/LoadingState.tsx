@@ -15,8 +15,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {motion} from "framer-motion";
-import {CircularProgress, Typography} from "@mui/material";
+import {CircularProgress} from "@mui/material";
 import React from "react";
 
 /**
@@ -24,18 +23,18 @@ import React from "react";
  */
 export function LoadingState() {
     return (
-        <motion.div
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            className="flex flex-col items-center justify-center py-16"
-        >
-            <CircularProgress size={60} thickness={4} className="mb-4"/>
-            <Typography variant="h6" className="font-medium text-gray-800 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CircularProgress size={32} thickness={4} />
+            </div>
+
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Loading Blockchain Data
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </h3>
+
+            <p className="text-sm text-gray-600">
                 Please wait while we fetch your blockchain activity...
-            </Typography>
-        </motion.div>
+            </p>
+        </div>
     );
 }

@@ -16,8 +16,6 @@
  */
 
 import {PropsWithChildren, ReactElement} from "react";
-import {motion} from "framer-motion";
-import {Container} from "@mui/material";
 
 export interface DashboardLayoutProps {
     navbar: ReactElement,
@@ -26,34 +24,25 @@ export interface DashboardLayoutProps {
 
 export function DashboardLayout({children, navbar, sidebar}: PropsWithChildren<DashboardLayoutProps>) {
     return (
-        <div id="main-layout" className="w-full h-full z-0">
-            <motion.nav
-                initial={{y: -20, opacity: 0}}
-                animate={{y: 0, opacity: 1}}
-                transition={{duration: 0.3}}
-                className="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full h-16 z-10"
-            >
+        <div id="main-layout" className="w-full h-full">
+            {/* Fixed navbar */}
+            <nav className="bg-white border-b border-gray-200 fixed top-0 left-0 w-full h-16 z-10">
                 {navbar}
-            </motion.nav>
-            <div className="pt-16 h-full w-full">
-                <motion.div
-                    initial={{x: -20, opacity: 0}}
-                    animate={{x: 0, opacity: 1}}
-                    transition={{duration: 0.3, delay: 0.1}}
-                    className="fixed h-full w-16 border-r border-gray-200 bg-white shadow-sm z-0"
-                >
+            </nav>
+
+            {/* Main content area with sidebar */}
+            <div className="pt-16 h-full w-full flex">
+                {/* Fixed sidebar */}
+                <aside className="fixed h-full w-16 border-r border-gray-200 bg-white">
                     {sidebar}
-                </motion.div>
-                <motion.div
-                    initial={{opacity: 0}}
-                    animate={{opacity: 1}}
-                    transition={{duration: 0.3, delay: 0.2}}
-                    className="h-full w-full pl-16 overflow-y-auto bg-gray-50 z-0"
-                >
-                    <Container className="py-8">
+                </aside>
+
+                {/* Main content */}
+                <main className="flex-1 ml-16 overflow-y-auto bg-gray-50">
+                    <div className="max-w-7xl mx-auto px-8 py-8">
                         {children}
-                    </Container>
-                </motion.div>
+                    </div>
+                </main>
             </div>
         </div>
     );

@@ -69,133 +69,67 @@ import {useToast} from "@/hooks/useToast.tsx";
 export default function ProofChecker() {
     const [proof, setProof] = useState<Record<string, any> | undefined>();
 
-    // Animation variants
-    const pageVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={pageVariants}
-            className="max-w-6xl mx-auto"
-        >
-            <Box className="mb-8">
-                <Paper elevation={0} className="bg-linear-to-r from-blue-50 to-blue-100/30 border border-blue-100 rounded-xl p-8 mb-6 shadow-sm">
-                    <Box className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <Box>
-                            <Typography variant="h4" className="font-bold text-gray-800 mb-3">
-                                Blockchain Proof Verification
-                            </Typography>
-                            <Typography variant="body1" className="text-gray-600 max-w-2xl">
-                                Upload and verify blockchain proofs to validate data integrity and authenticity on the Carmentis network
-                            </Typography>
-                        </Box>
-                        <div className="relative md:mt-0 mt-4">
-                            <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
-                            <Avatar 
-                                className="bg-blue-50 text-blue-600 w-20 h-20 border-2 border-blue-100 relative shadow-md"
-                                sx={{ width: 80, height: 80 }}
-                            >
-                                <VerifiedUser sx={{ fontSize: 40 }} />
-                            </Avatar>
-                        </div>
-                    </Box>
-                </Paper>
-            </Box>
+        <div className="max-w-3xl mx-auto space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                    Blockchain Proof Verification
+                </h1>
+                <p className="text-sm text-gray-500">
+                    Upload and verify blockchain proofs to validate data integrity and authenticity on the Carmentis network
+                </p>
+            </div>
 
             <ErrorBoundary fallback={<ProofCheckerFailure error={"Test"} />}>
-                <AnimatePresence mode="wait">
-                    {proof ? (
-                        <ProofViewer 
-                            key="viewer" 
-                            proof={proof} 
-                            resetProof={() => setProof(undefined)} 
-                        />
-                    ) : (
-                        <ProofCheckerUpload 
-                            key="upload" 
-                            onUpload={proof => setProof(proof)} 
-                        />
-                    )}
-                </AnimatePresence>
+                {proof ? (
+                    <ProofViewer
+                        proof={proof}
+                        resetProof={() => setProof(undefined)}
+                    />
+                ) : (
+                    <ProofCheckerUpload
+                        onUpload={proof => setProof(proof)}
+                    />
+                )}
             </ErrorBoundary>
-        </motion.div>
+        </div>
     );
 }
 
 function ProofCheckerFailure({ error }: { error: string }) {
-    // Animation variants
-    const errorVariants = {
-        hidden: { opacity: 0, scale: 0.9, y: 20 },
-        visible: {
-            opacity: 1,
-            scale: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24,
-                duration: 0.4
-            }
-        }
-    };
-
     return (
-        <motion.div
-            variants={errorVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col items-center justify-center py-16"
-        >
-            <Paper elevation={0} className="border border-red-100 rounded-xl p-10 max-w-md mx-auto text-center shadow-md overflow-hidden">
-                <div className="absolute inset-0 bg-linear-to-b from-red-50/50 to-white z-0"></div>
-                <div className="relative z-10">
-                    <div className="relative mx-auto mb-8 w-28 h-28">
-                        <div className="absolute inset-0 bg-red-200 rounded-full blur-md opacity-30"></div>
-                        <Avatar className="mx-auto bg-red-50 text-red-500 w-28 h-28 border-2 border-red-100 relative shadow-md">
-                            <ErrorIcon sx={{ fontSize: 48 }} />
-                        </Avatar>
-                    </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center max-w-md mx-auto">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ErrorIcon className="text-red-600" sx={{ fontSize: 32 }} />
+            </div>
 
-                    <Typography variant="h5" className="font-bold text-gray-800 mb-4">
-                        Verification Failed
-                    </Typography>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Verification Failed
+            </h2>
 
-                    <Typography variant="body1" className="text-gray-600 mb-8">
-                        We couldn't verify this proof. The file might be malformed or corrupted.
-                    </Typography>
+            <p className="text-sm text-gray-600 mb-6">
+                We couldn't verify this proof. The file might be malformed or corrupted.
+            </p>
 
-                    <motion.div
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                    >
-                        <Button 
-                            variant="contained" 
-                            color="error"
-                            startIcon={<Refresh />}
-                            onClick={() => window.location.reload()}
-                            size="large"
-                            className="px-8 py-2.5 shadow-md"
-                            sx={{
-                                textTransform: 'none',
-                                fontWeight: 500,
-                                fontSize: '0.95rem',
-                            }}
-                        >
-                            Try Again
-                        </Button>
-                    </motion.div>
-                </div>
-            </Paper>
-        </motion.div>
+            <Button
+                variant="contained"
+                color="error"
+                startIcon={<Refresh />}
+                onClick={() => window.location.reload()}
+                sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    padding: '0.625rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    boxShadow: 'none',
+                    '&:hover': { boxShadow: 'none' }
+                }}
+            >
+                Try Again
+            </Button>
+        </div>
     );
 }
 
@@ -205,7 +139,6 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     const toast = useToast();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [fileName, setFileName] = useState<string | null>(null);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -233,8 +166,6 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
 
     const processFile = (file?: File) => {
         if (file) {
-            setFileName(file.name);
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
@@ -242,213 +173,83 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
                     onUpload(content);
                 } catch (error) {
                     toast.error("Invalid JSON file. Please upload a valid JSON file.");
-                    setFileName(null);
                 }
             };
             reader.readAsText(file);
         }
     };
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        }
-    };
-
-    const cardVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24,
-                delay: 0.1
-            }
-        }
-    };
-
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="max-w-4xl mx-auto"
-        >
-            <Grid container spacing={6}>
-                <Grid item xs={12} md={6}>
-                    <motion.div variants={cardVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                        <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden h-full shadow-sm hover:shadow-md transition-all duration-300">
-                            <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
-                                <div className="relative mr-4">
-                                    <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
-                                    <Avatar className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" sx={{ width: 40, height: 40 }}>
-                                        <FileUpload />
-                                    </Avatar>
-                                </div>
-                                <Typography variant="h6" className="font-semibold text-gray-800">
-                                    Upload Proof
-                                </Typography>
-                            </Box>
+        <div className="bg-white border border-gray-200 rounded-lg p-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Upload Proof File</h2>
 
-                            <CardContent className="p-8 flex flex-col items-center">
-                                <input
-                                    type="file"
-                                    accept="application/json"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    onChange={handleFileUpload}
-                                />
+                <input
+                    type="file"
+                    accept="application/json"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileUpload}
+                />
 
-                                <motion.div 
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
-                                    className="w-full"
-                                >
-                                    <Box 
-                                        className={`w-full border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${
-                                            isDragging ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-blue-200 hover:border-blue-400 hover:bg-blue-50/30'
-                                        }`}
-                                        onClick={() => fileInputRef.current?.click()}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                    >
-                                        <div className="relative mx-auto mb-6 w-20 h-20">
-                                            <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
-                                            <Avatar 
-                                                className="mx-auto bg-blue-50 text-blue-500 w-20 h-20 border-2 border-blue-100 relative shadow-md"
-                                                sx={{ width: 80, height: 80 }}
-                                            >
-                                                <UploadFile sx={{ fontSize: 40 }} />
-                                            </Avatar>
-                                        </div>
+                <div
+                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+                        isDragging
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <UploadFile className="text-blue-600" sx={{ fontSize: 32 }} />
+                    </div>
 
-                                        <Typography variant="h6" className="font-medium text-gray-800 mb-3">
-                                            Drag & Drop or Click to Upload'
-                                        </Typography>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">
+                        Drag & Drop or Click to Upload
+                    </h3>
 
-                                        <Typography variant="body2" className="text-gray-500 mb-6">
-                                            Upload a JSON proof file to verify
-                                        </Typography>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Upload a JSON proof file to verify
+                    </p>
 
-                                        <motion.div
-                                            whileHover={{ scale: 1.03 }}
-                                            whileTap={{ scale: 0.97 }}
-                                        >
-                                            <Button
-                                                variant="contained"
-                                                size="large"
-                                                startIcon={<FileUpload />}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    fileInputRef.current?.click();
-                                                }}
-                                                className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 shadow-md"
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    fontWeight: 500,
-                                                    fontSize: '0.95rem',
-                                                }}
-                                            >
-                                                Select File
-                                            </Button>
-                                        </motion.div>
-                                    </Box>
-                                </motion.div>
-                            </CardContent>
-                        </Paper>
-                    </motion.div>
-                </Grid>
+                    <Button
+                        variant="contained"
+                        startIcon={<FileUpload />}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                        }}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                            padding: '0.625rem 1.5rem',
+                            borderRadius: '0.5rem',
+                            boxShadow: 'none',
+                            '&:hover': { boxShadow: 'none' }
+                        }}
+                    >
+                        Select File
+                    </Button>
+                </div>
 
-                <Grid item xs={12} md={6}>
-                    <motion.div variants={cardVariants}>
-                        <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden h-full shadow-sm hover:shadow-md transition-all duration-300">
-                            <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
-                                <div className="relative mr-4">
-                                    <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
-                                    <Avatar className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" sx={{ width: 40, height: 40 }}>
-                                        <Info />
-                                    </Avatar>
-                                </div>
-                                <Typography variant="h6" className="font-semibold text-gray-800">
-                                    About Proof Verification
-                                </Typography>
-                            </Box>
-
-                            <CardContent className="p-8">
-                                <Alert 
-                                    severity="info" 
-                                    className="mb-6 rounded-lg border border-blue-100 bg-blue-50/50 shadow-sm"
-                                    icon={<Info className="text-blue-500" />}
-                                >
-                                    <Typography variant="body2">
-                                        Blockchain proofs provide cryptographic verification of data integrity and authenticity.
-                                    </Typography>
-                                </Alert>
-
-                                <Stepper orientation="vertical" className="mt-6">
-                                    <Step active={true} completed={true}>
-                                        <StepLabel StepIconProps={{ 
-                                            sx: { 
-                                                '&.Mui-completed': { color: '#3b82f6' },
-                                                '&.Mui-active': { color: '#3b82f6' } 
-                                            } 
-                                        }}>
-                                            <Typography className="font-medium">Upload Proof File</Typography>
-                                        </StepLabel>
-                                        <StepContent className="pb-4 pt-2">
-                                            <Typography variant="body2" className="text-gray-600">
-                                                Upload a JSON proof file exported from a Carmentis application.
-                                            </Typography>
-                                        </StepContent>
-                                    </Step>
-
-                                    <Step active={true} completed={false}>
-                                        <StepLabel StepIconProps={{ 
-                                            sx: { 
-                                                '&.Mui-active': { color: '#3b82f6' } 
-                                            } 
-                                        }}>
-                                            <Typography className="font-medium">Verification Process</Typography>
-                                        </StepLabel>
-                                        <StepContent className="pb-4 pt-2">
-                                            <Typography variant="body2" className="text-gray-600">
-                                                Our system will cryptographically verify the proof against the blockchain.
-                                            </Typography>
-                                        </StepContent>
-                                    </Step>
-
-                                    <Step active={true} completed={false}>
-                                        <StepLabel StepIconProps={{ 
-                                            sx: { 
-                                                '&.Mui-active': { color: '#3b82f6' } 
-                                            } 
-                                        }}>
-                                            <Typography className="font-medium">View Results</Typography>
-                                        </StepLabel>
-                                        <StepContent className="pb-4 pt-2">
-                                            <Typography variant="body2" className="text-gray-600">
-                                                See detailed verification results and proof data visualization.
-                                            </Typography>
-                                        </StepContent>
-                                    </Step>
-                                </Stepper>
-                            </CardContent>
-                        </Paper>
-                    </motion.div>
-                </Grid>
-            </Grid>
-        </motion.div>
+                {/* Info box */}
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                        <Info className="text-blue-600 flex-shrink-0 mt-0.5" fontSize="small" />
+                        <div className="text-sm text-gray-700">
+                            <p className="font-medium text-gray-900 mb-1">How it works</p>
+                            <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                                <li>Upload a JSON proof file from Carmentis</li>
+                                <li>We verify it cryptographically against the blockchain</li>
+                                <li>View detailed verification results and proof data</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
     );
 }
 

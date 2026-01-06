@@ -15,77 +15,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement } from 'react';
 import '../global.css';
 
 import { Route, Routes, useNavigate } from 'react-router';
 import Parameters from '@/entrypoints/main/parameters/Parameters.tsx';
-import { DropdownAccountSelection } from '@/components/shared/DropdownAccountSelection.tsx';
 import Skeleton from 'react-loading-skeleton';
-import { motion, AnimatePresence } from "framer-motion";
 import 'react-loading-skeleton/dist/skeleton.css';
 import HistoryPage from '@/entrypoints/main/history/page.tsx';
-import {
-    Badge,
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Tooltip,
-    Typography,
-    Grid,
-    Divider,
-    Avatar,
-    Button,
-    Chip
-} from '@mui/material';
-import { SpinningWheel } from '@/components/shared/SpinningWheel.tsx';
-import axios from 'axios';
-import { useRecoilValue } from 'recoil';
-//import TokenTransferPage from '@/entrypoints/main/transfer/page.tsx';
 import NotificationRightBar from "@/entrypoints/main/dashboard/NotificationRightBar.tsx";
-import { getUserKeyPair } from "@/entrypoints/main/wallet.tsx";
 import ActivityPage from "@/entrypoints/main/activity/Activity.tsx";
 import VirtualBlockchainViewer from "@/entrypoints/main/activity/VirtualBlockchainViewer.tsx";
 import ProofChecker from "@/entrypoints/main/proofChecker/ProofChecker.tsx";
-import { useAsync, useAsyncFn } from "react-use";
 import { DashboardNavbar } from "@/entrypoints/main/dashboard/DashboardNavbar.tsx";
 import {
-    AddCard,
-    Checklist,
-    Home,
-    MenuBook,
-    Search,
-    History,
-    SwapHoriz,
+    Dashboard as DashboardIcon,
+    Receipt,
+    Send,
     Settings,
-    Storage,
-    CheckCircle,
-    NetworkCheck,
-    Wallet,
-    TrendingUp,
-    Notifications,
-    ArrowForward,
-    BarChart,
-    AccountBalance
+    Widgets,
+    VerifiedUser
 } from "@mui/icons-material";
 import TokenTransferPage from "@/entrypoints/main/transfer/TokenTransfer.tsx";
-import {useOptimizedAccountBalance} from "@/hooks/useOptimizedAccountBalance.tsx";
-import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
-import {activeAccountState, nodeEndpointState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAuthenticatedAccount} from "@/hooks/useAuthenticatedAccount.tsx";
-import {useAuthenticationContext} from "@/hooks/useAuthenticationContext.tsx";
-import {useMainInterfaceActions} from "@/hooks/useMainInterfaceAction.tsx";
-import {useApplicationNotification} from "@/hooks/useApplicationNotification.tsx";
 import {DashboardLayout} from "@/entrypoints/main/dashboard/DashboardLayout.tsx";
 import {SidebarItem} from "@/entrypoints/main/dashboard/SidebarItem.tsx";
-import {ResourcesSection} from "@/entrypoints/main/dashboard/components/ResourcesSection.tsx";
-import {QuickActionCard} from "@/entrypoints/main/dashboard/components/QuickActionCard.tsx";
 import {
     NodeConnectionStatusSidebarItem
 } from "@/entrypoints/main/dashboard/components/NodeConnectionStatusSidebarItem.tsx";
-import {StatsCard} from "@/entrypoints/main/dashboard/components/StatsCard.tsx";
 import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
 import {CMTSToken} from "@cmts-dev/carmentis-sdk/client";
 
@@ -149,26 +107,19 @@ export function Dashboard(): ReactElement {
  */
 function DashboardSidebar() {
     return (
-        <motion.div
-            className="flex flex-col h-full py-6 bg-white border-r border-gray-100"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, staggerChildren: 0.05 }}
-        >
-
-
-            <SidebarItem icon={<Home />} text={'Home'} activeRegex={/\/$/} link={'/'} />
-            <SidebarItem icon={<Storage />} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
-            <SidebarItem icon={<SwapHoriz />} text={'Token Transfer'} activeRegex={/transfer$/} link={'/transfer'} />
-            <SidebarItem icon={<History />} text={'History'} activeRegex={/history$/} link={'/history'} />
-
-            <SidebarItem icon={<CheckCircle />} text={'Proof Checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
-            <SidebarItem icon={<Settings />} text={'Parameters'} activeRegex={/parameters$/} link={'/parameters'} />
-
-            <div className="mt-auto border-t border-gray-100 pt-4">
+        <div className="flex flex-col h-full py-4 bg-white">
+            <div className="flex-1 space-y-1">
+                <SidebarItem icon={<DashboardIcon />} text={'Home'} activeRegex={/\/$/} link={'/'} />
+                <SidebarItem icon={<Send />} text={'Transfer'} activeRegex={/transfer$/} link={'/transfer'} />
+                <SidebarItem icon={<Widgets />} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
+                <SidebarItem icon={<Receipt />} text={'History'} activeRegex={/history$/} link={'/history'} />
+                <SidebarItem icon={<VerifiedUser />} text={'Proof Checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
+            </div>
+            <div className="border-t border-gray-200 pt-2">
+                <SidebarItem icon={<Settings />} text={'Settings'} activeRegex={/parameters$/} link={'/parameters'} />
                 <NodeConnectionStatusSidebarItem />
             </div>
-        </motion.div>
+        </div>
     );
 }
 
@@ -177,16 +128,7 @@ function DashboardSidebar() {
  * Main dashboard home component
  */
 function DashboardHome() {
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="container mx-auto"
-        >
-            <DashboardOverview />
-        </motion.div>
-    );
+    return <DashboardOverview />;
 }
 
 /**
@@ -195,119 +137,102 @@ function DashboardHome() {
 function DashboardOverview() {
     const activeAccount = useAuthenticatedAccount();
     const balanceBreakdownResponse = useAccountBalanceBreakdown();
-    const numberVb = useAsync(async () => {
-        const db = await AccountDataStorage.connectDatabase(activeAccount);
-        return db.getNumberOfApplicationVirtualBlockchainId();
-    });
-
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 300, damping: 24 }
-        }
-    };
 
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-8"
-        >
-            {/* Welcome Section */}
-            <motion.div variants={itemVariants} className="mb-6">
-                <Typography variant="h5" className="font-semibold text-gray-800 mb-1">
-                    Welcome, {activeAccount.pseudo}
-                </Typography>
-                <Typography variant="body2" className="text-gray-500">
-                    Overview of your wallet
-                </Typography>
-            </motion.div>
+        <div className="max-w-5xl mx-auto space-y-8">
+            {/* Welcome */}
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                    {activeAccount.pseudo}
+                </h1>
+                <p className="text-sm text-gray-500">
+                    Your wallet overview
+                </p>
+            </div>
 
-            {/* Stats Cards */}
-            <motion.div variants={itemVariants}>
-                <Grid container spacing={3}>
-                    <Grid size={4}>
-                        <StatsCard
-                            title="Spendable"
-                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
-                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().spendable).toString() : "--" }
-                            subtitle="Available"
-                        />
-                    </Grid>
-                    <Grid size={4}>
-                        <StatsCard
-                            title="Staked"
-                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
-                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().staked).toString() : "--" }
-                            subtitle="Locked in staking"
-                        />
-                    </Grid>
-                    <Grid size={4}>
-                        <StatsCard
-                            title="Vested"
-                            value={balanceBreakdownResponse.isLoadingBreakdown ? <Skeleton height={40} width={120} /> :
-                                balanceBreakdownResponse.breakdown ? CMTSToken.createAtomic(balanceBreakdownResponse.breakdown.getBreakdown().vested).toString() : "--" }
-                            subtitle="Time-locked"
-                        />
-                    </Grid>
-                </Grid>
-            </motion.div>
+            {/* Balance Cards */}
+            <div className="grid grid-cols-3 gap-4">
+                <BalanceCard
+                    label="Spendable"
+                    amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
+                        balanceBreakdownResponse.breakdown?.getBreakdown().spendable}
+                    isLoading={balanceBreakdownResponse.isLoadingBreakdown}
+                />
+                <BalanceCard
+                    label="Staked"
+                    amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
+                        balanceBreakdownResponse.breakdown?.getBreakdown().staked}
+                    isLoading={balanceBreakdownResponse.isLoadingBreakdown}
+                />
+                <BalanceCard
+                    label="Vested"
+                    amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
+                        balanceBreakdownResponse.breakdown?.getBreakdown().vested}
+                    isLoading={balanceBreakdownResponse.isLoadingBreakdown}
+                />
+            </div>
 
             {/* Quick Actions */}
-            <motion.div variants={itemVariants}>
-                <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                    Quick Actions
-                </Typography>
-                <Grid container spacing={3}>
-                    <Grid size={4}>
-                        <QuickActionCard
-                            title="Transfer Tokens"
-                            icon={<SwapHoriz />}
-                            description="Send tokens to another account"
-                            link="/transfer"
-                        />
-                    </Grid>
-                    <Grid size={4}>
-                        <QuickActionCard
-                            title="View Activity"
-                            icon={<Storage />}
-                            description="Check your recent blockchain activity"
-                            link="/activity"
-                        />
-                    </Grid>
-                    <Grid size={4}>
-                        <QuickActionCard
-                            title="Account Settings"
-                            icon={<Settings />}
-                            description="Manage your account preferences"
-                            link="/parameters"
-                        />
-                    </Grid>
-                </Grid>
-            </motion.div>
+            <div className="grid grid-cols-3 gap-4">
+                <ActionCard
+                    icon={<Send />}
+                    label="Transfer"
+                    description="Send tokens to other accounts"
+                    link="/transfer"
+                />
+                <ActionCard
+                    icon={<Widgets />}
+                    label="Activity"
+                    description="View blockchain activity"
+                    link="/activity"
+                />
+                <ActionCard
+                    icon={<Receipt />}
+                    label="History"
+                    description="Track transaction history"
+                    link="/history"
+                />
+            </div>
+        </div>
+    );
+}
 
-            {/* Resources Section */}
-            <motion.div variants={itemVariants}>
-                <Typography variant="h6" className="font-semibold text-gray-800 mb-4">
-                    Resources & Tools
-                </Typography>
-                <ResourcesSection />
-            </motion.div>
-        </motion.div>
+/**
+ * Simple balance card
+ */
+function BalanceCard({ label, amount, isLoading }: { label: string, amount: number | undefined, isLoading: boolean }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+            <div className="text-xs font-medium text-gray-500 mb-3">{label}</div>
+            {isLoading ? (
+                <Skeleton height={32} width={120} />
+            ) : (
+                <div className="text-2xl font-semibold text-gray-900 tracking-tight">
+                    {amount !== undefined ? CMTSToken.createAtomic(amount).toString() : "--"}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Simple action card
+ */
+function ActionCard({ icon, label, description, link }: { icon: React.ReactElement, label: string, description: string, link: string }) {
+    const navigate = useNavigate();
+
+    return (
+        <button
+            type="button"
+            onClick={() => navigate(link)}
+            className="bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 text-left group"
+        >
+            <div className="text-gray-600 group-hover:text-blue-600 mb-3 flex items-center justify-center w-10 h-10 bg-gray-50 rounded-lg group-hover:bg-blue-100">
+                {icon}
+            </div>
+            <div className="text-sm font-medium text-gray-900 mb-1">{label}</div>
+            <div className="text-xs text-gray-500">{description}</div>
+        </button>
     );
 }
 
