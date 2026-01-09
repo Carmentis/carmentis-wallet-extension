@@ -124,9 +124,18 @@ export default function VirtualBlockchainViewer() {
     );
 }
 
+interface VBInfo {
+    height: number;
+    actors: any[];
+    channels: any[];
+    applicationId: string;
+    applicationName?: string;
+    organizationName?: string;
+}
+
 function BlockchainContent({ chainId }: { chainId: string }) {
     const wallet = useWallet();
-    const [height, setHeight] = useState<number | undefined>(undefined);
+    const [vbInfo, setVbInfo] = useState<VBInfo | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [displayedBlocks, setDisplayedBlocks] = useState<number>(BLOCKS_PER_PAGE);
@@ -141,7 +150,44 @@ function BlockchainContent({ chainId }: { chainId: string }) {
             const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
             const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
             const height = vb.getHeight();
-            setHeight(height);
+            const internalState = vb.getInternalState();
+            const actors = internalState.getAllActors();
+            const channels = internalState.getAllChannels();
+            const applicationIdHash = internalState.getApplicationId();
+            const applicationId = applicationIdHash.encode();
+
+            // Load application name and organization name
+            let applicationName: string | undefined;
+            let organizationName: string | undefined;
+
+            try {
+                const appVb = await provider.loadApplicationVirtualBlockchain(applicationIdHash);
+                const appDescription = appVb.getDescription();
+                applicationName = appDescription.name;
+
+                // Load organization name
+                try {
+                    const orgIdHash = appDescription.organizationId;
+                    if (orgIdHash) {
+                        const orgVb = await provider.loadOrganizationVirtualBlockchain(Hash.from(orgIdHash));
+                        const orgDescription = orgVb.getDescription();
+                        organizationName = orgDescription.name;
+                    }
+                } catch (orgErr) {
+                    console.warn("Could not load organization:", orgErr);
+                }
+            } catch (appErr) {
+                console.warn("Could not load application:", appErr);
+            }
+
+            setVbInfo({
+                height,
+                actors,
+                channels,
+                applicationId,
+                applicationName,
+                organizationName
+            });
         } catch (err) {
             console.error("Error loading chain:", err);
             setError("Failed to load blockchain data. Please try again.");
@@ -194,7 +240,7 @@ function BlockchainContent({ chainId }: { chainId: string }) {
         );
     }
 
-    if (!height || height === 0) {
+    if (!vbInfo || !vbInfo.height || vbInfo.height === 0) {
         return (
             <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -212,22 +258,27 @@ function BlockchainContent({ chainId }: { chainId: string }) {
 
     // Apply filters
     let startBlock = 1;
-    let endBlock = Math.min(displayedBlocks, height);
+    let endBlock = Math.min(displayedBlocks, vbInfo.height);
 
     if (filterFrom && filterTo) {
         const from = parseInt(filterFrom);
         const to = parseInt(filterTo);
-        if (!isNaN(from) && !isNaN(to) && from >= 1 && to <= height && from <= to) {
+        if (!isNaN(from) && !isNaN(to) && from >= 1 && to <= vbInfo.height && from <= to) {
             startBlock = from;
             endBlock = to;
         }
     }
 
     const blockIndices = Array.from({ length: endBlock - startBlock + 1 }, (_, i) => startBlock + i);
-    const hasMore = endBlock < height && !filterFrom && !filterTo;
+    const hasMore = endBlock < vbInfo.height && !filterFrom && !filterTo;
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg">
+        <div className="space-y-6">
+            {/* VB Information Card */}
+            <VirtualBlockchainInfoCard vbInfo={vbInfo} chainId={chainId} />
+
+            {/* Microblocks Section */}
+            <div className="bg-white border border-gray-200 rounded-lg">
             {/* Blocks Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -238,8 +289,8 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                         <h2 className="text-base font-semibold text-gray-900">Microblocks</h2>
                         <p className="text-xs text-gray-500">
                             {filterFrom && filterTo
-                                ? `Showing blocks ${startBlock}-${endBlock} of ${height}`
-                                : `Showing ${blockIndices.length} of ${height} blocks`
+                                ? `Showing blocks ${startBlock}-${endBlock} of ${vbInfo.height}`
+                                : `Showing ${blockIndices.length} of ${vbInfo.height} blocks`
                             }
                         </p>
                     </div>
@@ -265,7 +316,7 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                             <input
                                 type="number"
                                 min="1"
-                                max={height}
+                                max={vbInfo.height}
                                 value={filterFrom}
                                 onChange={(e) => setFilterFrom(e.target.value)}
                                 placeholder="1"
@@ -277,10 +328,10 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                             <input
                                 type="number"
                                 min="1"
-                                max={height}
+                                max={vbInfo.height}
                                 value={filterTo}
                                 onChange={(e) => setFilterTo(e.target.value)}
-                                placeholder={height.toString()}
+                                placeholder={vbInfo.height.toString()}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
@@ -310,13 +361,99 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                 <div className="p-4 border-t border-gray-200 text-center">
                     <button
                         type="button"
-                        onClick={() => setDisplayedBlocks(prev => Math.min(prev + BLOCKS_PER_PAGE, height))}
+                        onClick={() => setDisplayedBlocks(prev => Math.min(prev + BLOCKS_PER_PAGE, vbInfo.height))}
                         className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        Load More ({Math.min(BLOCKS_PER_PAGE, height - displayedBlocks)} blocks)
+                        Load More ({Math.min(BLOCKS_PER_PAGE, vbInfo.height - displayedBlocks)} blocks)
                     </button>
                 </div>
             )}
+            </div>
+        </div>
+    );
+}
+
+function VirtualBlockchainInfoCard({ vbInfo, chainId }: { vbInfo: VBInfo, chainId: string }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Virtual Blockchain Information</h2>
+
+            <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Virtual Blockchain ID</label>
+                        <div className="text-sm font-mono text-gray-900 break-all">{chainId}</div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Application ID</label>
+                        <div className="text-sm font-mono text-gray-900 break-all">
+                            {vbInfo.applicationId || <span className="text-gray-400 italic">Not set</span>}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Application Name</label>
+                        <div className="text-sm text-gray-900">
+                            {vbInfo.applicationName || <span className="text-gray-400 italic">Not available</span>}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Organization</label>
+                        <div className="text-sm text-gray-900">
+                            {vbInfo.organizationName || <span className="text-gray-400 italic">Not available</span>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            Actors List ({vbInfo.actors.length})
+                        </label>
+                        <div className="max-h-24 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                            {vbInfo.actors.length > 0 ? (
+                                <div className="space-y-1">
+                                    {vbInfo.actors.map((actor, index) => (
+                                        <div key={index} className="text-xs text-gray-700 font-mono">
+                                            {index}: {actor.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-gray-400 italic">No actors</div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            Channels List ({vbInfo.channels.length})
+                        </label>
+                        <div className="max-h-24 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                            {vbInfo.channels.length > 0 ? (
+                                <div className="space-y-1">
+                                    {vbInfo.channels.map((channel, index) => (
+                                        <div key={index} className="text-xs text-gray-700">
+                                            <span className="font-mono">{index}: {channel.name}</span>
+                                            {channel.isPrivate && (
+                                                <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
+                                                    Private
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-gray-400 italic">No channels</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
