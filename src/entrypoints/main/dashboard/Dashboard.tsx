@@ -151,7 +151,7 @@ function DashboardOverview() {
             </div>
 
             {/* Balance Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
                 <BalanceCard
                     label="Spendable"
                     amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
@@ -168,6 +168,12 @@ function DashboardOverview() {
                     label="Vested"
                     amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
                         balanceBreakdownResponse.breakdown?.getBreakdown().vested}
+                    isLoading={balanceBreakdownResponse.isLoadingBreakdown}
+                />
+                <BalanceCard
+                    label="Escrowed"
+                    amount={balanceBreakdownResponse.isLoadingBreakdown ? null :
+                        balanceBreakdownResponse.breakdown?.getBreakdown().escrowed}
                     isLoading={balanceBreakdownResponse.isLoadingBreakdown}
                 />
             </div>

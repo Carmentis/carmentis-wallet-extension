@@ -26,7 +26,7 @@ export default function HistoryPage() {
             </div>
 
             {/* Token Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-3">
                 <TokenCards breakdown={balanceResponse.breakdown} />
             </div>
 
@@ -44,6 +44,7 @@ function TokenCards(input: { breakdown: BalanceAvailability }) {
         { label: 'Spendable', amount: breakdown.spendable },
         { label: 'Staked', amount: breakdown.staked },
         { label: 'Vested', amount: breakdown.vested },
+        { label: 'Escrowed', amount: breakdown.escrowed },
     ];
 
     return (
