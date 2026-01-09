@@ -15,65 +15,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {
-    Box, 
-    Breadcrumbs, 
-    Button, 
-    Card, 
-    CardContent, 
-    Chip, 
-    Divider, 
-    Link, 
-    Typography, 
-    Paper,
-    Avatar,
-    CircularProgress,
-    Grid,
-    Tooltip
-} from "@mui/material";
-import React, {useEffect, useState, useTransition} from "react";
+import React, {useEffect, useState} from "react";
 import {
     ApplicationLedgerVb,
     EncoderFactory,
     Hash,
-    Provider,
-    ProviderFactory, WalletCrypto
+    ProviderFactory,
+    WalletCrypto
 } from "@cmts-dev/carmentis-sdk/client";
-import Skeleton from "react-loading-skeleton";
 import {useParams} from "react-router";
-import {Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator} from "@mui/lab";
-import { timelineItemClasses } from '@mui/lab/TimelineItem';
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {useRecoilValue} from "recoil";
 import {useAsync, useAsyncFn} from "react-use";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-    Storage,
     FileDownload,
     OpenInNew,
-    DataObject,
-    Block,
-    Error as ErrorIcon,
-    Dns
+    Block as BlockIcon,
+    FilterList,
+    Refresh,
+    Info
 } from "@mui/icons-material";
 import {BlockViewer} from "@/components/dashboard/BlockViewer.tsx";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
-import {useActiveAccount} from "@/components/popup/PopupDashboard.tsx";
+import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
+import {CircularProgress} from "@mui/material";
+import {ChevronDown, ChevronUp} from "react-bootstrap-icons";
+
+const BLOCKS_PER_PAGE = 20;
 
 export default function VirtualBlockchainViewer() {
     const params = useParams<{hash: string}>();
     const hash = params.hash;
     const wallet = useWallet();
     const activeAccount = useRecoilValue(activeAccountState);
+
     const {loading: keyPairLoading, value: keyPair} = useAsync(async () => {
         return getUserKeyPair(wallet, activeAccount!)
-    })
-    const [state, startTransition] = useAsyncFn(async () => {
-        if (keyPairLoading || !keyPair) return
+    });
+
+    const [state, exportProof] = useAsyncFn(async () => {
+        if (keyPairLoading || !keyPair) return;
         const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
         const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(hash as string));
-        const proof = await vb.exportProof({ author: activeAccount?.pseudo as string })
+        const proof = await vb.exportProof({ author: activeAccount?.pseudo as string });
 
         const json = JSON.stringify(proof, null, 2);
         const blob = new Blob([json], {type: "application/json"});
@@ -82,128 +66,80 @@ export default function VirtualBlockchainViewer() {
         link.href = url;
         link.download = `proof-${hash}.json`;
         link.click();
-        URL.revokeObjectURL(url); // Clean up the URL after downloading
-    }, [keyPair]);
-
-    async function exportProof(chainId: string) {
-        startTransition()
-    }
-
-    // Animation variants
-    const pageVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        }
-    };
+        URL.revokeObjectURL(url);
+    }, [keyPair, hash]);
 
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={pageVariants}
-            className="max-w-6xl mx-auto"
-        >
-            <motion.div variants={itemVariants}>
-                <Box className="mb-8">
-                    <Paper elevation={0} className="bg-linear-to-r from-blue-50 to-indigo-50 border border-gray-100 rounded-lg p-6 mb-6">
-                        <Box className="flex flex-col md:flex-row md:items-center justify-between">
-                            <Box className="grow">
-                                <Box className="flex items-center mb-3">
-                                    <Typography variant="h4" className="font-bold text-gray-800">
-                                        Virtual Blockchain Explorer
-                                    </Typography>
+        <div className="max-w-6xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                    <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                        Virtual Blockchain Explorer
+                    </h1>
+                    <p className="text-sm text-gray-500 mb-3">
+                        Explore microblocks and transactions in this virtual blockchain
+                    </p>
+                    <div className="inline-flex items-center px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+                        <span className="text-xs font-medium text-gray-600 mr-2">ID:</span>
+                        <span className="text-xs font-mono text-blue-700">{hash}</span>
+                    </div>
+                </div>
 
-                                </Box>
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={exportProof}
+                        disabled={state.loading}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {state.loading ? (
+                            <>
+                                <CircularProgress size={16} className="mr-2" sx={{color: 'white'}} />
+                                Exporting...
+                            </>
+                        ) : (
+                            <>
+                                <FileDownload fontSize="small" className="mr-2" />
+                                Export Proof
+                            </>
+                        )}
+                    </button>
 
-                                <Box className="flex items-center mt-2">
-                                    <Chip 
-                                        icon={<Storage className="text-blue-600" />} 
-                                        label={`ID: ${hash}`}
-                                        className="bg-blue-100 text-blue-700 font-medium mr-3"
-                                        size="medium"
-                                    />
-                                    <Typography variant="body1" className="text-gray-600 hidden md:block">
-                                        Explore blocks and transactions in this virtual blockchain
-                                    </Typography>
-                                </Box>
-                            </Box>
+                    <a
+                        href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <OpenInNew fontSize="small" className="mr-2" />
+                        View on Explorer
+                    </a>
+                </div>
+            </div>
 
-                            <Box className="flex flex-wrap gap-3 mt-4 md:mt-0">
-                                <Tooltip title="Export proof for this blockchain">
-                                    <Button 
-                                        variant="contained" 
-                                        color="primary"
-                                        startIcon={state.loading ? <CircularProgress size={20} color="inherit" /> : <FileDownload />}
-                                        onClick={() => exportProof(hash as string)}
-                                        disabled={state.loading}
-                                        className="bg-blue-600 hover:bg-blue-700"
-                                        size="large"
-                                    >
-                                        {state.loading ? 'Exporting...' : 'Export Proof'}
-                                    </Button>
-                                </Tooltip>
-
-                                <Tooltip title="View in blockchain explorer">
-                                    <Link 
-                                        target="_blank" 
-                                        href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${hash}`}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        <Button 
-                                            variant="outlined" 
-                                            startIcon={<OpenInNew />}
-                                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                                            size="large"
-                                        >
-                                            Explore on Chain
-                                        </Button>
-                                    </Link>
-                                </Tooltip>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Box>
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-                <SingleChain chainId={hash!}/>
-            </motion.div>
-        </motion.div>
+            {/* Blockchain Content */}
+            <BlockchainContent chainId={hash!} />
+        </div>
     );
 }
 
-
-function SingleChain({ chainId }: { chainId: string }) {
+function BlockchainContent({ chainId }: { chainId: string }) {
     const wallet = useWallet();
-    const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
-    const vb = ApplicationLedgerVb.createApplicationLedgerVirtualBlockchain(provider)
-    const [height, setHeight] = useState<number|undefined>(undefined);
+    const [height, setHeight] = useState<number | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [displayedBlocks, setDisplayedBlocks] = useState<number>(BLOCKS_PER_PAGE);
+    const [filterFrom, setFilterFrom] = useState<string>("");
+    const [filterTo, setFilterTo] = useState<string>("");
+    const [showFilter, setShowFilter] = useState(false);
 
     async function loadChain() {
         try {
-            const applicationLedger = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
-            const vb = applicationLedger;
             setIsLoading(true);
             setError(null);
+            const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+            const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
             const height = vb.getHeight();
             setHeight(height);
         } catch (err) {
@@ -216,267 +152,280 @@ function SingleChain({ chainId }: { chainId: string }) {
 
     useEffect(() => {
         loadChain();
-    }, []);
-
-    // Animation variants
-    const timelineVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.05,
-                delayChildren: 0.2
-            }
-        }
-    };
+    }, [chainId]);
 
     if (isLoading) {
         return (
-            <Box className="py-8 text-center">
-                <CircularProgress size={60} thickness={4} className="mb-4" />
-                <Typography variant="h6" className="font-medium text-gray-800">
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CircularProgress size={32} thickness={4} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Loading Blockchain Data
-                </Typography>
-            </Box>
+                </h3>
+                <p className="text-sm text-gray-600">
+                    Please wait while we fetch the virtual blockchain...
+                </p>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Paper elevation={0} className="border border-red-100 rounded-lg p-8 text-center">
-                <Avatar className="mx-auto mb-4 bg-red-50 text-red-500 w-16 h-16">
-                    <ErrorIcon fontSize="large" />
-                </Avatar>
-                <Typography variant="h5" className="font-bold text-gray-800 mb-2">
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Info className="text-red-600" sx={{ fontSize: 32 }} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Error Loading Blockchain
-                </Typography>
-                <Typography variant="body1" className="text-gray-600 mb-4">
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
                     {error}
-                </Typography>
-                <Button 
-                    variant="outlined" 
-                    color="error"
-                    onClick={() => loadChain()}
+                </p>
+                <button
+                    type="button"
+                    onClick={loadChain}
+                    className="inline-flex items-center px-4 py-2 bg-white border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
                 >
+                    <Refresh fontSize="small" className="mr-2" />
                     Try Again
-                </Button>
-            </Paper>
+                </button>
+            </div>
         );
     }
 
     if (!height || height === 0) {
         return (
-            <Paper elevation={0} className="border border-gray-100 rounded-lg p-8 text-center">
-                <Avatar className="mx-auto mb-4 bg-blue-50 text-blue-500 w-16 h-16">
-                    <Block fontSize="large" />
-                </Avatar>
-                <Typography variant="h5" className="font-bold text-gray-800 mb-2">
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BlockIcon className="text-blue-600" sx={{ fontSize: 32 }} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     No Blocks Found
-                </Typography>
-                <Typography variant="body1" className="text-gray-600">
-                    This virtual blockchain doesn't contain any blocks yet.
-                </Typography>
-            </Paper>
+                </h3>
+                <p className="text-sm text-gray-600">
+                    This virtual blockchain doesn't contain any microblocks yet.
+                </p>
+            </div>
         );
     }
 
-    const content = [];
-    for (let i = 1; i <= height; i++) {
-        content.push(<BlocViewer key={`${chainId}-${i}`} chainId={chainId} index={i} />);
+    // Apply filters
+    let startBlock = 1;
+    let endBlock = Math.min(displayedBlocks, height);
+
+    if (filterFrom && filterTo) {
+        const from = parseInt(filterFrom);
+        const to = parseInt(filterTo);
+        if (!isNaN(from) && !isNaN(to) && from >= 1 && to <= height && from <= to) {
+            startBlock = from;
+            endBlock = to;
+        }
     }
 
-    return (
-        <Paper elevation={0} className="border border-gray-100 rounded-lg overflow-hidden">
-            <Box className="p-4 bg-blue-50 border-b border-gray-100 flex items-center">
-                <Avatar className="bg-blue-100 text-blue-600 mr-3">
-                    <DataObject />
-                </Avatar>
-                <Typography variant="h6" className="font-semibold text-gray-800">
-                    Blockchain Blocks
-                </Typography>
-                <Chip 
-                    label={`${height} blocks`} 
-                    size="small"
-                    className="ml-auto bg-blue-100 text-blue-700"
-                />
-            </Box>
+    const blockIndices = Array.from({ length: endBlock - startBlock + 1 }, (_, i) => startBlock + i);
+    const hasMore = endBlock < height && !filterFrom && !filterTo;
 
-            <Box className="p-4">
-                <motion.div
-                    variants={timelineVariants}
-                    initial="hidden"
-                    animate="visible"
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg">
+            {/* Blocks Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <BlockIcon className="text-blue-600" fontSize="small" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-semibold text-gray-900">Microblocks</h2>
+                        <p className="text-xs text-gray-500">
+                            {filterFrom && filterTo
+                                ? `Showing blocks ${startBlock}-${endBlock} of ${height}`
+                                : `Showing ${blockIndices.length} of ${height} blocks`
+                            }
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => setShowFilter(!showFilter)}
+                    className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                    <Timeline
-                        sx={{
-                            [`& .${timelineItemClasses.root}:before`]: {
-                                flex: 0,
-                                padding: 0,
-                            },
-                        }}
+                    <FilterList fontSize="small" className="mr-1" />
+                    Filter
+                    {showFilter ? <ChevronUp fontSize="small" className="ml-1" /> : <ChevronDown fontSize="small" className="ml-1" />}
+                </button>
+            </div>
+
+            {/* Filter Panel */}
+            {showFilter && (
+                <div className="p-4 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-end gap-3">
+                        <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">From Block</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max={height}
+                                value={filterFrom}
+                                onChange={(e) => setFilterFrom(e.target.value)}
+                                placeholder="1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">To Block</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max={height}
+                                value={filterTo}
+                                onChange={(e) => setFilterTo(e.target.value)}
+                                placeholder={height.toString()}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setFilterFrom("");
+                                setFilterTo("");
+                            }}
+                            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Blocks List */}
+            <div className="p-4 space-y-3">
+                {blockIndices.map((index) => (
+                    <BlockItem key={`${chainId}-${index}`} chainId={chainId} index={index} />
+                ))}
+            </div>
+
+            {/* Load More */}
+            {hasMore && (
+                <div className="p-4 border-t border-gray-200 text-center">
+                    <button
+                        type="button"
+                        onClick={() => setDisplayedBlocks(prev => Math.min(prev + BLOCKS_PER_PAGE, height))}
+                        className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        {content.map((item, i) => (
-                            <motion.div 
-                                key={i}
-                                variants={{
-                                    hidden: { opacity: 0, y: 20 },
-                                    visible: { 
-                                        opacity: 1, 
-                                        y: 0,
-                                        transition: { 
-                                            type: "spring",
-                                            stiffness: 300,
-                                            damping: 24,
-                                            delay: i * 0.05
-                                        }
-                                    }
-                                }}
-                            >
-                                <TimelineItem>
-                                    <TimelineSeparator>
-                                        <TimelineDot color="primary" />
-                                        {i < content.length - 1 && <TimelineConnector />}
-                                    </TimelineSeparator>
-                                    <TimelineContent>
-                                        {item}
-                                    </TimelineContent>
-                                </TimelineItem>
-                            </motion.div>
-                        ))}
-                    </Timeline>
-                </motion.div>
-            </Box>
-        </Paper>
+                        Load More ({Math.min(BLOCKS_PER_PAGE, height - displayedBlocks)} blocks)
+                    </button>
+                </div>
+            )}
+        </div>
     );
 }
 
-function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
+function BlockItem({ chainId, index }: { chainId: string, index: number }) {
     const wallet = useRecoilValue(walletState);
-    const encoder = EncoderFactory.defaultBytesToStringEncoder();
-    const walletSeed = WalletCrypto.fromSeed(encoder.decode(wallet.seed));
-    const activeAccount = useActiveAccount();
-    const accountCrypto = walletSeed.getAccount(activeAccount?.nonce);
-    const [record, setRecord] = useState<Record<string, any>|undefined>(undefined);
-    const [isLoading, setIsLoading] = useState(true);
+    const activeAccount = useRecoilValue(activeAccountState);
+    const [record, setRecord] = useState<Record<string, any> | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     async function loadBlock() {
         try {
-
             setIsLoading(true);
             setError(null);
+
+            const encoder = EncoderFactory.defaultBytesToStringEncoder();
+            const walletSeed = WalletCrypto.fromSeed(encoder.decode(wallet.seed));
+            const accountCrypto = walletSeed.getAccount(activeAccount?.nonce);
+
             const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet?.nodeEndpoint as string);
             const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
             const genesisSeed = await vb.getGenesisSeed();
             const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
             const record = await vb.getRecord(index, actorCrypto);
-            console.log("Obtained record:", record)
+
             setRecord(record);
         } catch (err) {
             console.error(`Error loading block ${index}:`, err);
-            setError(`Failed to load block ${index}. Please try again.`);
+            setError(`Failed to load block data.`);
         } finally {
             setIsLoading(false);
         }
     }
 
     useEffect(() => {
-        loadBlock();
-    }, []);
-
-    // Animation variants
-    const cardVariants = {
-        hidden: { opacity: 0, scale: 0.95 },
-        visible: {
-            opacity: 1,
-            scale: 1,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
+        if (isExpanded && record === undefined && !isLoading && !error) {
+            loadBlock();
         }
-    };
-
-    if (isLoading) {
-        return (
-            <Card className="border border-gray-100 shadow-sm mb-4 overflow-hidden">
-                <CardContent className="p-4">
-                    <Box className="flex items-center mb-3">
-                        <Skeleton width={120} height={28} />
-                    </Box>
-                    <Skeleton height={150} />
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (error) {
-        return (
-            <Card className="border border-red-100 shadow-sm mb-4 overflow-hidden">
-                <CardContent className="p-4">
-                    <Box className="flex items-center mb-2">
-                        <ErrorIcon className="text-red-500 mr-2" />
-                        <Typography variant="h6" className="font-medium text-red-600">
-                            Error Loading Block {index}
-                        </Typography>
-                    </Box>
-                    <Typography variant="body2" className="text-gray-600 mb-3">
-                        {error}
-                    </Typography>
-                    <Button 
-                        size="small" 
-                        variant="outlined" 
-                        color="error"
-                        onClick={() => loadBlock()}
-                    >
-                        Retry
-                    </Button>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (record === undefined) {
-        return (
-            <Card className="border border-gray-100 shadow-sm mb-4 overflow-hidden">
-                <CardContent className="p-4">
-                    <Typography variant="h6" className="font-medium text-gray-700 mb-2">
-                        Block {index}
-                    </Typography>
-                    <Typography variant="body2" className="text-gray-500">
-                        No data available for this block.
-                    </Typography>
-                </CardContent>
-            </Card>
-        );
-    }
+    }, [isExpanded]);
 
     return (
-        <motion.div variants={cardVariants}>
-            <Card className="border border-gray-100 shadow-sm mb-4 overflow-hidden hover:shadow-md transition-shadow duration-200">
-                <CardContent className="p-0">
-                    <Box className="p-3 bg-blue-50 border-b border-gray-100 flex items-center">
-                        <Avatar className="bg-blue-100 text-blue-600 mr-2" sx={{ width: 28, height: 28 }}>
-                            <Block fontSize="small" />
-                        </Avatar>
-                        <Typography variant="h6" className="font-medium text-gray-800">
-                            Block {index}
-                        </Typography>
-                        <Tooltip title="Block index in the blockchain">
-                            <Chip 
-                                label={`#${index}`} 
-                                size="small"
-                                className="ml-auto bg-blue-100 text-blue-700"
-                            />
-                        </Tooltip>
-                    </Box>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {/* Block Header - Collapsed View */}
+            <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <BlockIcon className="text-blue-600" sx={{ fontSize: 18 }} />
+                    </div>
+                    <div className="text-left">
+                        <div className="text-sm font-semibold text-gray-900">Block #{index}</div>
+                        <div className="text-xs text-gray-500">Microblock position in virtual blockchain</div>
+                    </div>
+                </div>
 
-                    <Box className="p-4">
-                        <BlockViewer initialPath={[]} data={record}/>
-                    </Box>
-                </CardContent>
-            </Card>
-        </motion.div>
+                <div className="flex items-center gap-2">
+                    {isExpanded && record && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                            {Object.keys(record).length} fields
+                        </span>
+                    )}
+                    {isExpanded ? (
+                        <ChevronUp className="text-gray-500" />
+                    ) : (
+                        <ChevronDown className="text-gray-500" />
+                    )}
+                </div>
+            </button>
+
+            {/* Block Details - Expanded View */}
+            {isExpanded && (
+                <div className="p-4 bg-white border-t border-gray-200">
+                    {isLoading && (
+                        <div className="text-center py-8">
+                            <CircularProgress size={32} thickness={4} />
+                            <p className="text-sm text-gray-600 mt-3">Loading block data...</p>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="text-center py-8">
+                            <p className="text-sm text-red-600 mb-3">{error}</p>
+                            <button
+                                type="button"
+                                onClick={loadBlock}
+                                className="inline-flex items-center px-3 py-1.5 bg-white border border-red-300 text-red-700 text-xs font-medium rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                                <Refresh fontSize="small" className="mr-1" />
+                                Retry
+                            </button>
+                        </div>
+                    )}
+
+                    {!isLoading && !error && record && (
+                        <BlockViewer initialPath={[]} data={record} />
+                    )}
+
+                    {!isLoading && !error && record === undefined && (
+                        <p className="text-sm text-gray-500 text-center py-4">
+                            No data available for this block.
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }
