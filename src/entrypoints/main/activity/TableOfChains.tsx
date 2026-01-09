@@ -16,13 +16,13 @@
  */
 
 import {useRecoilValue} from "recoil";
-import {activeAccountState, walletState} from "@/states/globals.tsx";
+import {activeAccountCryptoState, activeAccountState, walletState} from "@/states/globals.tsx";
 import {useNavigate} from "react-router";
 import React, {useEffect, useState} from "react";
 import {EmptyStateMessage} from "@/entrypoints/main/activity/EmptyStateMessage.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
-import {Hash, Provider, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {Hash, Logger, Provider, ProviderFactory} from "@cmts-dev/carmentis-sdk/client";
 import {Avatar, Box, Button, Chip, CircularProgress, Paper, Typography} from "@mui/material";
 import {ArrowRight, Business, Refresh, Schedule, Storage, Timeline} from "@mui/icons-material";
 import {LoadingState} from "@/entrypoints/main/activity/LoadingState.tsx";
@@ -34,6 +34,7 @@ export function TableOfChains() {
     const limit = 200;
     const wallet = useRecoilValue(walletState);
     const activeAccount = useRecoilValue(activeAccountState);
+    const activeAccountCrypto = useRecoilValue(activeAccountCryptoState);
     const navigate = useNavigate();
     const [chains, setChains] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -48,15 +49,7 @@ export function TableOfChains() {
             setError(null);
 
             const db = await AccountDataStorage.connectDatabase(activeAccount!);
-            const keyPair = await getUserKeyPair(wallet!, activeAccount!);
             const chains = await db.getAllApplicationVirtualBlockchainId(offset, limit);
-            /*
-            sdk.blockchain.blockchainCore.setUser(
-                sdk.blockchain.ROLES.OPERATOR,
-                sdk.utils.encoding.toHexa(keyPair.privateKey)
-            );
-
-             */
 
             setChains(chains.map(c => c.virtualBlockchainId));
         } catch (err) {
@@ -89,6 +82,8 @@ export function TableOfChains() {
             // loading the organisation, application and application ledger
             console.log("Loading application ledger...")
             const applicationLedger = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chain));
+            const genesisSeed = await applicationLedger.getGenesisSeed();
+            const actorCrypto = activeAccountCrypto?.getActor(genesisSeed.toBytes());
             console.log("Loading application...")
             const application = await provider.loadApplicationVirtualBlockchain(applicationLedger.getApplicationId());
             const organisationId = await application.getOrganizationId();
@@ -104,7 +99,7 @@ export function TableOfChains() {
             const timestamps = [];
             for (let index = 1; index <= height; index++) {
                 const vb = applicationLedger;
-                const record = await applicationLedger.getRecord(index)
+                const record = await applicationLedger.getRecord(index, actorCrypto)
                 const mb = await vb.getMicroblock(index);
                 timestamps.push(mb.getTimestamp());
                 records.push(record)

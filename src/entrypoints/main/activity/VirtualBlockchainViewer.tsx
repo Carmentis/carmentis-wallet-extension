@@ -71,8 +71,8 @@ export default function VirtualBlockchainViewer() {
     })
     const [state, startTransition] = useAsyncFn(async () => {
         if (keyPairLoading || !keyPair) return
-        const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet.nodeEndpoint);
-        const vb = await provider.loadApplicationLedger(Hash.from(hash as string));
+        const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
+        const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(hash as string));
         const proof = await vb.exportProof({ author: activeAccount?.pseudo as string })
 
         const json = JSON.stringify(proof, null, 2);
@@ -367,7 +367,9 @@ function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
             setError(null);
             const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet?.nodeEndpoint as string);
             const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
-            const record = await vb.getRecord(index, accountCrypto);
+            const genesisSeed = await vb.getGenesisSeed();
+            const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
+            const record = await vb.getRecord(index, actorCrypto);
             console.log("Obtained record:", record)
             setRecord(record);
         } catch (err) {

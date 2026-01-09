@@ -25,6 +25,7 @@ import Dashboard from '@/entrypoints/main/dashboard/Dashboard.tsx';
 import {useRecoilValue} from 'recoil';
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
+import {Logger} from "@cmts-dev/carmentis-sdk/client";
 
 /**
  * This function returns the full page entrypoint called by the main application.
@@ -35,6 +36,8 @@ import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
  * @constructor
  */
 export function FullPageEntrypoint() : ReactElement {
+    // enable logs
+    Logger.enableLogsSync();
     return <AuthenticationManager>
         <FullPageApp></FullPageApp>
     </AuthenticationManager>
