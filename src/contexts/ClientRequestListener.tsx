@@ -16,7 +16,7 @@
  */
 
 import React, {ReactElement, useEffect} from "react";
-import {useSetRecoilState} from "recoil";
+import {useRecoilState, useSetRecoilState} from "recoil";
 
 import {
     QRDataClientRequest,
@@ -35,20 +35,25 @@ import {clientRequestSessionState} from "@/states/globals.tsx";
  * @return {JSX.Element} The rendered component containing the child elements.
  */
 export function ClientRequestListener(props: { children: ReactElement }): JSX.Element {
-    const setClientRequestSession = useSetRecoilState(clientRequestSessionState);
+    const [clientRequestSession, setClientRequestSession] = useRecoilState(clientRequestSessionState);
+
 
     useEffect(() => {
-        const handleMessage = async (message: QRDataClientRequest|unknown) => {
+        const handleMessage = async (message: QRDataClientRequest) => {
             console.log("[client request state writer] Received message:", message)
 
             // here we only handle new client request
-            if ((message as QRDataClientRequest).data) {
-                setClientRequestSession(message)
+            if (message.data) {
+                if (clientRequestSession === undefined) {
+                    setClientRequestSession(message)
+                } else {
+                    console.warn(`The client request session is already set. Ignoring incoming request:`, message.data);
+                }
             }
         };
 
         const listener = (
-            message: QRDataClientRequest|unknown,
+            message: QRDataClientRequest,
             sender: MessageSender,
             sendResponse: (message: unknown) => void
         ) => {

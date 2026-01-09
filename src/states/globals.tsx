@@ -16,7 +16,13 @@
  */
 
 import {atom, AtomEffect, selector} from "recoil";
-import {PublicSignatureKey} from "@cmts-dev/carmentis-sdk/client";
+import {
+    AccountCrypto,
+    EncoderFactory,
+    PublicSignatureKey,
+    SignatureSchemeId,
+    WalletCrypto
+} from "@cmts-dev/carmentis-sdk/client";
 import {useAccountKeyPairLoader} from "@/hooks/useAccountKeyPairLoader.tsx";
 import {SignatureKeyPair} from "@/types/SignatureKeyPair.tsx";
 import {Account} from "@/types/Account.ts";
@@ -70,6 +76,25 @@ export const activeAccountState = selector<Account | undefined>({
         return wallet.accounts.find(v => v.id === wallet.activeAccountId);
     }
 })
+
+
+export const activeAccountCryptoState = selector<AccountCrypto | undefined>({
+    key: "activeAccountCrypto",
+    get: async ({get}) => {
+        const wallet = get(walletState);
+        const activeAccount = get(activeAccountState)
+        if (!wallet || !activeAccount)
+            return undefined;
+
+        const hexEncoder = EncoderFactory.bytesToHexEncoder();
+        let seed = hexEncoder.decode(wallet.seed);
+        const carmentisWallet = WalletCrypto.fromSeed(seed);
+        const accountCrypto = carmentisWallet.getAccount(activeAccount.nonce);
+        return accountCrypto;
+    }
+})
+
+
 export const activeAccountKeyPairState = selector<SignatureKeyPair | undefined>({
     key: "activeAccountKeyPair",
     get: async ({get}) => {
@@ -81,6 +106,8 @@ export const activeAccountKeyPairState = selector<SignatureKeyPair | undefined>(
         return await loadAccountKeyPair(wallet, activeAccount);
     }
 })
+
+
 export const activeAccountPublicKeyState = selector<PublicSignatureKey | undefined>({
     key: "activeAccountPublicKey",
     get: ({get}) => {

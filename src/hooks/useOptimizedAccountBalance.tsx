@@ -34,6 +34,6 @@ export function useOptimizedAccountBalance() {
     const wallet = useWallet();
     return useSWR(
         accountPublicKey ? ['balanceAccount', accountPublicKey, wallet] : null,
-        ([, pk, wallet]) => useAccountBalance(pk, wallet.nodeEndpoint)
+        ([, pk, wallet]) => useAccountBalance()
     );
 }

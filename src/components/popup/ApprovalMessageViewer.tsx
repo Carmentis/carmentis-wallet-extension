@@ -15,14 +15,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {ApplicationLedger} from "@cmts-dev/carmentis-sdk/client";
 import React, {ReactElement, useEffect, useState} from "react";
 import Skeleton from "react-loading-skeleton";
 import {useSetRecoilState} from "recoil";
 import {dataViewEnabledState, heightState, pathState} from "@/components/popup/states.ts";
 import {FieldTokenType} from "@/types/FieldTokenType.tsx";
+import {ApplicationLedgerVb} from "@cmts-dev/carmentis-sdk/client";
 
-export type AppLedgerVBProps = { applicationLedger: ApplicationLedger }
+export type AppLedgerVBProps = { applicationLedger: ApplicationLedgerVb }
 
 /**
  * A React component for viewing approval messages. This component displays a formatted message

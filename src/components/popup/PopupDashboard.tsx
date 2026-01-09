@@ -21,13 +21,8 @@ import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {Box, Button, Typography} from "@mui/material";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {
-    EncoderFactory,
-    StringSignatureEncoder,
+    EncoderFactory, WalletRequestType, WalletRequestValidation, WalletResponse,
     wiExtensionWallet,
-    WIRQ_AUTH_BY_PUBLIC_KEY,
-    WIRQ_DATA_APPROVAL,
-    WIRQ_GET_EMAIL,
-    WIRQ_GET_USER_DATA
 } from "@cmts-dev/carmentis-sdk/client";
 import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse,} from "@/entrypoints/background.ts";
 import PopupEventApproval from "@/components/popup/PopupEventApproval.tsx";
@@ -40,6 +35,10 @@ import {activeAccountState, clientRequestSessionState, showSuccessScreenState, w
 import {Account} from "@/types/Account.ts";
 import {Wallet} from "@/types/Wallet.ts";
 import CarmentisLogoDark from "@/components/shared/CarmentisLogoDark.tsx";
+import {
+    ClientBridgeValidation
+} from "../../../../carmentis-core/src/common/type/valibot/clientBridge/ClientBridgeEncoder.ts";
+import {wallet} from "@/lib/carmentis-nodejs-sdk";
 
 
 
@@ -98,10 +97,12 @@ export const useUserKeyPair = () =>  {
 
 export const useClientRequest = () => {
     const clientRequest = useRecoilValue(clientRequestSessionState);
+    console.log("Client request in useClientRequest:", clientRequest)
     const noRequest = clientRequest === undefined;
     const error = useRecoilValue(errorState);
     const success = useRecoilValue(showSuccessScreenState);
-    return { clientRequest, noRequest, error, success  };
+    const walletRequest = clientRequest ? WalletRequestValidation.validateWalletRequest(clientRequest.data) : undefined;
+    return { walletRequest, clientRequest, noRequest, error, success  };
 }
 
 export function PopupDashboard() {
@@ -261,16 +262,15 @@ export function OriginAndDateOfCurrentRequest() {
 
 function PopupBody() {
     // the current client request stored in session (possibly undefined)
-    const {clientRequest, noRequest, error, success} = useClientRequest();
+    const {walletRequest, clientRequest, noRequest, error, success} = useClientRequest();
+    console.log(walletRequest, clientRequest)
 
     // by default when there is no client request display the default dashboard
     if (error) return <PopupError/>
     if (success) return <PopupSuccess/>
     if (noRequest)  return <PopupIdleBody/>
-    const wiWallet = new wiExtensionWallet();
-    const req = wiWallet.getRequestFromMessage(clientRequest.data)
-    if (req.type === WIRQ_AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody/>
-    if (req.type === WIRQ_DATA_APPROVAL) return <PopupEventApproval/>
+    if (walletRequest.type === WalletRequestType.AUTH_BY_PUBLIC_KEY) return <PopupAuthByPublicKeyBody/>
+    if (walletRequest.type === WalletRequestType.DATA_APPROVAL) return <PopupEventApproval/>
 
     return <>You have a request!</>
 }
@@ -316,8 +316,9 @@ function PopupSuccess() {
     );
 }
 
-function PopupError() {
+export function PopupError(input: { error?: Error }) {
     const wallet = useWallet();
+    const clearClientRequest = useClearClientRequest();
     const [error, setError] = useRecoilState(errorState);
 
     function renderNotificationError(error: unknown) {
@@ -332,6 +333,11 @@ function PopupError() {
         } else {
             return `${error}`;
         }
+    }
+
+    function clear() {
+        setError(undefined);
+        clearClientRequest()
     }
 
     const errorMessage = renderNotificationError(error);
@@ -383,7 +389,7 @@ function PopupError() {
     const footer = (
         <Button 
             className="uppercase w-full py-2 bg-red-500 hover:bg-red-600 text-white transition-all duration-200" 
-            onClick={() => setError(undefined)} 
+            onClick={clear}
             variant="contained"
         >
             Dismiss
@@ -452,21 +458,20 @@ function PopupIdleBody() {
 
 function PopupAuthByPublicKeyBody() {
     const maskAsAccepted = useAccept();
-    const {clientRequest} = useClientRequest();
+    const {walletRequest} = useClientRequest();
     const genKeyPair = useUserKeyPair()
 
 
     async function accept() {
-        if (clientRequest === undefined) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
+        if (walletRequest === undefined || walletRequest.type !== WalletRequestType.AUTH_BY_PUBLIC_KEY) throw "Invalid state: wiWallet and clientRequest cannot be null at this step";
         const wiWallet = new wiExtensionWallet();
         const keyPair = await genKeyPair()
-        const req = wiWallet.getRequestFromMessage(clientRequest.data)
-        const answer = wiWallet.signAuthenticationByPublicKey(
+        const answer = await wiWallet.signAuthenticationByPublicKey(
             keyPair.privateKey,
-            req.object
+            walletRequest
         );
 
-        const response: BackgroundRequest<ClientResponse> = {
+        const response: BackgroundRequest<WalletResponse> = {
             backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
             payload: answer
         }

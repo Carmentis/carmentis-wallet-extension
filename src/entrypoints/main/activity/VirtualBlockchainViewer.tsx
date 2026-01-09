@@ -37,7 +37,7 @@ import {
     EncoderFactory,
     Hash,
     Provider,
-    ProviderFactory
+    ProviderFactory, WalletCrypto
 } from "@cmts-dev/carmentis-sdk/client";
 import Skeleton from "react-loading-skeleton";
 import {useParams} from "react-router";
@@ -59,6 +59,7 @@ import {
 import {BlockViewer} from "@/components/dashboard/BlockViewer.tsx";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
+import {useActiveAccount} from "@/components/popup/PopupDashboard.tsx";
 
 export default function VirtualBlockchainViewer() {
     const params = useParams<{hash: string}>();
@@ -192,15 +193,15 @@ export default function VirtualBlockchainViewer() {
 function SingleChain({ chainId }: { chainId: string }) {
     const wallet = useWallet();
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
-    const vb = new ApplicationLedgerVb({provider})
+    const vb = ApplicationLedgerVb.createApplicationLedgerVirtualBlockchain(provider)
     const [height, setHeight] = useState<number|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     async function loadChain() {
         try {
-            const applicationLedger = await provider.loadApplicationLedger(Hash.from(chainId));
-            const vb = applicationLedger.getVirtualBlockchain();
+            const applicationLedger = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
+            const vb = applicationLedger;
             setIsLoading(true);
             setError(null);
             const height = vb.getHeight();
@@ -351,20 +352,23 @@ function SingleChain({ chainId }: { chainId: string }) {
 
 function BlocViewer({ chainId, index }: { chainId: string, index: number }) {
     const wallet = useRecoilValue(walletState);
+    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+    const walletSeed = WalletCrypto.fromSeed(encoder.decode(wallet.seed));
+    const activeAccount = useActiveAccount();
+    const accountCrypto = walletSeed.getAccount(activeAccount?.nonce);
     const [record, setRecord] = useState<Record<string, any>|undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const activeAccount = useRecoilValue(activeAccountState);
 
     async function loadBlock() {
         try {
 
             setIsLoading(true);
             setError(null);
-            const keyPair = await getUserKeyPair(wallet!, activeAccount!);
-            const provider = ProviderFactory.createKeyedProviderExternalProvider(keyPair.privateKey, wallet?.nodeEndpoint as string);
-            const vb = await provider.loadApplicationLedger(Hash.from(chainId));
-            const record = await vb.getRecord(index);
+            const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet?.nodeEndpoint as string);
+            const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chainId));
+            const record = await vb.getRecord(index, accountCrypto);
+            console.log("Obtained record:", record)
             setRecord(record);
         } catch (err) {
             console.error(`Error loading block ${index}:`, err);

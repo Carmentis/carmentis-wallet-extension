@@ -88,13 +88,13 @@ export function TableOfChains() {
 
             // loading the organisation, application and application ledger
             console.log("Loading application ledger...")
-            const applicationLedger = await provider.loadApplicationLedger(Hash.from(chain));
+            const applicationLedger = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(chain));
             console.log("Loading application...")
-            const application = await provider.loadApplication(applicationLedger.getApplicationId());
+            const application = await provider.loadApplicationVirtualBlockchain(applicationLedger.getApplicationId());
             const organisationId = await application.getOrganizationId();
             console.log("Loading organisation...")
-            const organisation = await provider.loadOrganization(organisationId);
-            const applicationDescription = await application.getDescription();
+            const organisation = await provider.loadOrganizationVirtualBlockchain(organisationId);
+            const applicationDescription = await application.getApplicationDescription();
             const organisationDescription = await organisation.getDescription();
             const height = applicationLedger.getHeight();
 
@@ -103,7 +103,7 @@ export function TableOfChains() {
             const records = [];
             const timestamps = [];
             for (let index = 1; index <= height; index++) {
-                const vb = applicationLedger.getVirtualBlockchain();
+                const vb = applicationLedger;
                 const record = await applicationLedger.getRecord(index)
                 const mb = await vb.getMicroblock(index);
                 timestamps.push(mb.getTimestamp());

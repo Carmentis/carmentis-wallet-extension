@@ -1,19 +1,24 @@
-import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import {RecoilLoadable, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {
-    ApplicationLedger,
+    ApplicationLedgerVb,
     EncoderFactory,
     Hash,
-    Provider,
+    Microblock,
+    MicroblockConsistencyChecker,
     ProviderFactory,
+    SignatureSchemeId,
+    VirtualBlockchainLabel,
+    WalletCrypto,
+    WalletRequestType,
+    WalletResponse,
     wiExtensionWallet
 } from "@cmts-dev/carmentis-sdk/client";
 import React, {useEffect, useRef, useState} from "react";
-import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {motion} from "framer-motion";
 import {Box, Button, Typography} from "@mui/material";
 import {Code, KeyboardBackspace} from "@mui/icons-material";
 import {dataViewEnabledState, errorState} from "@/components/popup/states.ts";
-import {BACKGROUND_REQUEST_TYPE, BackgroundRequest, ClientResponse} from "@/entrypoints/background.ts";
+import {BACKGROUND_REQUEST_TYPE, BackgroundRequest} from "@/entrypoints/background.ts";
 import {Splashscreen} from "@/components/shared/Splashscreen.tsx";
 import {
     AcceptDeclineButtonsFooter,
@@ -22,13 +27,24 @@ import {
     useAccept,
     useActiveAccount,
     useClearClientRequest,
-    useUserKeyPair
+    useClientRequest
 } from "@/components/popup/PopupDashboard.tsx";
 import {AccountDataStorage} from "@/utils/db/AccountDataStorage.ts";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {ApprovalMessageViewer} from "@/components/popup/ApprovalMessageViewer.tsx";
 import {RecordDataViewer} from "@/components/popup/RecordDataViewer.tsx";
-import {clientRequestSessionState} from "@/states/globals.tsx";
+import {useAsync} from "react-use";
+import loading = RecoilLoadable.loading;
+import {activeAccountCryptoState} from "@/states/globals.tsx";
+
+
+function PopupLoading(input:{label: string}) {
+    const clearRequest = useClearClientRequest();
+    return <>
+        <Splashscreen label={"Microblock approval loading..."}/>
+        <button onClick={clearRequest}>Stop</button>
+    </>
+}
 
 /**
  * PopupEventApproval is a React functional component that handles the process of approving or declining
@@ -40,75 +56,147 @@ import {clientRequestSessionState} from "@/states/globals.tsx";
  *                       and actionable buttons for the user to accept or decline the request.
  */
 export default function PopupEventApproval() {
+    // we use these functions to manage the state of the request
     const clearRequest = useClearClientRequest();
     const maskAsAccepted = useAccept();
-    const genKeyPair = useUserKeyPair();
-    const wallet = useWallet();
-    const activeAccount = useActiveAccount();
-    const [ready, setReady] = useState(false);
-    const virtualBlockchainRef = useRef<ApplicationLedger|null>(null);
-    const [dataViewEnabled, setDataViewEnabled] = useRecoilState(dataViewEnabledState);
     const setError = useSetRecoilState(errorState);
+
+    //
+    const [dataViewEnabled, setDataViewEnabled] = useRecoilState(dataViewEnabledState);
+
+
+    // obtain the received request
+    const {walletRequest, clientRequest} = useClientRequest();
+
+
+    // instantiate the cryptography keys for the active account
+    const wallet = useWallet();
+    const encoder = EncoderFactory.defaultBytesToStringEncoder();
+    const activeAccount = useActiveAccount();
+    const accountCrypto = useRecoilValue(activeAccountCryptoState)
+
+    // create a reference to the virtual blockchain containing the microblock block to approve (initially undefined)
+    const virtualBlockchainRef = useRef<ApplicationLedgerVb|null>(null);
+    const microblockRef = useRef<Microblock|null>(null);
+
+
     const wiWallet = new wiExtensionWallet();
-    const clientRequest = useRecoilValue(clientRequestSessionState);
-    const req = wiWallet.getRequestFromMessage(clientRequest.data);
     const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
 
-    useEffect(() => {
-        setDataViewEnabled(true);
-        const loadRequest = async () => {
-            const keyPair = await genKeyPair();
-            const encoder = EncoderFactory.defaultBytesToStringEncoder();
-            const walletSeed = encoder.decode(wallet.seed);
+    // use an async method for preparation
+    const {value, loading: isPreparing, error: preparationFailure} = useAsync(async () => {
+        if (clientRequest === undefined) throw new Error("Client request is undefined");
+        if (walletRequest === undefined) throw new Error("Wallet request is undefined");
+        if (walletRequest.type !== WalletRequestType.DATA_APPROVAL) throw new Error("Invalid wallet request type");
 
-            wiWallet.getApprovalData(keyPair.privateKey, walletSeed, req.object)
-                .then(async (microblockData) => {
+        const serverUrl = walletRequest.serverUrl;
+        const anchorRequestId = walletRequest.anchorRequestId
+        console.log(`Fetching approval data at ${serverUrl} for anchor request id:`, anchorRequestId);
+        const approvalData = await wiWallet.getApprovalData(
+            accountCrypto,
+            {serverUrl, anchorRequestId}
+        );
 
-                    // check the received microblock
-                    const importer = provider.getMicroblockImporter(microblockData);
-                    const isValidMicroBlock = await importer.isValidMicroBlock();
-                    if (!isValidMicroBlock) throw new Error("Invalid microblock received");
+        // parse the  received microblock
+        console.log("Parsing received microblock")
+        const b64 = EncoderFactory.bytesToBase64Encoder();
+        const mb = Microblock.loadFromSerializedMicroblock(
+            b64.decode(approvalData.b64SerializedMicroblock)
+        );
+        console.log(mb.toString())
+        console.log(EncoderFactory.bytesToBase64Encoder().encode(mb.getPreviousHash().toBytes()))
 
-                    // load the microblock
-                    const applicationLedger = importer.getVirtualBlockchainObject<ApplicationLedger>();
-                    const virtualBlockchain = applicationLedger.getVirtualBlockchain();
-                    virtualBlockchainRef.current = applicationLedger;
-                    console.log("chain id:", encoder.encode(virtualBlockchain.getId()))
-                    setReady(true)
-                }).catch(e => {
-                    clearRequest()
-                    console.error(e);
-                    setError(e.message);
-                });
-        };
+        // check that the microblock is valid
+        let applicationLedger = mb.getHeight() === 1 ?
+            ApplicationLedgerVb.createApplicationLedgerVirtualBlockchain(provider) :
+            await provider.loadApplicationLedgerVirtualBlockchain(
+                await provider.getVirtualBlockchainIdContainingMicroblock(
+                    // we are looking for the previous microblock hash, the received one is not anchored yet
+                    mb.getPreviousHash()
+                )
+            );
+        applicationLedger.enableDraftMode();
+        await applicationLedger.appendMicroBlock(mb);
 
-        loadRequest();
+        // store the application ledger and microblock
+        virtualBlockchainRef.current = applicationLedger;
+        microblockRef.current = mb;
 
 
-        return () => {
-            clearRequest()
-        }
+        console.log("chain id:", encoder.encode(applicationLedger.getId()))
     }, []);
 
+    useEffect(() => {
+        if (preparationFailure) {
+            setError(preparationFailure.message)
+        }
+    }, [preparationFailure])
+
+    /*
+    useEffect(() => {
+        if (preparationFailure) {
+            clearRequest()
+            console.error(preparationFailure);
+            setError(preparationFailure.message);
+        }
+    }, [isPreparing, preparationFailure]);
+
+
+     */
 
     async function accept() {
-        // derive the actor key from the private key and the genesis seed
-        const keyPair = await getUserKeyPair(wallet!, activeAccount!);
-        const vb = applicationLedger.getVirtualBlockchain();
-        const signature = await vb.signAsEndorser(keyPair.privateKey); // TODO: derive key pair
+        if (walletRequest === undefined) throw new Error("Wallet request is undefined");
+        if (walletRequest.type !== WalletRequestType.DATA_APPROVAL) throw new Error("Invalid wallet request type");
 
+        // derive the actor key from the private key and the genesis seed
+        const genesisSeed = await virtualBlockchainRef.current!.getGenesisSeed();
+        console.log(`Obtained genesis seed when accepting: ${EncoderFactory.bytesToBase64Encoder().encode(genesisSeed.toBytes())}`)
+        /*
+        const {loading, error, value: record} = useAsync(async () => {
+            const genesisSeed = await applicationLedger.getGenesisSeed();
+            const actorCrypto = accountCrypto?.deriveActorFromVbSeed(genesisSeed.toBytes());
+            console.log(actorCrypto);
+            const pk = await actorCrypto?.getPublicSignatureKey(SignatureSchemeId.SECP256K1);
+            console.log(applicationLedger)
+            console.log(await applicationLedger.getActorIdByPublicSignatureKey(pk))
+            return await applicationLedger.getRecord(h, actorCrypto);
+        }, [h])
+
+         */
+        const actorCrypto = accountCrypto.deriveActorFromVbSeed(genesisSeed.toBytes());
+        const actorPrivateSignatureKey = await actorCrypto.getPrivateSignatureKey(SignatureSchemeId.SECP256K1);
+
+
+        // TODO: check that we are currently the endorser
+        const mb = microblockRef.current;
+        if (mb === null) throw new Error("Microblock is undefined");
+        const signature = await mb.sign(
+            actorPrivateSignatureKey,
+            false
+        );
+
+        const serverUrl = walletRequest.serverUrl;
+        const anchorRequestId = walletRequest.anchorRequestId
         try {
-            const answer = await wiWallet.sendApprovalSignature(keyPair.privateKey, req.object, signature);
-            const vbHash = answer.walletObject.vbHash;
+            const answer = await wiWallet.sendApprovalSignature(
+                serverUrl,
+                anchorRequestId,
+                signature
+            );
+
 
             // store the virtual blockchain id in which the user is involved
+            const b64 = EncoderFactory.bytesToBase64Encoder();
+            const hex = EncoderFactory.bytesToHexEncoder();
+            const vbHash = b64.decode(answer.b64VbHash);
+            console.log(`Received virtual blockchain id: ${hex.encode(vbHash)}`)
             const db = await AccountDataStorage.connectDatabase(activeAccount!);
-            await db.storeApplicationVirtualBlockchainId(Hash.from(vbHash).encode())
+            await db.storeApplicationVirtualBlockchainId(hex.encode(vbHash))
 
             // clear the current request
-            const response: BackgroundRequest<ClientResponse> = {
+            const response: BackgroundRequest<WalletResponse> = {
                 backgroundRequestType: BACKGROUND_REQUEST_TYPE.CLIENT_RESPONSE,
-                payload: answer.clientAnswer
+                payload: answer
             }
 
             console.log("[popup dashboard] Response:", response)
@@ -121,7 +209,10 @@ export default function PopupEventApproval() {
 
     }
 
-    if (!ready) return <Splashscreen label={"Request loading..."}/>
+    console.log(value, preparationFailure)
+    if (isPreparing) return <PopupLoading label={"Microblock approval loading..."}/>
+    if (preparationFailure) return <>An error occured: {preparationFailure.message}</>
+
     const applicationLedger = virtualBlockchainRef.current!;
 
     let header = <></>;

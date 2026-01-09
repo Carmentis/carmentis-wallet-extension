@@ -16,7 +16,7 @@
  */
 
 import {AppLedgerVBProps} from "@/components/popup/ApprovalMessageViewer.tsx";
-import {useRecoilState} from "recoil";
+import {useRecoilState, useRecoilValue} from "recoil";
 import {heightState, pathState} from "@/components/popup/states.ts";
 import {useAsync} from "react-use";
 import {
@@ -29,6 +29,8 @@ import Skeleton from "react-loading-skeleton";
 import {Box, IconButton, Tooltip, Typography} from "@mui/material";
 import {PopupJsonViewer} from "@/components/popup/PopupJsonViewer.tsx";
 import React from "react";
+import {activeAccountCryptoState} from "@/states/globals.tsx";
+import {SignatureSchemeId, CryptoEncoderFactory} from '@cmts-dev/carmentis-sdk/client';
 
 /**
  * Compares two numbers and returns the larger of the two.
@@ -55,12 +57,24 @@ function min(a: number, b: number) {
 export function RecordDataViewer({applicationLedger}: AppLedgerVBProps) {
     const [height, setHeight] = useRecoilState(heightState);
     const [path, setPath] = useRecoilState(pathState);
-    const vb = applicationLedger.getVirtualBlockchain();
-    const maxH = vb.getHeight();
-    const h = height ?? vb.getHeight();
+    const maxH = applicationLedger.getHeight();
+    const h = height ?? applicationLedger.getHeight();
+    const accountCrypto = useRecoilValue(activeAccountCryptoState)
     const {loading, error, value: record} = useAsync(async () => {
-        return await applicationLedger.getRecord(h);
+        const genesisSeed = await applicationLedger.getGenesisSeed();
+        const actorCrypto = accountCrypto?.deriveActorFromVbSeed(genesisSeed.toBytes());
+        console.log(actorCrypto);
+        const pk = await actorCrypto?.getPublicSignatureKey(SignatureSchemeId.SECP256K1);
+        const encodedGenesisSeed = genesisSeed.encode();
+        const sigEncoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
+        console.log(`Generated signature public key for genesisSeed ${encodedGenesisSeed}: ${await sigEncoder.encodePublicKey(pk)}`)
+        console.log(applicationLedger)
+        console.log(await applicationLedger.getActorIdByPublicSignatureKey(pk))
+        return await applicationLedger.getRecord(h, actorCrypto);
     }, [h])
+
+    console.log("Record data viewer state:", record, loading, error)
+    console.log(record, typeof record)
 
 
     function goToStart() {

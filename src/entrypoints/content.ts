@@ -18,8 +18,7 @@
 import {
     BACKGROUND_REQUEST_TYPE,
     BackgroundRequest,
-    CLIENT_REQUEST_TYPE,
-    ClientAuthenticationRequest, QRCodeRequestData, QRDataClientRequest
+    QRDataClientRequest
 } from "@/entrypoints/background.ts";
 
 function handleClientRequest(requestData: QRCodeRequestData, origin: string) {

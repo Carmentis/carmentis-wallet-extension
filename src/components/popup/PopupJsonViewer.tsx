@@ -292,6 +292,11 @@ export function PopupJsonViewer({ data, initialPath = [] }: { data: Record<strin
     );
   };
 
+  if (shownData === undefined ) {
+    console.warn("Received undefined show data")
+    return renderEmptyState();
+  }
+
   return (
     <Box className="w-full overflow-auto max-h-[300px]">
       {renderBreadcrumbs()}

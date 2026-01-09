@@ -7,11 +7,6 @@ export enum BACKGROUND_REQUEST_TYPE {
     BROWSER_OPEN_ACTION = "browserAction"
 }
 
-export enum CLIENT_REQUEST_TYPE {
-    AUTHENTICATION = "authentication"
-}
-
-
 export type BrowserActionPayload = {
     location: "main" | "onboarding"
 }
@@ -24,23 +19,6 @@ export type BackgroundRequest<T> = {
 }
 
 
-
-export type ClientRequestPayload<T> = {
-    clientRequestType: CLIENT_REQUEST_TYPE,
-    timestamp: number,
-    origin: string,
-    data: T
-}
-
-export type ClientResponsePayload<T> = {
-    clientRequestType: CLIENT_REQUEST_TYPE,
-    data: T
-}
-
-export type ClientAuthenticationRequest = ClientRequestPayload<{challenge: string}>
-export type ClientAuthenticationResponse = ClientResponsePayload<{publicKey: string, signature: string}>
-
-
 export type ClientResponse = {
     answer: string,
     answerType: number,
@@ -49,12 +27,7 @@ export type ClientResponse = {
 export type QRDataClientRequest = {
     timestamp: number,
     origin: string,
-    data: QRCodeRequestData
-}
-
-export type QRCodeRequestData  = {
-    requestType: number,
-    request: string
+    data: unknown
 }
 
 

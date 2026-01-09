@@ -26,8 +26,12 @@ import {useRecoilValue} from "recoil";
 import {PropsWithChildren} from "react";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useApplicationStatus} from "@/hooks/useApplicationStatus.tsx";
+import {Logger} from '@cmts-dev/carmentis-sdk/client';
 
 export function PopupAppEntrypoint() {
+    // enable logs
+    Logger.enableLogsSync();
+
     return <>
         <AuthenticationManager>
             <ClientRequestListener>
