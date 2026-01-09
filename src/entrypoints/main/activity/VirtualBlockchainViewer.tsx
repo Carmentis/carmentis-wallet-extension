@@ -16,24 +16,11 @@
  */
 
 import React, {useEffect, useState} from "react";
-import {
-    ApplicationLedgerVb,
-    EncoderFactory,
-    Hash,
-    ProviderFactory,
-    WalletCrypto
-} from "@cmts-dev/carmentis-sdk/client";
+import {EncoderFactory, Hash, ProviderFactory, SignatureSchemeId, WalletCrypto} from "@cmts-dev/carmentis-sdk/client";
 import {useParams} from "react-router";
 import {useRecoilValue} from "recoil";
 import {useAsync, useAsyncFn} from "react-use";
-import {
-    FileDownload,
-    OpenInNew,
-    Block as BlockIcon,
-    FilterList,
-    Refresh,
-    Info
-} from "@mui/icons-material";
+import {Block as BlockIcon, FileDownload, FilterList, Info, OpenInNew, Refresh} from "@mui/icons-material";
 import {BlockViewer} from "@/components/dashboard/BlockViewer.tsx";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
@@ -75,15 +62,11 @@ export default function VirtualBlockchainViewer() {
             <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                     <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-                        Virtual Blockchain Explorer
+                        Application Ledger Explorer
                     </h1>
                     <p className="text-sm text-gray-500 mb-3">
-                        Explore microblocks and transactions in this virtual blockchain
+                        Explore microblocks in the application ledger virtual blockchain
                     </p>
-                    <div className="inline-flex items-center px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
-                        <span className="text-xs font-medium text-gray-600 mr-2">ID:</span>
-                        <span className="text-xs font-mono text-blue-700">{hash}</span>
-                    </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -131,10 +114,12 @@ interface VBInfo {
     applicationId: string;
     applicationName?: string;
     organizationName?: string;
+    currentActorId?: number;
 }
 
 function BlockchainContent({ chainId }: { chainId: string }) {
     const wallet = useWallet();
+    const activeAccount = useRecoilValue(activeAccountState);
     const [vbInfo, setVbInfo] = useState<VBInfo | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -162,15 +147,15 @@ function BlockchainContent({ chainId }: { chainId: string }) {
 
             try {
                 const appVb = await provider.loadApplicationVirtualBlockchain(applicationIdHash);
-                const appDescription = appVb.getDescription();
+                const appDescription = await appVb.getApplicationDescription();
                 applicationName = appDescription.name;
 
                 // Load organization name
                 try {
-                    const orgIdHash = appDescription.organizationId;
+                    const orgIdHash = appVb.getOrganizationId();
                     if (orgIdHash) {
-                        const orgVb = await provider.loadOrganizationVirtualBlockchain(Hash.from(orgIdHash));
-                        const orgDescription = orgVb.getDescription();
+                        const orgVb = await provider.loadOrganizationVirtualBlockchain(orgIdHash);
+                        const orgDescription = await orgVb.getDescription();
                         organizationName = orgDescription.name;
                     }
                 } catch (orgErr) {
@@ -180,13 +165,28 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                 console.warn("Could not load application:", appErr);
             }
 
+            // Determine current actor ID (me)
+            let currentActorId: number | undefined;
+            try {
+                const encoder = EncoderFactory.defaultBytesToStringEncoder();
+                const walletSeed = WalletCrypto.fromSeed(encoder.decode(wallet.seed));
+                const accountCrypto = walletSeed.getAccount(activeAccount?.nonce);
+                const genesisSeed = await vb.getGenesisSeed();
+                const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
+                const publicSignatureKey = await actorCrypto.getPublicSignatureKey(SignatureSchemeId.SECP256K1);
+                currentActorId = await vb.getActorIdByPublicSignatureKey(publicSignatureKey);
+            } catch (actorErr) {
+                console.warn("Could not determine current actor ID:", actorErr);
+            }
+
             setVbInfo({
                 height,
                 actors,
                 channels,
                 applicationId,
                 applicationName,
-                organizationName
+                organizationName,
+                currentActorId
             });
         } catch (err) {
             console.error("Error loading chain:", err);
@@ -418,8 +418,13 @@ function VirtualBlockchainInfoCard({ vbInfo, chainId }: { vbInfo: VBInfo, chainI
                             {vbInfo.actors.length > 0 ? (
                                 <div className="space-y-1">
                                     {vbInfo.actors.map((actor, index) => (
-                                        <div key={index} className="text-xs text-gray-700 font-mono">
-                                            {index}: {actor.name}
+                                        <div key={index} className="text-xs text-gray-700 font-mono flex items-center">
+                                            <span>{index}: {actor.name}</span>
+                                            {vbInfo.currentActorId === index && (
+                                                <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-sans">
+                                                    me
+                                                </span>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
