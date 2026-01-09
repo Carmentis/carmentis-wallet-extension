@@ -16,7 +16,14 @@
  */
 
 import React, {useEffect, useState} from "react";
-import {EncoderFactory, Hash, ProviderFactory, SignatureSchemeId, WalletCrypto} from "@cmts-dev/carmentis-sdk/client";
+import {
+    EncoderFactory,
+    Hash,
+    ProviderFactory,
+    PublicKeyEncryptionSchemeId,
+    SignatureSchemeId,
+    WalletCrypto
+} from "@cmts-dev/carmentis-sdk/client";
 import {useParams} from "react-router";
 import {useRecoilValue} from "recoil";
 import {useAsync, useAsyncFn} from "react-use";
@@ -115,6 +122,9 @@ interface VBInfo {
     applicationName?: string;
     organizationName?: string;
     currentActorId?: number;
+    genesisSeed?: string;
+    publicSignatureKey?: string;
+    publicEncryptionKey?: string;
 }
 
 function BlockchainContent({ chainId }: { chainId: string }) {
@@ -127,6 +137,7 @@ function BlockchainContent({ chainId }: { chainId: string }) {
     const [filterFrom, setFilterFrom] = useState<string>("");
     const [filterTo, setFilterTo] = useState<string>("");
     const [showFilter, setShowFilter] = useState(false);
+    const [activeTab, setActiveTab] = useState<'microblocks' | 'cryptokeys'>('microblocks');
 
     async function loadChain() {
         try {
@@ -165,8 +176,12 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                 console.warn("Could not load application:", appErr);
             }
 
-            // Determine current actor ID (me)
+            // Determine current actor ID (me) and crypto keys
             let currentActorId: number | undefined;
+            let genesisSeedEncoded: string | undefined;
+            let publicSignatureKeyEncoded: string | undefined;
+            let publicEncryptionKeyEncoded: string | undefined;
+
             try {
                 const encoder = EncoderFactory.defaultBytesToStringEncoder();
                 const walletSeed = WalletCrypto.fromSeed(encoder.decode(wallet.seed));
@@ -174,7 +189,12 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                 const genesisSeed = await vb.getGenesisSeed();
                 const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
                 const publicSignatureKey = await actorCrypto.getPublicSignatureKey(SignatureSchemeId.SECP256K1);
+                const publicEncryptionKey = await actorCrypto.getPublicEncryptionKey(PublicKeyEncryptionSchemeId.ML_KEM_768_AES_256_GCM);
+
                 currentActorId = await vb.getActorIdByPublicSignatureKey(publicSignatureKey);
+                genesisSeedEncoded = genesisSeed.encode();
+                publicSignatureKeyEncoded = encoder.encode(await publicSignatureKey.getPublicKeyAsBytes());
+                publicEncryptionKeyEncoded = encoder.encode(await publicEncryptionKey.getRawPublicKey());
             } catch (actorErr) {
                 console.warn("Could not determine current actor ID:", actorErr);
             }
@@ -186,7 +206,10 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                 applicationId,
                 applicationName,
                 organizationName,
-                currentActorId
+                currentActorId,
+                genesisSeed: genesisSeedEncoded,
+                publicSignatureKey: publicSignatureKeyEncoded,
+                publicEncryptionKey: publicEncryptionKeyEncoded
             });
         } catch (err) {
             console.error("Error loading chain:", err);
@@ -277,8 +300,86 @@ function BlockchainContent({ chainId }: { chainId: string }) {
             {/* VB Information Card */}
             <VirtualBlockchainInfoCard vbInfo={vbInfo} chainId={chainId} />
 
-            {/* Microblocks Section */}
-            <div className="bg-white border border-gray-200 rounded-lg">
+            {/* Tabs */}
+            <div className="border-b border-gray-200">
+                <div className="flex gap-1">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('microblocks')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'microblocks'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                    >
+                        Microblocks
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('cryptokeys')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'cryptokeys'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                    >
+                        Cryptographic Keys
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'microblocks' ? (
+                <MicroblocksTab
+                    vbInfo={vbInfo}
+                    chainId={chainId}
+                    filterFrom={filterFrom}
+                    setFilterFrom={setFilterFrom}
+                    filterTo={filterTo}
+                    setFilterTo={setFilterTo}
+                    showFilter={showFilter}
+                    setShowFilter={setShowFilter}
+                    displayedBlocks={displayedBlocks}
+                    setDisplayedBlocks={setDisplayedBlocks}
+                    blockIndices={blockIndices}
+                    hasMore={hasMore}
+                />
+            ) : (
+                <CryptoKeysTab vbInfo={vbInfo} />
+            )}
+        </div>
+    );
+}
+
+function MicroblocksTab({
+    vbInfo,
+    chainId,
+    filterFrom,
+    setFilterFrom,
+    filterTo,
+    setFilterTo,
+    showFilter,
+    setShowFilter,
+    displayedBlocks,
+    setDisplayedBlocks,
+    blockIndices,
+    hasMore
+}: {
+    vbInfo: VBInfo;
+    chainId: string;
+    filterFrom: string;
+    setFilterFrom: (value: string) => void;
+    filterTo: string;
+    setFilterTo: (value: string) => void;
+    showFilter: boolean;
+    setShowFilter: (value: boolean) => void;
+    displayedBlocks: number;
+    setDisplayedBlocks: (value: (prev: number) => number) => void;
+    blockIndices: number[];
+    hasMore: boolean;
+}) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg">
             {/* Blocks Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -368,6 +469,46 @@ function BlockchainContent({ chainId }: { chainId: string }) {
                     </button>
                 </div>
             )}
+        </div>
+    );
+}
+
+function CryptoKeysTab({ vbInfo }: { vbInfo: VBInfo }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Genesis Seed</label>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-xs font-mono text-gray-900 break-all">
+                            {vbInfo.genesisSeed || <span className="text-gray-400 italic">Not available</span>}
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Public Signature Key</label>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                        <p className="text-xs font-mono text-gray-900 break-all">
+                            {vbInfo.publicSignatureKey || <span className="text-gray-400 italic">Not available</span>}
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Public Encryption Key</label>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                        <p className="text-xs font-mono text-gray-900 break-all">
+                            {vbInfo.publicEncryptionKey || <span className="text-gray-400 italic">Not available</span>}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-xs text-gray-700">
+                        <strong>Note:</strong> These cryptographic keys are specific to your wallet's actor identity in this virtual blockchain. The genesis seed is derived from the virtual blockchain, and the public keys are generated for secure communication and signing within this application ledger.
+                    </p>
+                </div>
             </div>
         </div>
     );
