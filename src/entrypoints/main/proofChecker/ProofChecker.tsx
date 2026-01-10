@@ -15,56 +15,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {
-    Box,
-    Breadcrumbs,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Link,
-    Table,
-    TableCell,
-    TableRow,
-    Typography,
-    Paper,
-    Grid,
-    Avatar,
-    CircularProgress,
-    Divider,
-    Alert,
-    Tooltip,
-    Stepper,
-    Step,
-    StepLabel,
-    StepContent
-} from "@mui/material";
-import { Timeline, TimelineConnector, TimelineContent, TimelineDot, TimelineItem, TimelineSeparator } from "@mui/lab";
-import { timelineItemClasses } from '@mui/lab/TimelineItem';
 import React, { useState, useRef } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import {
     UploadFile,
     CheckCircle,
     Error as ErrorIcon,
-    VerifiedUser,
-    FileUpload,
     Refresh,
     Info,
-    ArrowForward,
-    DataObject
+    OpenInNew
 } from "@mui/icons-material";
 import { useAsync } from "react-use";
 import {
     Provider,
     Proof,
-    ProofVerificationResult, ProviderFactory,
+    ProofVerificationResult, ProviderFactory, ImportedProof, Hash, ActorCrypto, AccountCrypto,
 } from "@cmts-dev/carmentis-sdk/client";
 import { BlockViewer } from "@/components/dashboard/BlockViewer.tsx";
 import { ErrorBoundary } from "react-error-boundary";
-import { motion, AnimatePresence } from "framer-motion";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
+import {CircularProgress} from "@mui/material";
+import useAccountCrypto from "@/hooks/useAccountCrypto.ts";
 
 export default function ProofChecker() {
     const [proof, setProof] = useState<Record<string, any> | undefined>();
@@ -73,15 +45,15 @@ export default function ProofChecker() {
         <div className="max-w-3xl mx-auto space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-1">
                     Blockchain Proof Verification
                 </h1>
                 <p className="text-sm text-gray-500">
-                    Upload and verify blockchain proofs to validate data integrity and authenticity on the Carmentis network
+                    Upload and verify blockchain proofs to validate data integrity and authenticity
                 </p>
             </div>
 
-            <ErrorBoundary fallback={<ProofCheckerFailure error={"Test"} />}>
+            <ErrorBoundary fallback={<ProofCheckerFailure error={"Verification failed"} />}>
                 {proof ? (
                     <ProofViewer
                         proof={proof}
@@ -99,50 +71,45 @@ export default function ProofChecker() {
 
 function ProofCheckerFailure({ error }: { error: string }) {
     return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center max-w-md mx-auto">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ErrorIcon className="text-red-600" sx={{ fontSize: 32 }} />
             </div>
-
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Verification Failed
-            </h2>
-
-            <p className="text-sm text-gray-600 mb-6">
-                We couldn't verify this proof. The file might be malformed or corrupted.
+            </h3>
+            <p className="text-sm text-gray-600">
+                {error}
             </p>
-
-            <Button
-                variant="contained"
-                color="error"
-                startIcon={<Refresh />}
-                onClick={() => window.location.reload()}
-                sx={{
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                    padding: '0.625rem 1.5rem',
-                    borderRadius: '0.5rem',
-                    boxShadow: 'none',
-                    '&:hover': { boxShadow: 'none' }
-                }}
-            >
-                Try Again
-            </Button>
         </div>
     );
 }
 
-
-
 function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
-    const toast = useToast();
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const toast = useToast();
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        processFile(file);
+    const handleFileSelect = async (file: File) => {
+        try {
+            const text = await file.text();
+            const proof = JSON.parse(text);
+            onUpload(proof);
+        } catch (error) {
+            console.error("Error reading file:", error);
+            toast.error("Invalid proof file format");
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === "application/json") {
+            handleFileSelect(file);
+        } else {
+            toast.error("Please upload a JSON file");
+        }
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -154,405 +121,188 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
         setIsDragging(false);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const file = e.dataTransfer.files[0];
-            processFile(file);
-        }
-    };
-
-    const processFile = (file?: File) => {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const content = JSON.parse(e.target?.result as string);
-                    onUpload(content);
-                } catch (error) {
-                    toast.error("Invalid JSON file. Please upload a valid JSON file.");
-                }
-            };
-            reader.readAsText(file);
-        }
-    };
-
     return (
-        <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Upload Proof File</h2>
-
+        <div className="space-y-6">
+            {/* Upload Area */}
+            <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+                    isDragging
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50'
+                }`}
+            >
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <UploadFile className="text-blue-600" sx={{ fontSize: 32 }} />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">
+                    Upload Proof File
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                    Click to browse or drag and drop your JSON proof file
+                </p>
                 <input
+                    ref={fileInputRef}
                     type="file"
                     accept="application/json"
-                    ref={fileInputRef}
+                    onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileSelect(file);
+                    }}
                     className="hidden"
-                    onChange={handleFileUpload}
                 />
+            </div>
 
-                <div
-                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
-                        isDragging
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-                    }`}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                >
-                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <UploadFile className="text-blue-600" sx={{ fontSize: 32 }} />
-                    </div>
-
-                    <h3 className="text-base font-medium text-gray-900 mb-2">
-                        Drag & Drop or Click to Upload
-                    </h3>
-
-                    <p className="text-sm text-gray-500 mb-6">
-                        Upload a JSON proof file to verify
-                    </p>
-
-                    <Button
-                        variant="contained"
-                        startIcon={<FileUpload />}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            fileInputRef.current?.click();
-                        }}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            fontSize: '0.875rem',
-                            padding: '0.625rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            boxShadow: 'none',
-                            '&:hover': { boxShadow: 'none' }
-                        }}
-                    >
-                        Select File
-                    </Button>
-                </div>
-
-                {/* Info box */}
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                        <Info className="text-blue-600 flex-shrink-0 mt-0.5" fontSize="small" />
-                        <div className="text-sm text-gray-700">
-                            <p className="font-medium text-gray-900 mb-1">How it works</p>
-                            <ol className="list-decimal list-inside space-y-1 text-gray-600">
-                                <li>Upload a JSON proof file from Carmentis</li>
-                                <li>We verify it cryptographically against the blockchain</li>
-                                <li>View detailed verification results and proof data</li>
-                            </ol>
-                        </div>
+            {/* How it works */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                    <Info className="text-blue-600 mr-3 mt-0.5" fontSize="small" />
+                    <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">How it works</h4>
+                        <ol className="text-xs text-gray-700 space-y-1 list-decimal list-inside">
+                            <li>Upload a JSON proof file exported from the Carmentis network</li>
+                            <li>The proof is cryptographically verified against the blockchain</li>
+                            <li>View detailed verification results and proof data</li>
+                        </ol>
                     </div>
                 </div>
             </div>
+        </div>
     );
 }
 
-async function importProof(blockchain: Provider, proof: Proof): Promise<{ records: object[], result: ProofVerificationResult }> {
-    const result = await blockchain.verifyProofFromJson(proof);
-    const records = await Promise.all(result.getInvolvedBlockHeights().map(h => result.getRecordContainedInBlockAtHeight<any>(h)))
-    return {result,  records}
+async function importProof(blockchain: Provider, proof: Proof, accountCrypto: AccountCrypto): Promise<ImportedProof[]> {
+    const appLedgerId = Hash.fromHex(proof.info.virtualBlockchainIdentifier);
+    const appLedgerVb = await blockchain.loadApplicationLedgerVirtualBlockchain(appLedgerId);
+    const genesisSeed = await appLedgerVb.getGenesisSeed();
+    const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
+    return await appLedgerVb.importProof(proof, actorCrypto);
 }
 
 function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any }) {
     const wallet = useWallet();
+    const activeAccountCrypto = useAccountCrypto().accountCrypto;
     const blockchain = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint)
-    const state = useAsync(async () => importProof(blockchain, proof));
-
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24
-            }
-        }
-    };
+    const state = useAsync(async () => {
+        return await importProof(blockchain, proof, activeAccountCrypto);
+    });
 
     if (state.loading) {
         return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-20"
-            >
-                <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-blue-200 rounded-full blur-md opacity-30"></div>
-                    <CircularProgress size={80} thickness={4} className="relative z-10 text-blue-500" />
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CircularProgress size={32} thickness={4} />
                 </div>
-                <Typography variant="h5" className="font-semibold text-gray-800 mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Verifying Proof
-                </Typography>
-                <Typography variant="body1" className="text-gray-600 max-w-md text-center">
-                    Please wait while we cryptographically verify the blockchain proof...
-                </Typography>
-            </motion.div>
+                </h3>
+                <p className="text-sm text-gray-600">
+                    Please wait while we verify the blockchain proof...
+                </p>
+            </div>
         );
     }
 
     if (state.error || !state.value) {
+        console.error(state.error)
         return <ProofCheckerFailure error={state.error?.toString() || "Unknown error"} />;
     }
 
-
-    const { records, result: verificationResult } = state.value;
-    const verified = verificationResult.isVerified();
-    const data = state.value;
+    const importedProofs = state.value;
+    const verified = true;
     const { author, date, title, virtualBlockchainIdentifier: appLedgerId } = proof.info;
 
-
-    const rows = [
-        { header: "Proof Verification Status", value: <Chip 
-            label={verified ? 'Verified' : 'Failed'}
-            color={verified ? 'success' : 'error'}
-            icon={verified ? <CheckCircle /> : <ErrorIcon />}
-            className="font-medium shadow-sm"
-            sx={{ 
-                padding: '4px 8px',
-                '& .MuiChip-label': { fontWeight: 500 }
-            }}
-        /> },
-        { header: "Proof Title", value: title },
-        { header: "Proof Export Time", value: date },
-        { header: "Proof Author", value: author },
-        { header: "Virtual Blockchain ID", value: <Link 
-            href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${appLedgerId}`} 
-            target={"_blank"}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-        >
-            {appLedgerId}
-        </Link> },
-    ];
-
-
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-8"
-        >
-            <motion.div variants={itemVariants}>
-                <Button
-                    variant="contained"
-                    startIcon={<Refresh />}
-                    onClick={() => resetProof()}
-                    size="large"
-                    className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 shadow-md"
-                    sx={{
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        fontSize: '0.95rem',
-                    }}
-                >
-                    Verify Another Proof
-                </Button>
-            </motion.div>
-
-            <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                <Paper elevation={0} className={`border ${verified ? 'border-green-100' : 'border-red-100'} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300`}>
-                    <Box className={`p-5 ${verified ? 'bg-linear-to-r from-green-50 to-green-50/70' : 'bg-linear-to-r from-red-50 to-red-50/70'} border-b ${verified ? 'border-green-100' : 'border-red-100'} flex items-center`}>
-                        <div className="relative mr-4">
-                            <div className={`absolute inset-0 ${verified ? 'bg-green-200' : 'bg-red-200'} rounded-full blur-sm opacity-30`}></div>
-                            <Avatar 
-                                className={`${verified ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'} border shadow-sm`} 
-                                sx={{ width: 40, height: 40 }}
-                            >
-                                {verified ? <VerifiedUser /> : <ErrorIcon />}
-                            </Avatar>
-                        </div>
-                        <Typography variant="h6" className="font-semibold text-gray-800">
-                            Proof Information
-                        </Typography>
-                        <Chip 
-                            label={verified ? "Verified" : "Failed"} 
-                            color={verified ? "success" : "error"}
-                            size="small"
-                            className="ml-auto"
-                            sx={{ fontWeight: 500 }}
-                        />
-                    </Box>
-
-                    <CardContent className="p-0">
-                        <Table>
-                            <tbody>
-                                {rows.map((row, index) => (
-                                    <TableRow key={index} className={index % 2 === 0 ? 'bg-gray-50/70' : ''} hover>
-                                        <TableCell className="font-medium text-gray-700 w-1/3 py-4 px-6 border-r border-gray-100">
-                                            {row.header}
-                                        </TableCell>
-                                        <TableCell className="py-4 px-6 text-gray-800">
-                                            {row.value}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </tbody>
-                        </Table>
-                    </CardContent>
-                </Paper>
-            </motion.div>
-
-            {data.records && (
-                <motion.div variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                    <Paper elevation={0} className="border border-blue-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                        <Box className="p-5 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
-                            <div className="relative mr-4">
-                                <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
-                                <Avatar 
-                                    className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" 
-                                    sx={{ width: 40, height: 40 }}
-                                >
-                                    <DataObject />
-                                </Avatar>
-                            </div>
-                            <Typography variant="h6" className="font-semibold text-gray-800">
-                                Proof Data Visualization
-                            </Typography>
-                            <Chip 
-                                label={`${data.records.length} Records`} 
-                                size="small"
-                                className="ml-auto bg-blue-100 text-blue-700 border border-blue-200"
-                            />
-                        </Box>
-
-                        <CardContent className="p-8">
-                            <ProofRecordViewer records={records} />
-                        </CardContent>
-                    </Paper>
-                </motion.div>
-            )}
-        </motion.div>
-    );
-}
-
-function ProofRecordViewer({ records }: { records: any[] }) {
-    // Animation variants
-    const timelineVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.15,
-                delayChildren: 0.2
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, x: -20, y: 10 },
-        visible: (i: number) => ({
-            opacity: 1,
-            x: 0,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24,
-                delay: i * 0.05
-            }
-        })
-    };
-
-    // Import Block icon
-    const Block = DataObject;
-
-    return (
-        <motion.div
-            variants={timelineVariants}
-            initial="hidden"
-            animate="visible"
-            className="mt-4"
-        >
-            <Timeline
-                sx={{
-                    [`& .${timelineItemClasses.root}:before`]: {
-                        flex: 0,
-                        padding: 0,
-                    },
-                    padding: '12px 0',
-                }}
+        <div className="space-y-6">
+            {/* Verify Another Button */}
+            <button
+                type="button"
+                onClick={() => resetProof()}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
-                {records.map((record, i) => (
-                    <motion.div 
-                        key={i} 
-                        custom={i}
-                        variants={itemVariants}
-                    >
-                        <TimelineItem>
-                            <TimelineSeparator>
-                                <TimelineDot 
-                                    sx={{ 
-                                        width: 20, 
-                                        height: 20,
-                                        margin: '8px 0',
-                                        backgroundColor: '#3b82f6',
-                                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.3)'
-                                    }} 
-                                />
-                                {i < records.length - 1 && (
-                                    <TimelineConnector sx={{ 
-                                        minHeight: 50,
-                                        backgroundColor: '#93c5fd'
-                                    }} />
-                                )}
-                            </TimelineSeparator>
-                            <TimelineContent sx={{ py: '12px', px: 3 }}>
-                                <Card className="border border-blue-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 mb-6 overflow-hidden">
-                                    <Box className="p-4 bg-linear-to-r from-blue-50 to-blue-50/70 border-b border-blue-100 flex items-center">
-                                        <div className="relative mr-3">
-                                            <div className="absolute inset-0 bg-blue-200 rounded-full blur-sm opacity-30"></div>
-                                            <Avatar 
-                                                className="bg-blue-50 text-blue-600 border border-blue-100 shadow-sm" 
-                                                sx={{ width: 32, height: 32 }}
-                                            >
-                                                <Block fontSize="small" />
-                                            </Avatar>
-                                        </div>
-                                        <Typography variant="h6" className="font-medium text-gray-800">
-                                            Block {i + 1}
-                                        </Typography>
-                                        <Chip 
-                                            label={`# ${i + 1}`}
-                                            size="small"
-                                            className="ml-auto bg-blue-100 text-blue-700 border border-blue-200 shadow-sm"
-                                        />
-                                    </Box>
-                                    <CardContent className="p-6 bg-white">
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: 0.3 + (i * 0.1), duration: 0.5 }}
-                                        >
-                                            <BlockViewer initialPath={[]} data={
-                                                record
-                                            } />
-                                        </motion.div>
-                                    </CardContent>
-                                </Card>
-                            </TimelineContent>
-                        </TimelineItem>
-                    </motion.div>
-                ))}
-            </Timeline>
-        </motion.div>
+                <Refresh fontSize="small" className="mr-2" />
+                Verify Another Proof
+            </button>
+
+            {/* Verification Status */}
+            <div className={`bg-white border rounded-lg overflow-hidden ${verified ? 'border-green-200' : 'border-red-200'}`}>
+                <div className={`px-6 py-4 border-b flex items-center justify-between ${verified ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${verified ? 'bg-green-100' : 'bg-red-100'}`}>
+                            {verified ? (
+                                <CheckCircle className="text-green-600" fontSize="small" />
+                            ) : (
+                                <ErrorIcon className="text-red-600" fontSize="small" />
+                            )}
+                        </div>
+                        <h2 className="ml-3 text-base font-semibold text-gray-900">Proof Information</h2>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                        {verified ? 'Verified' : 'Failed'}
+                    </span>
+                </div>
+
+                <div className="divide-y divide-gray-200">
+                    <div className="px-6 py-4 flex">
+                        <span className="w-1/3 text-sm font-medium text-gray-700">Status</span>
+                        <span className={`text-sm font-semibold ${verified ? 'text-green-600' : 'text-red-600'}`}>
+                            {verified ? 'Verified' : 'Failed'}
+                        </span>
+                    </div>
+                    <div className="px-6 py-4 flex">
+                        <span className="w-1/3 text-sm font-medium text-gray-700">Title</span>
+                        <span className="text-sm text-gray-900">{title}</span>
+                    </div>
+                    <div className="px-6 py-4 flex">
+                        <span className="w-1/3 text-sm font-medium text-gray-700">Export Time</span>
+                        <span className="text-sm text-gray-900">{date}</span>
+                    </div>
+                    <div className="px-6 py-4 flex">
+                        <span className="w-1/3 text-sm font-medium text-gray-700">Author</span>
+                        <span className="text-sm text-gray-900">{author}</span>
+                    </div>
+                    <div className="px-6 py-4 flex">
+                        <span className="w-1/3 text-sm font-medium text-gray-700">Virtual Blockchain ID</span>
+                        <a
+                            href={`${wallet.explorerEndpoint}/explorer/virtualBlockchain/${appLedgerId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 inline-flex items-center"
+                        >
+                            {appLedgerId}
+                            <OpenInNew fontSize="small" className="ml-1" sx={{ fontSize: 14 }} />
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {/* Proof Data */}
+            {importedProofs && importedProofs.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <h2 className="text-base font-semibold text-gray-900">Proof Data</h2>
+                        <p className="text-xs text-gray-500 mt-1">{importedProofs.length} record{importedProofs.length !== 1 ? 's' : ''}</p>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                        {importedProofs.map((record, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                    <span className="text-sm font-medium text-gray-900">Record {index + 1}</span>
+                                </div>
+                                <div className="p-4">
+                                    <BlockViewer initialPath={[]} data={record.data} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
