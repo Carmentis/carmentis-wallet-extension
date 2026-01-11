@@ -157,7 +157,7 @@ export function DashboardNavbar() {
 }
 
 /**
- * Simplified node status icon
+ * Simplified node status icon with periodic polling (30s interval)
  */
 function NodeStatusIcon() {
     const wallet = useRecoilValue(walletState);
@@ -169,7 +169,7 @@ function NodeStatusIcon() {
         const checkConnection = async () => {
             setIsLoading(true);
             try {
-                await axios.get(nodeUrl);
+                await axios.get(nodeUrl, { timeout: 5000 });
                 setIsConnected(true);
             } catch (error) {
                 setIsConnected(false);
@@ -180,6 +180,11 @@ function NodeStatusIcon() {
 
         if (nodeUrl) {
             checkConnection();
+
+            // Poll every 30 seconds to avoid spamming the node
+            const intervalId = setInterval(checkConnection, 30000);
+
+            return () => clearInterval(intervalId);
         }
     }, [nodeUrl]);
 
@@ -189,7 +194,13 @@ function NodeStatusIcon() {
     return (
         <MuiTooltip title={tooltipText}>
             <div className={iconColor}>
-                {isLoading ? <SpinningWheel /> : <NetworkCheck fontSize="small" />}
+                {isLoading ? (
+                    <div className="w-5 h-5">
+                        <SpinningWheel />
+                    </div>
+                ) : (
+                    <NetworkCheck fontSize="small" />
+                )}
             </div>
         </MuiTooltip>
     );

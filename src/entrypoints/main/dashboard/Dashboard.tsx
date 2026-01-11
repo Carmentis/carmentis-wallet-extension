@@ -41,9 +41,6 @@ import {useWallet} from "@/hooks/useWallet.tsx";
 import {useAuthenticatedAccount} from "@/hooks/useAuthenticatedAccount.tsx";
 import {DashboardLayout} from "@/entrypoints/main/dashboard/DashboardLayout.tsx";
 import {SidebarItem} from "@/entrypoints/main/dashboard/SidebarItem.tsx";
-import {
-    NodeConnectionStatusSidebarItem
-} from "@/entrypoints/main/dashboard/components/NodeConnectionStatusSidebarItem.tsx";
 import {useAccountBalanceBreakdown} from "@/hooks/useAccountBalanceBreakdown.tsx";
 import {CMTSToken} from "@cmts-dev/carmentis-sdk/client";
 
@@ -107,17 +104,17 @@ export function Dashboard(): ReactElement {
  */
 function DashboardSidebar() {
     return (
-        <div className="flex flex-col h-full py-4 bg-white">
-            <div className="flex-1 space-y-1">
+        <div className="flex flex-col h-full bg-white">
+            <div>
                 <SidebarItem icon={<DashboardIcon />} text={'Home'} activeRegex={/\/$/} link={'/'} />
                 <SidebarItem icon={<Send />} text={'Transfer'} activeRegex={/transfer$/} link={'/transfer'} />
                 <SidebarItem icon={<Widgets />} text={'Activity'} activeRegex={/activity/} link={'/activity'} />
                 <SidebarItem icon={<Receipt />} text={'History'} activeRegex={/history$/} link={'/history'} />
                 <SidebarItem icon={<VerifiedUser />} text={'Proof Checker'} activeRegex={/proofChecker/} link={'/proofChecker'} />
             </div>
-            <div className="border-t border-gray-200 pt-2">
+            <div className="flex-1"></div>
+            <div className="border-t border-gray-200">
                 <SidebarItem icon={<Settings />} text={'Settings'} activeRegex={/parameters$/} link={'/parameters'} />
-                <NodeConnectionStatusSidebarItem />
             </div>
         </div>
     );

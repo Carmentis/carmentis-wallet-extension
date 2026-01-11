@@ -33,7 +33,7 @@ export function DashboardLayout({children, navbar, sidebar}: PropsWithChildren<D
             {/* Main content area with sidebar */}
             <div className="pt-16 h-full w-full flex">
                 {/* Fixed sidebar */}
-                <aside className="fixed h-full w-16 border-r border-gray-200 bg-white">
+                <aside className="fixed top-16 bottom-0 w-16 border-r border-gray-200 bg-white overflow-y-auto">
                     {sidebar}
                 </aside>
 
