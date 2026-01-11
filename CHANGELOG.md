@@ -1,3 +1,10 @@
+## [0.17.24](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.23...v0.17.24) (2026-01-11)
+
+
+### Bug Fixes
+
+* enhance node status monitoring with periodic polling and UI updates ([7606762](https://github.com/Carmentis/carmentis-wallet-extension/commit/7606762e014161725bc09b3c867fbcafb446667c))
+
 ## [0.17.23](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.22...v0.17.23) (2026-01-10)
 
 ## [0.17.22](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.21...v0.17.22) (2025-10-03)
