@@ -1,3 +1,10 @@
+## [0.17.26](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.25...v0.17.26) (2026-01-19)
+
+
+### Bug Fixes
+
+* update transaction history error handling with improved messaging and "Buy tokens" CTA ([7e1b482](https://github.com/Carmentis/carmentis-wallet-extension/commit/7e1b4820eabb68206b50c7e516c19ec3ad2d5130))
+
 ## [0.17.25](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.24...v0.17.25) (2026-01-19)
 
 
