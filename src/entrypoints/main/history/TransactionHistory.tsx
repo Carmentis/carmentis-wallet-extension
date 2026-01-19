@@ -36,13 +36,21 @@ export function TransactionHistory() {
 
     if (accountHistoryLoadingError || !accountHistory) {
         return (
-            <div className="mb-8 p-6 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-base font-semibold text-red-700 mb-2">
-                    Error Loading Transactions
+            <div className="mb-8 p-8 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                <div className="text-base font-semibold text-gray-700 mb-2">
+                    No Account Found
                 </div>
-                <div className="text-sm text-red-600">
-                    There was an error loading your transaction history. Please try again later.
-                    Reason: {accountHistoryLoadingError?.message || 'unknown'}
+                <div className="text-sm text-gray-600 mb-4">
+                    You need to create an account and get tokens to start using the wallet.
+                </div>
+                <button
+                    onClick={() => window.open('https://faucet.testnet.carmentis.io', '_blank')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    Buy tokens
+                </button>
+                <div className="mt-4 pt-4 border-t border-gray-300 text-xs text-gray-500">
+                    Error: {accountHistoryLoadingError?.message || 'unknown'}
                 </div>
             </div>
         );
