@@ -223,10 +223,13 @@ function BalanceDisplay() {
 
     if (breakdownLoadingError || !breakdown) {
         return (
-            <MuiTooltip title="Failed to load balance">
-                <div className="text-sm text-red-600">
-                    Error
-                </div>
+            <MuiTooltip title="Get tokens from the faucet">
+                <button
+                    onClick={() => window.open('https://faucet.testnet.carmentis.io', '_blank')}
+                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                >
+                    Buy tokens
+                </button>
             </MuiTooltip>
         );
     }
