@@ -27,12 +27,12 @@ import {
     Language,
     Save,
     Settings as SettingsIcon,
-    Info
+    Info, VisibilityOff, Visibility
 } from "@mui/icons-material";
 import { useForm, Controller } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import * as v from "valibot";
-import {CryptoEncoderFactory} from "@cmts-dev/carmentis-sdk/client";
+import {CryptoEncoderFactory, EncoderFactory, SeedEncoder, WalletCrypto} from "@cmts-dev/carmentis-sdk/client";
 import {activeAccountState, walletState} from "@/states/globals.tsx";
 import {useToast} from "@/hooks/useToast.tsx";
 import {Wallet} from "@/types/Wallet.ts";
@@ -85,42 +85,6 @@ interface TabPanelProps {
     value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`settings-tabpanel-${index}`}
-            aria-labelledby={`settings-tab-${index}`}
-            {...other}
-            style={{ padding: '24px 0' }}
-        >
-            <AnimatePresence mode="wait">
-                {value === index && (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        {children}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
-
-function a11yProps(index: number) {
-    return {
-        id: `settings-tab-${index}`,
-        'aria-controls': `settings-tabpanel-${index}`,
-    };
-}
-
 // Main component
 export default function Parameters() {
     const toast = useToast();
@@ -133,6 +97,8 @@ export default function Parameters() {
     const [accountPrivateKeys, setAccountPrivateKeys] = useState<Record<string, string>>({});
     const [visiblePrivateKeys, setVisiblePrivateKeys] = useState<Record<string, boolean>>({});
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [encodedWalletSeed, setEncodedWalletSeed] = useState<string>('');
+    const [showWalletSeed, setShowWalletSeed] = useState<boolean>(false);
 
     // Forms
     const personalInfoForm = useForm<PersonalInfoFormData>({
@@ -168,6 +134,19 @@ export default function Parameters() {
     const { control: personalControl, handleSubmit: handlePersonalSubmit, formState: { errors: personalErrors, isDirty: isPersonalDirty } } = personalInfoForm;
     const { control: networkControl, handleSubmit: handleNetworkSubmit, formState: { errors: networkErrors, isDirty: isNetworkDirty } } = networkForm;
     const { control: accountInfoControl, handleSubmit: handleAccountInfoSubmit, formState: { errors: accountInfoErrors, isDirty: isAccountInfoDirty } } = accountInfoForm;
+
+    // Load wallet seed
+    useAsync(async () => {
+        if (!wallet) return;
+        try {
+            const hexEncoder = EncoderFactory.bytesToHexEncoder();
+            const seed = hexEncoder.decode(wallet.seed);
+            const encodedSeed = new SeedEncoder().encode(seed);
+            setEncodedWalletSeed(encodedSeed);
+        } catch (error) {
+            console.error('Failed to encode wallet seed:', error);
+        }
+    }, [wallet])
 
     // Load user keys
     useAsync(async () => {
@@ -338,6 +317,47 @@ export default function Parameters() {
                                 <p className="text-sm text-gray-500">
                                     Quickly modify information for all your accounts in one place
                                 </p>
+                            </div>
+
+                            {/* Wallet Seed Display */}
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-medium text-gray-700">
+                                        Wallet Master Seed
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowWalletSeed(!showWalletSeed)}
+                                        className="text-gray-600 hover:text-gray-800 transition-colors"
+                                    >
+                                        {showWalletSeed ? (
+                                            <VisibilityOff fontSize="small" />
+                                        ) : (
+                                            <Visibility fontSize="small" />
+                                        )}
+                                    </button>
+                                </div>
+                                <TextField
+                                    value={showWalletSeed ? encodedWalletSeed : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    InputProps={{
+                                        readOnly: true,
+                                        sx: {
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.875rem',
+                                            backgroundColor: showWalletSeed ? '#fff' : '#fef3c7',
+                                        }
+                                    }}
+                                    helperText="This is your master seed from which all account private keys are derived. Keep it safe and never share it."
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '0.5rem',
+                                            '& fieldset': { borderColor: '#fbbf24' },
+                                        },
+                                    }}
+                                />
                             </div>
 
                             {wallet?.accounts.map((account, index) => (
