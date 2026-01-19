@@ -1,3 +1,10 @@
+# [0.18.0](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.26...v0.18.0) (2026-01-19)
+
+
+### Features
+
+* add wallet seed display with visibility toggle ([1836b94](https://github.com/Carmentis/carmentis-wallet-extension/commit/1836b94536c347fd91455245ed450dacc508c189))
+
 ## [0.17.26](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.25...v0.17.26) (2026-01-19)
 
 
