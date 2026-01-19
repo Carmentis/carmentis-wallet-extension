@@ -1,3 +1,10 @@
+## [0.17.25](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.24...v0.17.25) (2026-01-19)
+
+
+### Bug Fixes
+
+* update dashboard tooltip and default node endpoint ([a0775ff](https://github.com/Carmentis/carmentis-wallet-extension/commit/a0775fff075f2a8eac3be9211867bb9e850f923b))
+
 ## [0.17.24](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.23...v0.17.24) (2026-01-11)
 
 
