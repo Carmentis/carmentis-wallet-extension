@@ -16,32 +16,19 @@
  */
 
 import {CryptoSchemeFactory, EncoderFactory, SymmetricEncryptionKey} from "@cmts-dev/carmentis-sdk/client";
-import * as Carmentis from "@/lib/carmentis-nodejs-sdk.js";
 import {ProviderInterface} from "@/types/ProviderInterface.ts";
+import * as bip39 from "@scure/bip39";
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 export class CarmentisProvider implements ProviderInterface{
     generateWords(): string[] {
-        return Carmentis.generateWordList(12);
+        return bip39.generateMnemonic(wordlist).split(" ");
     }
 
     async generateSeed(words: string[]): Promise<string> {
-        const seed: Uint8Array = await Carmentis.getSeedFromWordList(words);
+        const seed: Uint8Array = bip39.mnemonicToSeedSync(words.join(' '));
         const encoder = EncoderFactory.bytesToHexEncoder();
         return encoder.encode(seed);
-    }
-
-    encryptSeed(password: string, seed : Uint8Array) : Uint8Array {
-        const secretKey = CryptoSchemeFactory.deriveKeyFromPassword(password);
-        return secretKey.encrypt(seed);
-        //const secretKey = Carmentis.deriveAesKeyFromPassword(password);
-        //return secretKey.encrypt(seed);
-    }
-
-    decryptSeed(password: string, seed : Uint8Array) : Uint8Array {
-        const secretKey = CryptoSchemeFactory.deriveKeyFromPassword(password);
-        return secretKey.decrypt(seed);
-        //const secretKey = Carmentis.deriveAesKeyFromPassword(password);
-        //return secretKey.decrypt(seed);
     }
 
     async deriveSecretKeyFromPassword( password : string ) : Promise<SymmetricEncryptionKey> {
