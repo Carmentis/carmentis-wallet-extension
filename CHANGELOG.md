@@ -1,3 +1,10 @@
+## [0.18.2](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.1...v0.18.2) (2026-02-02)
+
+
+### Bug Fixes
+
+* update proof checker and virtual blockchain viewer for compatibility with crypto actors ([92c552e](https://github.com/Carmentis/carmentis-wallet-extension/commit/92c552e668a02dceb0f5c6d1c2e1a17adf07628c))
+
 ## [0.18.1](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.0...v0.18.1) (2026-02-02)
 
 
