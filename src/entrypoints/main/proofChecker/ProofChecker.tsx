@@ -218,7 +218,7 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
     }
 
     const proofDocument = ProofDocument.fromObject(proof);
-    const proofVb = proofDocument.getSingleVirtualBlockchainOrFail();
+    const proofVb = proofDocument.getVirtualBlockchains()[0];
     const appLedgerId = proofVb.getIdentifier();
     const author = proofDocument.getAuthor();
     const date = proofDocument.getDate().toISOString();

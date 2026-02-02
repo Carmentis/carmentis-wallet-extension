@@ -29,7 +29,7 @@ import {useRecoilValue} from "recoil";
 import {useAsync, useAsyncFn} from "react-use";
 import {Block as BlockIcon, FileDownload, FilterList, Info, OpenInNew, Refresh} from "@mui/icons-material";
 import {BlockViewer} from "@/components/dashboard/BlockViewer.tsx";
-import {activeAccountState, walletState} from "@/states/globals.tsx";
+import {activeAccountCryptoState, activeAccountState, walletState} from "@/states/globals.tsx";
 import {useWallet} from "@/hooks/useWallet.tsx";
 import {getUserKeyPair} from "@/entrypoints/main/wallet.tsx";
 import {CircularProgress} from "@mui/material";
@@ -42,16 +42,22 @@ export default function VirtualBlockchainViewer() {
     const hash = params.hash;
     const wallet = useWallet();
     const activeAccount = useRecoilValue(activeAccountState);
+    const activeAccountCrypto = useRecoilValue(activeAccountCryptoState);
 
     const {loading: keyPairLoading, value: keyPair} = useAsync(async () => {
         return getUserKeyPair(wallet, activeAccount!)
     });
 
     const [state, exportProof] = useAsyncFn(async () => {
-        if (keyPairLoading || !keyPair) return;
+        if (keyPairLoading || !keyPair || !activeAccountCrypto) return;
         const provider = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
         const vb = await provider.loadApplicationLedgerVirtualBlockchain(Hash.from(hash as string));
-        const proof = await vb.exportProof({ author: activeAccount?.pseudo as string });
+        const vbSeed = await vb.getGenesisSeed();
+        const actorCrypto = activeAccountCrypto.getActor(vbSeed.toBytes());
+        const proof = await vb.exportProof(
+            { author: activeAccount?.pseudo as string },
+            actorCrypto
+        );
 
         const json = JSON.stringify(proof, null, 2);
         const blob = new Blob([json], {type: "application/json"});
