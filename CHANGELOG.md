@@ -1,3 +1,10 @@
+## [0.18.1](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.0...v0.18.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* invalid package-lock with not updated SDK ([b9e7772](https://github.com/Carmentis/carmentis-wallet-extension/commit/b9e77723a6eccb57fbb70e33061fac87b92ae1cd))
+
 # [0.18.0](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.17.26...v0.18.0) (2026-01-19)
 
 
