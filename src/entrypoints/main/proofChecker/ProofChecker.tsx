@@ -28,8 +28,14 @@ import {
 import { useAsync } from "react-use";
 import {
     Provider,
-    Proof,
-    ProofVerificationResult, ProviderFactory, ImportedProof, Hash, ActorCrypto, AccountCrypto,
+    ProofWrapper,
+    ProofVerificationResult,
+    ProviderFactory,
+    ImportedProof,
+    Hash,
+    ActorCrypto,
+    AccountCrypto,
+    ProofDocument,
 } from "@cmts-dev/carmentis-sdk/client";
 import { BlockViewer } from "@/components/dashboard/BlockViewer.tsx";
 import { ErrorBoundary } from "react-error-boundary";
@@ -174,20 +180,20 @@ function ProofCheckerUpload({ onUpload }: { onUpload: (proof: any) => void }) {
     );
 }
 
-async function importProof(blockchain: Provider, proof: Proof, accountCrypto: AccountCrypto): Promise<ImportedProof[]> {
-    const appLedgerId = Hash.fromHex(proof.info.virtualBlockchainIdentifier);
+async function importProof(blockchain: Provider, proof: ProofWrapper): Promise<ImportedProof[]> {
+    const proofDocument = ProofDocument.fromObject(proof);
+    const proofVb = proofDocument.getSingleVirtualBlockchainOrFail();
+    const vbId = proofVb.getIdentifier();
+    const appLedgerId = Hash.fromHex(vbId);
     const appLedgerVb = await blockchain.loadApplicationLedgerVirtualBlockchain(appLedgerId);
-    const genesisSeed = await appLedgerVb.getGenesisSeed();
-    const actorCrypto = accountCrypto.getActor(genesisSeed.toBytes());
-    return await appLedgerVb.importProof(proof, actorCrypto);
+    return await appLedgerVb.importProof(proof);
 }
 
 function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any }) {
     const wallet = useWallet();
-    const activeAccountCrypto = useAccountCrypto().accountCrypto;
-    const blockchain = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint)
+    const blockchain = ProviderFactory.createInMemoryProviderWithExternalProvider(wallet.nodeEndpoint);
     const state = useAsync(async () => {
-        return await importProof(blockchain, proof, activeAccountCrypto);
+        return await importProof(blockchain, proof);
     });
 
     if (state.loading) {
@@ -211,9 +217,16 @@ function ProofViewer({ proof, resetProof }: { resetProof: () => void, proof: any
         return <ProofCheckerFailure error={state.error?.toString() || "Unknown error"} />;
     }
 
+    const proofDocument = ProofDocument.fromObject(proof);
+    const proofVb = proofDocument.getSingleVirtualBlockchainOrFail();
+    const appLedgerId = proofVb.getIdentifier();
+    const author = proofDocument.getAuthor();
+    const date = proofDocument.getDate().toISOString();
+    const title = proofDocument.getTitle();
+
     const importedProofs = state.value;
     const verified = true;
-    const { author, date, title, virtualBlockchainIdentifier: appLedgerId } = proof.info;
+//  const { author, date, title, virtualBlockchainIdentifier: appLedgerId } = proof.info;
 
     return (
         <div className="space-y-6">
