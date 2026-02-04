@@ -1,3 +1,10 @@
+## [0.18.3](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.2...v0.18.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* update `getProtocolVariables` to `getProtocolState` usage in token transfer hook ([d2a1c8c](https://github.com/Carmentis/carmentis-wallet-extension/commit/d2a1c8c995e45851797eaa6f5e54bd3d8435a4cf))
+
 ## [0.18.2](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.1...v0.18.2) (2026-02-02)
 
 
