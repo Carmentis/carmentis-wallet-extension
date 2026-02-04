@@ -49,7 +49,7 @@ export function useTokenTransfer() {
         })
 
         // compute the gas
-        const protocolVariables = await provider.getProtocolVariables();
+        const protocolVariables = await provider.getProtocolState();
         const feesCalculationVersion = protocolVariables.getFeesCalculationVersion();
         const feesCalculationFormula = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(feesCalculationVersion);
         const gas = await feesCalculationFormula.computeFees(senderPrivateKey.getSignatureSchemeId(), mb);
