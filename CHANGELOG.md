@@ -1,3 +1,10 @@
+# [0.19.0](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.3...v0.19.0) (2026-03-05)
+
+
+### Features
+
+* upgrade to SDK 1.20.1 ([6ec50b8](https://github.com/Carmentis/carmentis-wallet-extension/commit/6ec50b80e0602cf5d1790a90416b66022b7e1b9a))
+
 ## [0.18.3](https://github.com/Carmentis/carmentis-wallet-extension/compare/v0.18.2...v0.18.3) (2026-02-04)
 
 
